@@ -11,15 +11,20 @@ namespace DeepWoodsMod
     {
         private const int TILE_SIZE_IN_ACTUAL_PIXEL = 64;
 
-        public const int MIN_MAP_WIDTH = 24;
-        public const int MAX_MAP_WIDTH = 64;
-        public const int MIN_MAP_HEIGHT = 24;
-        public const int MAX_MAP_HEIGHT = 64;
-
         public const int MIN_CORNER_SIZE = 3;
         public const int MAX_CORNER_SIZE = 8;
 
-        private const int MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION = MAX_CORNER_SIZE + 2;
+        /// <summary>Amount of tiles exits expand in each direction</summary>
+        public const int EXIT_RADIUS = 2;
+
+        private const int MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION = MAX_CORNER_SIZE + EXIT_RADIUS + 2;   // => 12
+
+        public const int MIN_MAP_WIDTH = MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION * 2 + 4;   // => 28
+        public const int MAX_MAP_WIDTH = 64;
+        public const int MIN_MAP_HEIGHT = MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION * 2 + 4;  // => 28
+        public const int MAX_MAP_HEIGHT = 64;
+
+        public const int MAX_MAP_SIZE_FOR_LICHTUNG = 32;
 
         public const int MIN_FOREST_PATCH_DIAMETER = 8;
         public const int MAX_FOREST_PATCH_DIAMETER = 24;
@@ -32,6 +37,8 @@ namespace DeepWoodsMod
 
         public const int MINIMUM_TILES_FOR_MONSTER = 36;
         public const int MINIMUM_TILES_FOR_TERRAIN_FEATURE = 4;
+        public const int MINIMUM_TILES_FOR_BAUBLE = 16;
+        public const int MINIMUM_TILES_FOR_LEAVES = 16;
 
         private int mapWidth;
         private int mapHeight;

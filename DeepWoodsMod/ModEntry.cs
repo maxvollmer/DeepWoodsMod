@@ -36,12 +36,6 @@ namespace DeepWoodsMod
     public class ModEntry : Mod, IAssetEditor
     {
         private Dictionary<long, GameLocation> playerLocations = new Dictionary<long, GameLocation>();
-        private List<Location> woodsToDeepwoodsWarpLocations = new List<Location>() {
-            new Location(24, 32),
-            new Location(25, 32),
-            new Location(26, 32),
-            new Location(27, 32)
-        };
 
         private static ModEntry mod = null;
 
@@ -89,6 +83,13 @@ namespace DeepWoodsMod
         private void SaveEvents_AfterLoad(object sender, EventArgs args)
         {
             this.Monitor.Log("SaveEvents_AfterLoad()", LogLevel.Error);
+
+            /*
+            // TODO: TEMPTEMPTEMP
+            Game1.currentSeason = "winter";
+            Game1.setGraphicsForSeason();
+            */
+
             LoadAndAddDeepWoods();
         }
 
@@ -99,7 +100,7 @@ namespace DeepWoodsMod
             DeepWoods.LocalDayUpdate(Game1.dayOfMonth);
 
             // TODO: TEMPTEMPTEMP
-            Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", DeepWoods.ENTER_LOCATION.X, DeepWoods.ENTER_LOCATION.Y, false));
+            // Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", DeepWoods.ENTER_LOCATION.X, DeepWoods.ENTER_LOCATION.Y, false));
         }
 
         private void TimeEvents_TimeOfDayChanged(object sender, EventArgs args)
@@ -179,7 +180,7 @@ namespace DeepWoodsMod
 
             // Add some new border tiles to prevent player from getting confused/lost/stuck inside the hole we created.
             // (Basically setup a new border so player can only go left/down into DeepWoods or right/up back.)
-            for (int x = 24; x <= 28; x++)
+            for (int x = 24; x < 29; x++)
             {
                 buildingsLayer.Tiles[x, 24] = new StaticTile(buildingsLayer, borderTileSheet, BlendMode.Alpha, borderTileIndex);
             }
@@ -196,16 +197,19 @@ namespace DeepWoodsMod
             {
                 warpPropertyString = GetWoodsToDeepWoodsWarps();
             }
+            Log("warpPropertyString: " + warpPropertyString);
             map.Properties["Warp"] = new PropertyValue(warpPropertyString);
         }
 
         private string GetWoodsToDeepWoodsWarps()
         {
             string warps = "";
-            foreach (Location location in woodsToDeepwoodsWarpLocations)
+
+            for (int i = -DeepWoodsSpaceManager.EXIT_RADIUS; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
             {
-                warps += " " + location.X + " " + location.Y + " DeepWoods " + DeepWoods.ENTER_LOCATION.X + " " + DeepWoods.ENTER_LOCATION.Y;
+                warps += " " + (26 + i) + " 32 DeepWoods " + (DeepWoods.ENTER_LOCATION.X + i) + " 1";
             }
+
             return warps.Trim();
         }
     }

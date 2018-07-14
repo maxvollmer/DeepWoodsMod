@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="DeepWoods.cs" />
     <Compile Include="DeepWoodsBuilder.cs" />
+    <Compile Include="DeepWoodsDebris.cs" />
     <Compile Include="DeepWoodsEnterExit.cs" />
     <Compile Include="DeepWoodsMonsters.cs" />
     <Compile Include="DeepWoodsRandom.cs" />
@@ -52,6 +53,9 @@
     <Compile Include="DeepWoodsTileDefinitions.cs" />
     <Compile Include="DestroyableBush.cs" />
     <Compile Include="Flower.cs" />
+    <Compile Include="Game1MultiplayerAccessProvider.cs" />
+    <Compile Include="GingerBreadHouse.cs" />
+    <Compile Include="LootFreeGrass.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -24,11 +24,482 @@ namespace DeepWoodsMod
 
         private static Probability CHANCE_FOR_NOLEAVE_FOREST_FILLER = new Probability(80);
 
+        private static Probability CHANCE_FOR_FOREST_ROW_TREESTUMPS = new Probability(50);
+
+        private const int FOREST_ROW_MAX_INWARDS_BUMP = 2;
+        private static Probability CHANCE_FOR_FOREST_ROW_BUMP = new Probability(50);
+
+        private const int PLAIN_FOREST_BACKGROUND = 946;
+        private static int[] FOREST_BACKGROUND = new int[] { PLAIN_FOREST_BACKGROUND, 971, 996 };
+
+        private const int FOREST_ROW_TREESTUMP_LEFT = 1144;
+        private const int FOREST_ROW_TREESTUMP_RIGHT = 1145;
+
+        private enum GrassType
+        {
+            BLACK,
+            DARK,
+            NORMAL,
+            BRIGHT
+        }
+
+        private enum PlacingDirection
+        {
+            DOWNWARDS,
+            UPWARDS,
+            LEFTWARDS,
+            RIGHTWARDS
+        }
+
+        private class Placing
+        {
+            public readonly Location location;
+            public readonly PlacingDirection dir;
+            public readonly PlacingDirection dirInward;
+
+            public int XDir
+            {
+                get
+                {
+                    switch (dir)
+                    {
+                        case PlacingDirection.LEFTWARDS:
+                            return -1;
+                        case PlacingDirection.RIGHTWARDS:
+                            return 1;
+                        case PlacingDirection.DOWNWARDS:
+                        case PlacingDirection.UPWARDS:
+                            return 0;
+                        default:
+                            throw new InvalidOperationException("Invalid placing direction: " + this.dir);
+                    }
+                }
+            }
+
+            public int YDir
+            {
+                get
+                {
+                    switch (dir)
+                    {
+                        case PlacingDirection.LEFTWARDS:
+                        case PlacingDirection.RIGHTWARDS:
+                            return 0;
+                        case PlacingDirection.DOWNWARDS:
+                            return 1;
+                        case PlacingDirection.UPWARDS:
+                            return -1;
+                        default:
+                            throw new InvalidOperationException("Invalid placing direction: " + this.dir);
+                    }
+                }
+            }
+
+            public int XDirInward
+            {
+                get
+                {
+                    switch (dirInward)
+                    {
+                        case PlacingDirection.LEFTWARDS:
+                            return -1;
+                        case PlacingDirection.RIGHTWARDS:
+                            return 1;
+                        case PlacingDirection.DOWNWARDS:
+                        case PlacingDirection.UPWARDS:
+                            return 0;
+                        default:
+                            throw new InvalidOperationException("Invalid placing direction: " + this.dirInward);
+                    }
+                }
+            }
+
+            public int YDirInward
+            {
+                get
+                {
+                    switch (dirInward)
+                    {
+                        case PlacingDirection.LEFTWARDS:
+                        case PlacingDirection.RIGHTWARDS:
+                            return 0;
+                        case PlacingDirection.DOWNWARDS:
+                            return 1;
+                        case PlacingDirection.UPWARDS:
+                            return -1;
+                        default:
+                            throw new InvalidOperationException("Invalid placing direction: " + this.dirInward);
+                    }
+                }
+            }
+
+            public int DistanceTo(Location location)
+            {
+                switch(dir)
+                {
+                    case PlacingDirection.LEFTWARDS:
+                    case PlacingDirection.RIGHTWARDS:
+                        return Math.Abs(location.X - this.location.X);
+                    case PlacingDirection.DOWNWARDS:
+                    case PlacingDirection.UPWARDS:
+                        return Math.Abs(location.Y - this.location.Y);
+                    default:
+                        throw new InvalidOperationException("Invalid placing direction: " + this.dirInward);
+                }
+            }
+
+            public Placing Replace(Location location)
+            {
+                return new Placing(location, this.dir, this.dirInward);
+            }
+
+            public Placing(Location location, PlacingDirection dir, PlacingDirection dirInward)
+            {
+                this.location = location;
+                this.dir = dir;
+                this.dirInward = dirInward;
+            }
+            public Placing(Placing placing, int steps, int stepsInward)
+            {
+                this.location.X = placing.location.X + (placing.XDir * steps) + (placing.XDirInward * stepsInward);
+                this.location.Y = placing.location.Y + (placing.YDir * steps) + (placing.YDirInward * stepsInward);
+                this.dir = placing.dir;
+                this.dirInward = placing.dirInward;
+            }
+        }
+
+        private enum PlaceMode
+        {
+            DONT_OVERRIDE,
+            OVERRIDE
+        }
+
+        private class DeepWoodsRowTileMatrix
+        {
+            public int[] FOREST_BACK;
+            public int[] FOREST_FRONT;
+
+            public int[] FOREST_LEFT_BACK;
+            public int[] FOREST_LEFT_FRONT;
+
+            public int[] FOREST_RIGHT_BACK;
+            public int[] FOREST_RIGHT_FRONT;
+
+            public int FOREST_LEFT_CORNER_BACK;
+            public int FOREST_LEFT_CONCAVE_CORNER;
+            public int FOREST_LEFT_CONVEX_CORNER;
+
+            public int FOREST_RIGHT_CORNER_BACK;
+            public int FOREST_RIGHT_CONCAVE_CORNER;
+            public int FOREST_RIGHT_CONVEX_CORNER;
+
+            public int DARK_GRASS_FRONT;
+            public int DARK_GRASS_LEFT;
+            public int DARK_GRASS_RIGHT;
+            public int DARK_GRASS_LEFT_CONCAVE_CORNER;
+            public int DARK_GRASS_LEFT_CONVEX_CORNER;
+            public int DARK_GRASS_RIGHT_CONCAVE_CORNER;
+            public int DARK_GRASS_RIGHT_CONVEX_CORNER;
+
+            public int BLACK_GRASS_FRONT;
+            public int BLACK_GRASS_LEFT;
+            public int BLACK_GRASS_RIGHT;
+            public int BLACK_GRASS_LEFT_CONCAVE_CORNER;
+            public int BLACK_GRASS_LEFT_CONVEX_CORNER;
+            public int BLACK_GRASS_RIGHT_CONCAVE_CORNER;
+            public int BLACK_GRASS_RIGHT_CONVEX_CORNER;
+
+            public int BRIGHT_GRASS_FRONT;
+            public int BRIGHT_GRASS_LEFT;
+            public int BRIGHT_GRASS_RIGHT;
+            public int BRIGHT_GRASS_LEFT_CONCAVE_CORNER;
+            public int BRIGHT_GRASS_LEFT_CONVEX_CORNER;
+            public int BRIGHT_GRASS_RIGHT_CONCAVE_CORNER;
+            public int BRIGHT_GRASS_RIGHT_CONVEX_CORNER;
+
+            public bool HAS_BLACK_GRASS;
+
+            private DeepWoodsRowTileMatrix() { }
+
+            public static readonly DeepWoodsRowTileMatrix TOP = new DeepWoodsRowTileMatrix()
+            {
+                FOREST_BACK = new int[] { 941/*942, 943*/ },
+                FOREST_FRONT = new int[] { 967, 968 },
+
+                FOREST_LEFT_BACK = new int[] { 1015 },
+                FOREST_LEFT_FRONT = new int[] { 991, 1016 },
+
+                FOREST_RIGHT_BACK = new int[] { 995 },
+                FOREST_RIGHT_FRONT = new int[] { 994, 1019 },
+
+                FOREST_LEFT_CORNER_BACK = 940,
+                FOREST_LEFT_CONCAVE_CORNER = 966,
+                FOREST_LEFT_CONVEX_CORNER = 992,
+
+                FOREST_RIGHT_CORNER_BACK = 945,
+                FOREST_RIGHT_CONCAVE_CORNER = 969,
+                FOREST_RIGHT_CONVEX_CORNER = 993,
+
+                DARK_GRASS_FRONT = 405,
+                DARK_GRASS_LEFT = 381,
+                DARK_GRASS_RIGHT = 379,
+                DARK_GRASS_LEFT_CONCAVE_CORNER = 357,
+                DARK_GRASS_LEFT_CONVEX_CORNER = 406,
+                DARK_GRASS_RIGHT_CONCAVE_CORNER = 407,
+                DARK_GRASS_RIGHT_CONVEX_CORNER = 404,
+
+                BLACK_GRASS_FRONT = 1119,
+                BLACK_GRASS_LEFT = 1121,
+                BLACK_GRASS_RIGHT = 1096,
+                BLACK_GRASS_LEFT_CONCAVE_CORNER = 1092,
+                BLACK_GRASS_LEFT_CONVEX_CORNER = 1120,
+                BLACK_GRASS_RIGHT_CONCAVE_CORNER = 1093,
+                BLACK_GRASS_RIGHT_CONVEX_CORNER = 1095,
+
+                BRIGHT_GRASS_FRONT = 326,
+                BRIGHT_GRASS_LEFT = 350,
+                BRIGHT_GRASS_RIGHT = 352,
+                BRIGHT_GRASS_LEFT_CONCAVE_CORNER = 325,
+                BRIGHT_GRASS_LEFT_CONVEX_CORNER = 328,
+                BRIGHT_GRASS_RIGHT_CONCAVE_CORNER = 327,
+                BRIGHT_GRASS_RIGHT_CONVEX_CORNER = 378,
+
+                HAS_BLACK_GRASS = true
+            };
+
+            public static readonly DeepWoodsRowTileMatrix BOTTOM = new DeepWoodsRowTileMatrix()
+            {
+                FOREST_BACK = new int[] { 1068, 1069 },
+                FOREST_FRONT = new int[] { 1042, 1043 },
+
+                FOREST_LEFT_BACK = new int[] { 1015 },
+                FOREST_LEFT_FRONT = new int[] { 991, 1016 },
+
+                FOREST_RIGHT_BACK = new int[] { 995 },
+                FOREST_RIGHT_FRONT = new int[] { 994, 1019 },
+
+                FOREST_LEFT_CORNER_BACK = 1065,
+                FOREST_LEFT_CONCAVE_CORNER = 1041,
+                FOREST_LEFT_CONVEX_CORNER = 1017,
+
+                FOREST_RIGHT_CORNER_BACK = 1070,
+                FOREST_RIGHT_CONCAVE_CORNER = 1044,
+                FOREST_RIGHT_CONVEX_CORNER = 1018,
+
+                DARK_GRASS_FRONT = 355,
+                DARK_GRASS_LEFT = 381,
+                DARK_GRASS_RIGHT = 379,
+                DARK_GRASS_LEFT_CONCAVE_CORNER = 382,
+                DARK_GRASS_LEFT_CONVEX_CORNER = 356,
+                DARK_GRASS_RIGHT_CONCAVE_CORNER = 332,
+                DARK_GRASS_RIGHT_CONVEX_CORNER = 354,
+
+                BRIGHT_GRASS_FRONT = 376,
+                BRIGHT_GRASS_LEFT = 350,
+                BRIGHT_GRASS_RIGHT = 352,
+                BRIGHT_GRASS_LEFT_CONCAVE_CORNER = 375,
+                BRIGHT_GRASS_LEFT_CONVEX_CORNER = 403,
+                BRIGHT_GRASS_RIGHT_CONCAVE_CORNER = 377,
+                BRIGHT_GRASS_RIGHT_CONVEX_CORNER = 353,
+
+                HAS_BLACK_GRASS = false
+            };
+
+            public static readonly DeepWoodsRowTileMatrix LEFT = new DeepWoodsRowTileMatrix()
+            {
+                FOREST_BACK = new int[] { 1015 },
+                FOREST_FRONT = new int[] { 991, 1016 },
+
+                FOREST_LEFT_BACK = new int[] { 941/*942, 943*/ },
+                FOREST_LEFT_FRONT = new int[] { 967, 968 },
+
+                FOREST_RIGHT_BACK = new int[] { 1068, 1069 },
+                FOREST_RIGHT_FRONT = new int[] { 1042, 1043 },
+
+                FOREST_LEFT_CORNER_BACK = 940,
+                FOREST_LEFT_CONCAVE_CORNER = 966,
+                FOREST_LEFT_CONVEX_CORNER = 992,
+
+                FOREST_RIGHT_CORNER_BACK = 1040,
+                FOREST_RIGHT_CONCAVE_CORNER = 1041,
+                FOREST_RIGHT_CONVEX_CORNER = 1017,
+
+                DARK_GRASS_FRONT = 381,
+                DARK_GRASS_LEFT = 405,
+                DARK_GRASS_RIGHT = 355,
+                DARK_GRASS_LEFT_CONCAVE_CORNER = 357,
+                DARK_GRASS_LEFT_CONVEX_CORNER = 406,
+                DARK_GRASS_RIGHT_CONCAVE_CORNER = 382,
+                DARK_GRASS_RIGHT_CONVEX_CORNER = 356,
+
+                BRIGHT_GRASS_FRONT = 350,
+                BRIGHT_GRASS_LEFT = 326,
+                BRIGHT_GRASS_RIGHT = 376,
+                BRIGHT_GRASS_LEFT_CONCAVE_CORNER = 325,
+                BRIGHT_GRASS_LEFT_CONVEX_CORNER = 328,
+                BRIGHT_GRASS_RIGHT_CONCAVE_CORNER = 375,
+                BRIGHT_GRASS_RIGHT_CONVEX_CORNER = 403,
+
+                HAS_BLACK_GRASS = false
+            };
+
+            public static readonly DeepWoodsRowTileMatrix RIGHT = new DeepWoodsRowTileMatrix()
+            {
+                FOREST_BACK = new int[] { 995 },
+                FOREST_FRONT = new int[] { 994, 1019 },
+
+                FOREST_LEFT_BACK = new int[] { 941/*942, 943*/ },
+                FOREST_LEFT_FRONT = new int[] { 967, 968 },
+
+                FOREST_RIGHT_BACK = new int[] { 1068, 1069 },
+                FOREST_RIGHT_FRONT = new int[] { 1042, 1043 },
+
+                FOREST_LEFT_CORNER_BACK = 945,
+                FOREST_LEFT_CONCAVE_CORNER = 969,
+                FOREST_LEFT_CONVEX_CORNER = 993,
+
+                FOREST_RIGHT_CORNER_BACK = 1069,
+                FOREST_RIGHT_CONCAVE_CORNER = 1044,
+                FOREST_RIGHT_CONVEX_CORNER = 1018,
+
+                DARK_GRASS_FRONT = 379,
+                DARK_GRASS_LEFT = 405,
+                DARK_GRASS_RIGHT = 355,
+                DARK_GRASS_LEFT_CONCAVE_CORNER = 407,
+                DARK_GRASS_LEFT_CONVEX_CORNER = 404,
+                DARK_GRASS_RIGHT_CONCAVE_CORNER = 332,
+                DARK_GRASS_RIGHT_CONVEX_CORNER = 354,
+
+                BRIGHT_GRASS_FRONT = 352,
+                BRIGHT_GRASS_LEFT = 326,
+                BRIGHT_GRASS_RIGHT = 376,
+                BRIGHT_GRASS_LEFT_CONCAVE_CORNER = 327,
+                BRIGHT_GRASS_LEFT_CONVEX_CORNER = 378,
+                BRIGHT_GRASS_RIGHT_CONCAVE_CORNER = 377,
+                BRIGHT_GRASS_RIGHT_CONVEX_CORNER = 353,
+
+                HAS_BLACK_GRASS = false
+            };
+        }
+
+        private class DeepWoodsCornerTileMatrix
+        {
+            public int[] HORIZONTAL_BACK;
+            public int[] HORIZONTAL_FRONT;
+            public int[] VERTICAL_BACK;
+            public int[] VERTICAL_FRONT;
+            public int CONCAVE_CORNER_DIAGONAL_BACK;
+            public int CONCAVE_CORNER_HORIZONTAL_BACK;
+            public int CONCAVE_CORNER_VERTICAL_BACK;
+            public int CONCAVE_CORNER;
+            public int CONVEX_CORNER;
+
+            public int DARK_GRASS_HORIZONTAL;
+            public int DARK_GRASS_VERTICAL;
+            public int DARK_GRASS_CONCAVE_CORNER;
+            public int DARK_GRASS_CONVEX_CORNER;
+
+            public int BLACK_GRASS_HORIZONTAL;
+            public int BLACK_GRASS_VERTICAL;
+            public int BLACK_GRASS_CONCAVE_CORNER;
+            public int BLACK_GRASS_CONVEX_CORNER;
+
+            public bool HAS_BLACK_GRASS;
+
+            private DeepWoodsCornerTileMatrix() { }
+
+            public static readonly DeepWoodsCornerTileMatrix TOP_LEFT = new DeepWoodsCornerTileMatrix()
+            {
+                HORIZONTAL_BACK = new int[] { 941/*942, 943*/ },
+                HORIZONTAL_FRONT = new int[] { 967, 968 },
+                VERTICAL_BACK = new int[] { /*990,*/ 1015 },
+                VERTICAL_FRONT = new int[] { 991, 1016 },
+                CONCAVE_CORNER_DIAGONAL_BACK = 940,
+                CONCAVE_CORNER_HORIZONTAL_BACK = 941,
+                CONCAVE_CORNER_VERTICAL_BACK = 965,
+                CONCAVE_CORNER = 966,
+                CONVEX_CORNER = 992,
+                DARK_GRASS_HORIZONTAL = 405,
+                DARK_GRASS_VERTICAL = 381,
+                DARK_GRASS_CONCAVE_CORNER = 357,
+                DARK_GRASS_CONVEX_CORNER = 406,
+                BLACK_GRASS_HORIZONTAL = 1119,
+                BLACK_GRASS_VERTICAL = 1121,
+                BLACK_GRASS_CONCAVE_CORNER = 1092,
+                BLACK_GRASS_CONVEX_CORNER = 1120,
+                HAS_BLACK_GRASS = true
+            };
+
+            public static readonly DeepWoodsCornerTileMatrix TOP_RIGHT = new DeepWoodsCornerTileMatrix()
+            {
+                HORIZONTAL_BACK = new int[] { 942 },
+                HORIZONTAL_FRONT = new int[] { 967, 968 },
+                VERTICAL_BACK = new int[] { 995 },
+                VERTICAL_FRONT = new int[] { 994, 1019 },
+                CONCAVE_CORNER_DIAGONAL_BACK = 945,
+                CONCAVE_CORNER_HORIZONTAL_BACK = 944 /*942?*/,
+                CONCAVE_CORNER_VERTICAL_BACK = 970,
+                CONCAVE_CORNER = 969,
+                CONVEX_CORNER = 993,
+                DARK_GRASS_HORIZONTAL = 405,
+                DARK_GRASS_VERTICAL = 379,
+                DARK_GRASS_CONCAVE_CORNER = 407,
+                DARK_GRASS_CONVEX_CORNER = 404,
+                BLACK_GRASS_HORIZONTAL = 1119,
+                BLACK_GRASS_VERTICAL = 1096,
+                BLACK_GRASS_CONCAVE_CORNER = 1093,
+                BLACK_GRASS_CONVEX_CORNER = 1095,
+                HAS_BLACK_GRASS = true
+            };
+
+            public static readonly DeepWoodsCornerTileMatrix BOTTOM_LEFT = new DeepWoodsCornerTileMatrix()
+            {
+                HORIZONTAL_BACK = new int[] { 1068, 1069 },
+                HORIZONTAL_FRONT = new int[] { 1042, 1043 },
+                VERTICAL_BACK = new int[] { 990, 1015 },
+                VERTICAL_FRONT = new int[] { 991, 1016 },
+                CONCAVE_CORNER_DIAGONAL_BACK = 1065,
+                CONCAVE_CORNER_HORIZONTAL_BACK = 1066,
+                CONCAVE_CORNER_VERTICAL_BACK = 1040,
+                CONCAVE_CORNER = 1041,
+                CONVEX_CORNER = 1017,
+                DARK_GRASS_HORIZONTAL = 355,
+                DARK_GRASS_VERTICAL = 381,
+                DARK_GRASS_CONCAVE_CORNER = 382,
+                DARK_GRASS_CONVEX_CORNER = 356,
+                HAS_BLACK_GRASS = false
+            };
+
+            public static readonly DeepWoodsCornerTileMatrix BOTTOM_RIGHT = new DeepWoodsCornerTileMatrix()
+            {
+                HORIZONTAL_BACK = new int[] { 1068, 1069 },
+                HORIZONTAL_FRONT = new int[] { 1042, 1043 },
+                VERTICAL_BACK = new int[] { 995 },
+                VERTICAL_FRONT = new int[] { 994, 1019 },
+                CONCAVE_CORNER_DIAGONAL_BACK = 1070,
+                CONCAVE_CORNER_HORIZONTAL_BACK = 1069,
+                CONCAVE_CORNER_VERTICAL_BACK = 1045,
+                CONCAVE_CORNER = 1044,
+                CONVEX_CORNER = 1018,
+                DARK_GRASS_HORIZONTAL = 355,
+                DARK_GRASS_VERTICAL = 379,
+                DARK_GRASS_CONCAVE_CORNER = 332,
+                DARK_GRASS_CONVEX_CORNER = 354,
+                HAS_BLACK_GRASS = false
+            };
+        }
+
         private DeepWoods deepWoods;
         private DeepWoodsRandom random;
         private DeepWoodsSpaceManager spaceManager;
         private Map map;
         private Dictionary<ExitDirection, Location> exitLocations;
+        private TileSheet tileSheet;
+        private Layer backLayer;
+        private Layer buildingsLayer;
+        private Layer frontLayer;
+        private Layer alwaysFrontLayer;
+
 
         private DeepWoodsBuilder(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location>  exitLocations)
         {
@@ -37,6 +508,11 @@ namespace DeepWoodsMod
             this.spaceManager = spaceManager;
             this.map = map;
             this.exitLocations = exitLocations;
+            this.tileSheet = map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
+            this.backLayer = map.GetLayer("Back");
+            this.buildingsLayer = map.GetLayer("Buildings");
+            this.frontLayer = map.GetLayer("Front");
+            this.alwaysFrontLayer = map.GetLayer("AlwaysFront");
         }
 
         public static void Build(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location> exitLocations)
@@ -51,16 +527,43 @@ namespace DeepWoodsMod
             GenerateGround();
         }
 
-        private int GetRandomGrassTileIndex(bool dark)
+        private int GetRandomGrassTileIndex(GrassType grassType)
         {
-            if (dark)
+            switch (grassType)
             {
-                return this.random.GetRandomValue(new int[] { 380, 156 }, CHANCE_FOR_NORMAL_GRASS);
+                case GrassType.BLACK:
+                    return 1094;
+
+                case GrassType.DARK:
+                    return this.random.GetRandomValue(new WeightedValue[] {
+                        new WeightedValue(380, 80),
+                        new WeightedValue(156, 20)
+                    });
+
+                case GrassType.BRIGHT:
+                    return this.random.GetRandomValue(new WeightedValue[] {
+                        new WeightedValue(175, 100),
+                        new WeightedValue(275, 100),
+                        new WeightedValue(402, 100),
+                        new WeightedValue(400, 15),
+                        new WeightedValue(401, 15),
+                        new WeightedValue(150, 15),
+                        new WeightedValue(254, 5),
+                        new WeightedValue(255, 5),
+                        new WeightedValue(256, 5)
+                    });
+
+                case GrassType.NORMAL:
+                    return this.random.GetRandomValue(new WeightedValue[] {
+                        new WeightedValue(351, 100),
+                        new WeightedValue(300, 10),
+                        new WeightedValue(304, 10),
+                        new WeightedValue(305, 10),
+                        new WeightedValue(329, 1)
+                    });
             }
-            else
-            {
-                return this.random.GetRandomValue(new int[] { 351, 304, 300 }, CHANCE_FOR_NORMAL_GRASS);
-            }
+
+            throw new ArgumentException("Unknown GrassType: " + grassType);
         }
 
         private void GenerateGround()
@@ -77,7 +580,9 @@ namespace DeepWoodsMod
                 {
                     if (backLayer.Tiles[x, y] == null)
                     {
-                        backLayer.Tiles[x, y] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, GetRandomGrassTileIndex(false));
+                        // StaticTile[] tiles = new StaticTile[]{};
+                        // new AnimatedTile(backLayer, tiles, 100);
+                        backLayer.Tiles[x, y] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, GetRandomGrassTileIndex(GrassType.NORMAL));
                     }
                 }
             }
@@ -85,110 +590,165 @@ namespace DeepWoodsMod
 
         private void GenerateForestBorder()
         {
-            TileSheet tileSheet = this.map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
-            Layer buildingsLayer = this.map.GetLayer("Buildings");
-
             int mapWidth = this.spaceManager.GetMapWidth();
             int mapHeight = this.spaceManager.GetMapHeight();
 
-            /*
-            for (int x = 0; x < mapWidth; x++)
-            {
-                buildingsLayer.Tiles[x, 0] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 1144 + (x % 2));
-            }
+            Size topLeftCornerSize = GenerateForestCorner(0, 0, 1, 1, DeepWoodsCornerTileMatrix.TOP_LEFT);
+            Size topRightCornerSize = GenerateForestCorner(mapWidth - 1, 0, -1, 1, DeepWoodsCornerTileMatrix.TOP_RIGHT);
+            Size bottomLeftCornerSize = GenerateForestCorner(0, mapHeight - 1, 1, -1, DeepWoodsCornerTileMatrix.BOTTOM_LEFT);
+            Size bottomRightCornerSize = GenerateForestCorner(mapWidth - 1, mapHeight - 1, -1, -1, DeepWoodsCornerTileMatrix.BOTTOM_RIGHT);
 
-            for (int x = 0; x < mapWidth; x++)
-            {
-                buildingsLayer.Tiles[x, mapHeight - 1] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-            }
+            GenerateForestRow(
+                new Placing(new Location(topLeftCornerSize.Width, 0), PlacingDirection.RIGHTWARDS, PlacingDirection.DOWNWARDS),
+                mapWidth - (topLeftCornerSize.Width + topRightCornerSize.Width),
+                ExitDirection.TOP,
+                DeepWoodsRowTileMatrix.TOP);
 
-            for (int y = 0; y < (mapHeight - 1); y++)
-            {
-                buildingsLayer.Tiles[0, y] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-            }
+            GenerateForestRow(
+                new Placing(new Location(bottomLeftCornerSize.Width, mapHeight - 1), PlacingDirection.RIGHTWARDS, PlacingDirection.UPWARDS),
+                mapWidth - (bottomLeftCornerSize.Width + bottomRightCornerSize.Width),
+                ExitDirection.BOTTOM,
+                DeepWoodsRowTileMatrix.BOTTOM);
 
-            for (int y = 0; y < (mapHeight - 1); y++)
-            {
-                buildingsLayer.Tiles[mapWidth - 1, y] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-            }
-            */
+            GenerateForestRow(
+                new Placing(new Location(0, topLeftCornerSize.Height), PlacingDirection.DOWNWARDS, PlacingDirection.RIGHTWARDS),
+                mapHeight - (topLeftCornerSize.Height + bottomLeftCornerSize.Height),
+                ExitDirection.LEFT,
+                DeepWoodsRowTileMatrix.LEFT);
+
+            GenerateForestRow(
+                new Placing(new Location(mapWidth - 1, topRightCornerSize.Height), PlacingDirection.DOWNWARDS, PlacingDirection.LEFTWARDS),
+                mapHeight - (topRightCornerSize.Height + bottomRightCornerSize.Height),
+                ExitDirection.RIGHT,
+                DeepWoodsRowTileMatrix.RIGHT);
 
             GenerateExits();
-
-            Size topLeftCornerSize = GenerateForestCorner(0, 0, 1, 1);
-            Size topRightCornerSize = GenerateForestCorner(mapWidth - 1, 0, -1, 1);
-            Size bottomLeftCornerSize = GenerateForestCorner(0, mapHeight - 1, 1, -1);
-            Size bottomRightCornerSize = GenerateForestCorner(mapWidth - 1, mapHeight - 1, -1, -1);
-
-            GenerateForestRow(
-                new Location(topLeftCornerSize.Width, 0),
-                new Location(mapWidth - topRightCornerSize.Width, 0),
-                1, 0,
-                ExitDirection.TOP);
-
-            GenerateForestRow(
-                new Location(bottomLeftCornerSize.Width, mapHeight - 1),
-                new Location(mapWidth - bottomRightCornerSize.Width, mapHeight - 1),
-                1, 0,
-                ExitDirection.BOTTOM);
-
-            GenerateForestRow(
-                new Location(0, topLeftCornerSize.Height),
-                new Location(0, mapHeight - bottomLeftCornerSize.Height),
-                0, 1,
-                ExitDirection.LEFT);
-
-            GenerateForestRow(
-                new Location(mapWidth - 1, topRightCornerSize.Height),
-                new Location(mapWidth - 1, mapHeight - bottomRightCornerSize.Height),
-                0, 1,
-                ExitDirection.RIGHT);
         }
 
-        private void GenerateForestRow(Location startPos, Location stopPos, int xDir, int yDir, ExitDirection exitDir)
+        private void GenerateForestRow(
+            Placing placing,
+            int numTiles,
+            ExitDirection exitDir,
+            DeepWoodsRowTileMatrix matrix)
         {
             if (this.exitLocations.ContainsKey(exitDir))
             {
                 Location exitPosition = this.exitLocations[exitDir];
-                GenerateForestRow(startPos, exitPosition - new Location(xDir * 2, yDir * 2), xDir, yDir);
-                GenerateForestRow(exitPosition + new Location(xDir * 3, yDir * 3), stopPos, xDir, yDir);
+
+                int numTilesFromStartToExit = placing.DistanceTo(exitPosition);
+                int numTilesFromExitToEnd = numTiles - numTilesFromStartToExit - 1;
+                
+                GenerateForestRow(placing, numTilesFromStartToExit - DeepWoodsSpaceManager.EXIT_RADIUS, matrix);
+                GenerateForestRow(new Placing(placing.Replace(exitPosition), DeepWoodsSpaceManager.EXIT_RADIUS + 1, 0), numTilesFromExitToEnd - DeepWoodsSpaceManager.EXIT_RADIUS, matrix);
             }
             else
             {
-                GenerateForestRow(startPos, stopPos, xDir, yDir);
+                GenerateForestRow(placing, numTiles, matrix);
             }
         }
 
-        private void GenerateForestRow(Location startPos, Location stopPos, int xDir, int yDir)
+        private void GenerateForestRow(Placing placing, int numTiles, DeepWoodsRowTileMatrix matrix)
         {
             // Out of range check
-            if (
-                (stopPos.X != startPos.X && (((stopPos.X - startPos.X) > 0) != (xDir > 0)))
-                ||
-                (stopPos.Y != startPos.Y && (((stopPos.Y - startPos.Y) > 0) != (yDir > 0)))
-               )
+            if (numTiles <= 0)
             {
-                ModEntry.Log("GenerateForestRow out of range!", StardewModdingAPI.LogLevel.Warn);
+                ModEntry.Log("GenerateForestRow out of range! dir: " + placing.dir + ", numTiles: " + numTiles, StardewModdingAPI.LogLevel.Warn);
                 return;
             }
 
-            TileSheet tileSheet = this.map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
-            Layer buildingsLayer = this.map.GetLayer("Buildings");
-
-            for (int x = startPos.X, y = startPos.Y; x != stopPos.X || y != stopPos.Y; x+= xDir, y += yDir)
+            bool lastStepWasBumpOut = false;
+            int y = 0;
+            for (int x = 0; x < numTiles; x++)
             {
-                buildingsLayer.Tiles[x, y] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 1012);
+                if (y > 0 && (x >= (numTiles - Math.Abs(y)) || (!lastStepWasBumpOut && this.random.GetChance(CHANCE_FOR_FOREST_ROW_BUMP))))
+                {
+                    // Bump back!
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, placing, x, y - 1);
+                    PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CORNER_BACK, placing, x, y - 1);
+                    PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CONCAVE_CORNER, placing, x, y + 0);
+                    PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CONVEX_CORNER, placing, x, y + 1);
+                    if (matrix.HAS_BLACK_GRASS)
+                    {
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 0, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT_CONCAVE_CORNER, placing, x, y + 1, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT_CONVEX_CORNER, placing, x, y + 2, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, x, y + 3, PlaceMode.OVERRIDE);
+                    }
+                    else
+                    {
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.DARK), placing, x, y + 0, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONCAVE_CORNER, placing, x, y + 1, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, x, y + 2, PlaceMode.OVERRIDE);
+                    }
+                    y--;
+                    lastStepWasBumpOut = false;
+                }
+                else if (x < (numTiles - (2 + Math.Abs(y))) && y < FOREST_ROW_MAX_INWARDS_BUMP && this.random.GetChance(CHANCE_FOR_FOREST_ROW_BUMP))
+                {
+                    // Bump out!
+                    y++;
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, placing, x, y - 1);
+                    PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CORNER_BACK, placing, x, y - 1);
+                    PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CONCAVE_CORNER, placing, x, y + 0);
+                    PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CONVEX_CORNER, placing, x, y + 1);
+                    if (matrix.HAS_BLACK_GRASS)
+                    {
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 0, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT_CONCAVE_CORNER, placing, x, y + 1, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT_CONVEX_CORNER, placing, x, y + 2, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, x, y + 3, PlaceMode.OVERRIDE);
+                    }
+                    else
+                    {
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.DARK), placing, x, y + 0, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONCAVE_CORNER, placing, x, y + 1, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, x, y + 2, PlaceMode.OVERRIDE);
+                    }
+                    lastStepWasBumpOut = true;
+                }
+                else
+                {
+                    // TODO: Randomly (and sparsely) add "halfed" forest patches
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, placing, x, y + 0);
+                    PlaceTile(alwaysFrontLayer, matrix.FOREST_BACK, placing, x, y + 0);
+                    PlaceTile(alwaysFrontLayer, matrix.FOREST_FRONT, placing, x, y + 1);
+                    if (matrix.HAS_BLACK_GRASS)
+                    {
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 0, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 1, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.BLACK_GRASS_FRONT, placing, x, y + 2, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_FRONT, placing, x, y + 3, PlaceMode.OVERRIDE);
+                        if (!lastStepWasBumpOut && x > 1 && x < numTiles - 2 && x % 2 == 0 && this.random.GetChance(CHANCE_FOR_FOREST_ROW_TREESTUMPS))
+                        {
+                            PlaceTile(buildingsLayer, FOREST_ROW_TREESTUMP_LEFT, placing, x - 1, y + 1);
+                            PlaceTile(buildingsLayer, FOREST_ROW_TREESTUMP_RIGHT, placing, x, y + 1);
+                        }
+                    }
+                    else
+                    {
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.DARK), placing, x, y + 0, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.DARK), placing, x, y + 1, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_FRONT, placing, x, y + 2, PlaceMode.OVERRIDE);
+                    }
+                    lastStepWasBumpOut = false;
+                }
+
+                // Fill tiles behind "bumped out" row
+                for (int yy = y; yy >= 0; yy--)
+                {
+                    if (PlaceTile(alwaysFrontLayer, GetRandomForestFillerTileIndex(), placing, x, yy))
+                    {
+                        PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, placing, x, yy);
+                        PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, yy, PlaceMode.OVERRIDE);
+                    }
+                }
             }
         }
 
-        private Size GenerateForestCorner(int startXPos, int startYPos, int xDir, int yDir)
+        private Size GenerateForestCorner(int startXPos, int startYPos, int xDir, int yDir, DeepWoodsCornerTileMatrix matrix)
         {
-            TileSheet tileSheet = this.map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
-            Layer buildingsLayer = this.map.GetLayer("Buildings");
-            Layer alwaysFrontLayer = this.map.GetLayer("AlwaysFront");
-
-            int width = 8;// this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_CORNER_SIZE, DeepWoodsSpaceManager.MAX_CORNER_SIZE);
-            int height = 8;// this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_CORNER_SIZE, DeepWoodsSpaceManager.MAX_CORNER_SIZE);
+            int width = DeepWoodsSpaceManager.MAX_CORNER_SIZE; // this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_CORNER_SIZE, DeepWoodsSpaceManager.MAX_CORNER_SIZE);
+            int height = DeepWoodsSpaceManager.MAX_CORNER_SIZE; //this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_CORNER_SIZE, DeepWoodsSpaceManager.MAX_CORNER_SIZE);
 
             float ratio = (float)height / (float)width;
             int chance = (int)((100f / (ratio + 1f)) * ratio);
@@ -200,7 +760,6 @@ namespace DeepWoodsMod
             int curXPos = endXPos;
             int curYPos = startYPos;
 
-            //for (int x = 0; x < width; x++, curXPos -= xDir)
             while (curXPos != startXPos)
             {
                 int deltaX = Math.Abs(curXPos - startXPos);
@@ -212,10 +771,27 @@ namespace DeepWoodsMod
                     {
                         FillForestTile(curXPos, y);
                     }
-                    buildingsLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 941);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 966);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 2 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 992);
+                    buildingsLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
+                    alwaysFrontLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER_HORIZONTAL_BACK);
+                    alwaysFrontLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER);
+                    alwaysFrontLayer.Tiles[curXPos, curYPos + 2 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONVEX_CORNER);
+
+                    backLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK));
+                    backLayer.Tiles[curXPos, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK));
+
+                    backLayer.Tiles[curXPos + 1 * xDir, curYPos + 1 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONCAVE_CORNER : matrix.DARK_GRASS_CONCAVE_CORNER);
+                    backLayer.Tiles[curXPos + 1 * xDir, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONVEX_CORNER : matrix.DARK_GRASS_CONVEX_CORNER);
+                    backLayer.Tiles[curXPos + 0 * xDir, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL);
+
+                    if (matrix.HAS_BLACK_GRASS)
+                    {
+                        // Add dark grass
+                        backLayer.Tiles[curXPos + 2 * xDir, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_CONCAVE_CORNER);
+                        backLayer.Tiles[curXPos + 2 * xDir, curYPos + 3 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_CONVEX_CORNER);
+                        backLayer.Tiles[curXPos + 1 * xDir, curYPos + 3 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_HORIZONTAL);
+                        backLayer.Tiles[curXPos + 0 * xDir, curYPos + 3 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_HORIZONTAL);
+                    }
+
                     curXPos -= xDir;
                     curYPos += yDir;
                 }
@@ -226,9 +802,18 @@ namespace DeepWoodsMod
                     {
                         FillForestTile(curXPos, y);
                     }
-                    buildingsLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 942);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 967);
+                    buildingsLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
+                    alwaysFrontLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(matrix.HORIZONTAL_BACK));
+                    alwaysFrontLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(matrix.HORIZONTAL_FRONT));
+
+                    backLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL);
+
+                    if (matrix.HAS_BLACK_GRASS)
+                    {
+                        // Add dark grass
+                        backLayer.Tiles[curXPos, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_HORIZONTAL);
+                    }
+
                     curXPos -= xDir;
                 }
                 else
@@ -239,37 +824,32 @@ namespace DeepWoodsMod
                         FillForestTile(curXPos - 1 * xDir, y);
                         FillForestTile(curXPos - 0 * xDir, y);
                     }
-                    buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-                    buildingsLayer.Tiles[curXPos - 0 * xDir, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-                    buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-                    alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 940);
-                    alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 941);
-                    alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 965);
-                    alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 966);
+                    buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
+                    buildingsLayer.Tiles[curXPos - 0 * xDir, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
+                    buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
+                    alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER_DIAGONAL_BACK);
+                    alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER_HORIZONTAL_BACK);
+                    alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER_VERTICAL_BACK);
+                    alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER);
                     curYPos += yDir;
+                    /*
                     while (curYPos != endYPos)
                     {
-                        buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-                        alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 990);
-                        alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, 991);
+                        buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, matrix.PLAIN_FOREST_BACKGROUND);
+                        alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(matrix.VERTICAL_BACK));
+                        alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(matrix.VERTICAL_FRONT));
                         curYPos += yDir;
+                    }
+                    */
+                    if (curYPos != endYPos)
+                    {
+                        height -= Math.Abs(curYPos - endYPos);
                     }
                     curXPos -= xDir;
                 }
             }
 
-            Vector2 lightPos = new Vector2(startXPos, startYPos);
-            /*
-            for (int x = 0, y = 0; x < width && y < height; x++, y++)
-            {
-                if (buildingsLayer.Tiles[startXPos + x * xDir, startYPos + y * yDir] == null)
-                {
-                    lightPos = new Vector2(startXPos + (xDir * MathHelper.Max(0, x - 5)), startYPos + (yDir * MathHelper.Max(0, y - 5)));
-                    break;
-                }
-            }
-            */
-            deepWoods.lightSources.Add(lightPos);
+            deepWoods.lightSources.Add(new Vector2(startXPos, startYPos));
 
             return new Size(width, height);
         }
@@ -279,42 +859,118 @@ namespace DeepWoodsMod
             Layer buildingsLayer = this.map.GetLayer("Buildings");
             foreach (var exit in this.exitLocations)
             {
-                if (exit.Key == ExitDirection.TOP)
+                switch (exit.Key)
                 {
-
+                    case ExitDirection.TOP:
+                        GenerateExit(new Placing(exit.Value, PlacingDirection.RIGHTWARDS, PlacingDirection.DOWNWARDS), DeepWoodsRowTileMatrix.TOP);
+                        break;
+                    case ExitDirection.BOTTOM:
+                        GenerateExit(new Placing(exit.Value, PlacingDirection.RIGHTWARDS, PlacingDirection.UPWARDS), DeepWoodsRowTileMatrix.BOTTOM);
+                        break;
+                    case ExitDirection.LEFT:
+                        GenerateExit(new Placing(exit.Value, PlacingDirection.DOWNWARDS, PlacingDirection.RIGHTWARDS), DeepWoodsRowTileMatrix.LEFT);
+                        break;
+                    case ExitDirection.RIGHT:
+                        GenerateExit(new Placing(exit.Value, PlacingDirection.DOWNWARDS, PlacingDirection.LEFTWARDS), DeepWoodsRowTileMatrix.RIGHT);
+                        break;
                 }
-                // buildingsLayer.Tiles[exit.Value] = null;
+                deepWoods.lightSources.Add(new Vector2(exit.Value.X, exit.Value.Y));
             }
+        }
+
+        private void GenerateExit(Placing placing, DeepWoodsRowTileMatrix matrix)
+        {
+            // Add forest pieces left and right
+            PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_FRONT, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 0);
+            PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CONVEX_CORNER, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 1);
+            PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_FRONT, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 0);
+            PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CONVEX_CORNER, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 1);
+
+            // Add bright grass some paces inwards
+            int brightGrassPacesInwards = this.random.GetRandomValue(2, 3);
+
+            PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_CONCAVE_CORNER, placing, -1, 0);
+            PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, 0);
+            PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONCAVE_CORNER, placing, 1, 0);
+
+            for (int i = 1; i <= brightGrassPacesInwards; i++)
+            {
+                PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT, placing, -1, i);
+                PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, i);
+                PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT, placing, 1, i);
+            }
+
+            PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_CONVEX_CORNER, placing, -1, 3);
+            PlaceTile(backLayer, matrix.BRIGHT_GRASS_FRONT, placing, 0, 3);
+            PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONVEX_CORNER, placing, 1, 3);
+
+            // Add forest "shadow" (dark grass) left and right
+            PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 0);
+            PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 1);
+            PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 0);
+            PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 1);
+
+            if (matrix.HAS_BLACK_GRASS)
+            {
+                // longer dark grass to fit row with black grass
+                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 2);
+                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 3);
+                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 2);
+                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 3);
+
+                // Override black shadows from row with corner tiles
+                PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT, placing, -(DeepWoodsSpaceManager.EXIT_RADIUS + 1), 1, PlaceMode.OVERRIDE);
+                PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT_CONVEX_CORNER, placing, -(DeepWoodsSpaceManager.EXIT_RADIUS + 1), 2, PlaceMode.OVERRIDE);
+                PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT, placing, DeepWoodsSpaceManager.EXIT_RADIUS + 1, 1, PlaceMode.OVERRIDE);
+                PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT_CONVEX_CORNER, placing, DeepWoodsSpaceManager.EXIT_RADIUS + 1, 2, PlaceMode.OVERRIDE);
+            }
+            else
+            {
+                // simple dark grass corner to fit row shadow without black grass
+                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 2);
+                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 2);
+            }
+        }
+
+        private bool PlaceTile(Layer layer, int[] tileIndices, Placing placing, int steps, int stepsInward, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE)
+        {
+            return PlaceTile(layer, this.random.GetRandomValue(tileIndices), placing, steps, stepsInward, placeMode);
+        }
+
+        private bool PlaceTile(Layer layer, int tileIndex, Placing placing, int steps, int stepsInward, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE)
+        {
+            int x = placing.location.X + (steps * placing.XDir) + (stepsInward * placing.XDirInward);
+            int y = placing.location.Y + (steps * placing.YDir) + (stepsInward * placing.YDirInward);
+            return PlaceTile(layer, tileIndex, x, y, placeMode);
+        }
+
+        private bool PlaceTile(Layer layer, int tileIndex, int x, int y, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE)
+        {
+            if (x < 0 || y < 0 || x >= this.spaceManager.GetMapWidth() || y >= this.spaceManager.GetMapHeight())
+            {
+                // ModEntry.Log("Tile out of range: " +  x + ", " + y, StardewModdingAPI.LogLevel.Debug);
+                return false;
+            }
+
+            if (placeMode == PlaceMode.OVERRIDE || layer.Tiles[x, y] == null)
+            {
+                layer.Tiles[x, y] = new StaticTile(layer, tileSheet, BlendMode.Alpha, tileIndex);
+                return true;
+            }
+
+            return false;
         }
 
         private void FillForestTile(int x, int y)
         {
-            TileSheet tileSheet = this.map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
-            Layer buildingsLayer = this.map.GetLayer("Buildings");
-            Layer alwaysFrontLayer = this.map.GetLayer("AlwaysFront");
-
-            buildingsLayer.Tiles[x, y] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
-            alwaysFrontLayer.Tiles[x, y] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, GetRandomForestFillerTileIndex());
+            PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, x, y);
+            PlaceTile(alwaysFrontLayer, GetRandomForestFillerTileIndex(), x, y);
         }
 
         private int GetRandomForestFillerTileIndex()
         {
-            return this.random.GetRandomValue(new int[] { 946, 971, 996 }, CHANCE_FOR_NOLEAVE_FOREST_FILLER);
+            return this.random.GetRandomValue(FOREST_BACKGROUND, CHANCE_FOR_NOLEAVE_FOREST_FILLER);
         }
-
-        /*
-        private void GenerateForestRow(Location location, int width, Transform t)
-        {
-            TileSheet tileSheet = this.map.GetTileSheet(DEFAULT_OUTDOOR_TILESHEET_ID);
-            Layer alwaysFrontLayer = this.map.GetLayer("AlwaysFront");
-
-            for (int x = xOffset; x < xOffset + width; x++)
-            {
-                alwaysFrontLayer.Tiles[x, yOffset] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(new int[] { 1042, 1043 }));
-                alwaysFrontLayer.Tiles[x, yOffset+1] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(new int[] { 1067, 1068 }));
-            }
-        }
-        */
 
         private void GenerateForestPatch(xTile.Dimensions.Rectangle rectangle)
         {
@@ -326,7 +982,7 @@ namespace DeepWoodsMod
             {
                 for (int y = 0; y < rectangle.Height; y++)
                 {
-                    buildingsLayer.Tiles[rectangle.X + x, rectangle.Y + y] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, 946);
+                    buildingsLayer.Tiles[rectangle.X + x, rectangle.Y + y] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
                 }
             }
         }

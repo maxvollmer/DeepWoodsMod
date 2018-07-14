@@ -13,6 +13,12 @@ namespace DeepWoodsMod
 {
     class DeepWoodsStuffCreator
     {
+        private const int MIN_LEVEL_FOR_METEORITE = 10;
+        private const int MIN_LEVEL_FOR_FLOWERS = 10;
+        private const int MIN_LEVEL_FOR_FRUITS = 10;
+        private const int MIN_LEVEL_FOR_GINGERBREAD_HOUSE = 20;
+
+        private readonly static Probability CHANCE_FOR_GINGERBREAD_HOUSE = new Probability(1);
         private readonly static Probability CHANCE_FOR_RESOURCECLUMP = new Probability(5);
         private readonly static Probability CHANCE_FOR_LARGE_BUSH = new Probability(10);
         private readonly static Probability CHANCE_FOR_MEDIUM_BUSH = new Probability(5);
@@ -26,6 +32,7 @@ namespace DeepWoodsMod
         private readonly static Probability CHANCE_FOR_TWIG = new Probability(10);
         private readonly static Probability CHANCE_FOR_STONE = new Probability(10);
         private readonly static Probability CHANCE_FOR_FLOWER = new Probability(10);
+        private readonly static Probability CHANCE_FOR_FLOWER_IN_WINTER = new Probability(5);
 
         private readonly static Probability CHANCE_FOR_METEORITE = new Probability(1);
         private readonly static Probability CHANCE_FOR_BOULDER = new Probability(10);
@@ -46,34 +53,41 @@ namespace DeepWoodsMod
 
         public static void AddStuff(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager)
         {
-            new DeepWoodsStuffCreator(deepWoods, random, spaceManager).AddStuff();
+            new DeepWoodsStuffCreator(deepWoods, random, spaceManager).ClearAndAddStuff();
         }
 
-        private void AddStuff()
+        private void ClearAndAddStuff()
         {
             if (!Game1.IsMasterGame)
                 return;
 
-            random.EnterMasterMode();
+            this.random.EnterMasterMode();
 
-            ClearTerrainFeatures();
-            AddTerrainFeatures();
+            ClearStuff();
+            AddStuff();
 
-            random.LeaveMasterMode();
+            this.random.LeaveMasterMode();
         }
 
-        private void ClearTerrainFeatures()
+        private void ClearStuff()
         {
             deepWoods.resourceClumps.Clear();
             deepWoods.largeTerrainFeatures.Clear();
             deepWoods.terrainFeatures.Clear();
             deepWoods.objects.Clear();
+            deepWoods.debris.Clear();
         }
 
-        private void AddTerrainFeatures()
+        private void AddStuff()
         {
             int mapWidth = this.spaceManager.GetMapWidth();
             int mapHeight = this.spaceManager.GetMapHeight();
+
+            // Add a gingerbread house
+            if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_GINGERBREAD_HOUSE && this.random.GetChance(CHANCE_FOR_GINGERBREAD_HOUSE))
+            {
+                deepWoods.resourceClumps.Add(new GingerBreadHouse(new Vector2(mapWidth / 2, mapHeight / 2)));
+            }
 
             // Calculate maximum theoretical amount of terrain features for the current map.
             int maxTerrainFeatures = (mapWidth * mapHeight) / DeepWoodsSpaceManager.MINIMUM_TILES_FOR_TERRAIN_FEATURE;
@@ -88,13 +102,12 @@ namespace DeepWoodsMod
                 {
                     ResourceClump resourceClump = new ResourceClump(GetRandomResourceClumpType(), 2, 2, location);
                     deepWoods.resourceClumps.Add(resourceClump);
-                    deepWoods.terrainFeatures.Add(location, resourceClump);
                 }
-                else if (this.random.GetChance(CHANCE_FOR_LARGE_BUSH)/* && IsSpaceFree(location, new Size(3, 1))*/)
+                else if (this.random.GetChance(CHANCE_FOR_LARGE_BUSH) && IsSpaceFree(location, new Size(3, 1)))
                 {
                     deepWoods.largeTerrainFeatures.Add(new DestroyableBush(location, Bush.largeBush, deepWoods));
                 }
-                else if (this.random.GetChance(CHANCE_FOR_MEDIUM_BUSH)/* && IsSpaceFree(location, new Size(2, 1))*/)
+                else if (this.random.GetChance(CHANCE_FOR_MEDIUM_BUSH) && IsSpaceFree(location, new Size(2, 1)))
                 {
                     deepWoods.largeTerrainFeatures.Add(new DestroyableBush(location, Bush.mediumBush, deepWoods));
                 }
@@ -118,7 +131,7 @@ namespace DeepWoodsMod
                 {
                     FruitTree fruitTree = new FruitTree(GetRandomFruitTreeType(), FruitTree.treeStage);
                     deepWoods.terrainFeatures.Add(location, fruitTree);
-                    if (this.random.GetChance(CHANCE_FOR_FRUIT))
+                    if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_FRUITS && this.random.GetChance(CHANCE_FOR_FRUIT))
                     {
                         int numFruits = this.random.GetRandomValue(new int[] { 1, 2, 3 }, Probability.FIFTY_FIFTY);
                         for (int j = 0; j < numFruits; j++)
@@ -143,37 +156,57 @@ namespace DeepWoodsMod
                 {
                     deepWoods.objects.Add(location, new StardewValley.Object(location, GetRandomStoneType(), 1));
                 }
-                else if (this.random.GetChance(CHANCE_FOR_FLOWER))
+                else if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_FLOWERS && this.random.GetChance(Game1.currentSeason == "winter" ? CHANCE_FOR_FLOWER_IN_WINTER : CHANCE_FOR_FLOWER))
                 {
                     deepWoods.terrainFeatures.Add(location, new Flower(GetRandomFlowerType(), location));
                 }
                 else
                 {
-                    deepWoods.terrainFeatures.Add(location, new Grass(GetSeasonGrassType(), this.random.GetRandomValue(1, 3)));
+                    deepWoods.terrainFeatures.Add(location, new LootFreeGrass(GetSeasonGrassType(), this.random.GetRandomValue(1, 3)));
                 }
             }
 
             // Fill up with grass
-            for (int i = 0; i < maxTerrainFeatures; i++)
+            int maxGrass = maxTerrainFeatures * 2;
+            if (Game1.currentSeason == "winter")
+            {
+                // Leaveless trees and snow ground make winter forest look super empty and open,
+                // so we fill it with plenty of icy grass to give it a better atmosphere.
+                maxGrass *= 2;
+            }
+            for (int i = 0; i < maxGrass; i++)
             {
                 Vector2 location = new Vector2(this.random.GetRandomValue(1, mapWidth - 1), this.random.GetRandomValue(1, mapHeight - 1));
                 if (deepWoods.terrainFeatures.ContainsKey(location) || !deepWoods.isTileLocationTotallyClearAndPlaceable(location))
                     continue;
 
-                deepWoods.terrainFeatures.Add(location, new Grass(GetSeasonGrassType(), this.random.GetRandomValue(1, 3)));
+                deepWoods.terrainFeatures.Add(location, new LootFreeGrass(GetSeasonGrassType(), this.random.GetRandomValue(1, 3)));
             }
         }
 
         private int GetRandomFlowerType()
         {
-            // TODO: Use sell price and player luck for probability
-            return this.random.GetRandomValue(new int[] {
-                453, // 376, // Poppy
-                427, // 591, // Tulip
-                455, // 593, // SummerSpangle
-                425, // 595, // FairyRose
-                429, // 597, // BlueJazz
-            });
+            // 453, // 376, // Poppy, summer
+            // 427, // 591, // Tulip, spring
+            // 455, // 593, // SummerSpangle, summer
+            // 425, // 595, // FairyRose, fall
+            // 429, // 597, // BlueJazz, spring
+
+            if (Game1.currentSeason == "winter")
+            {
+                return this.random.GetRandomValue(new int[] { 425, 429 });
+            }
+            else
+            {
+                // TODO: Use season, sell price and player luck for probability
+                return this.random.GetRandomValue(new int[] {
+                    453, // 376, // Poppy, summer
+                    427, // 591, // Tulip, spring
+                    455, // 593, // SummerSpangle, summer
+                    425, // 595, // FairyRose, fall
+                    429, // 597, // BlueJazz, spring
+                });
+            }
         }
 
         private bool IsSpaceFree(Vector2 location, Size resourceClumpSize)
@@ -183,7 +216,8 @@ namespace DeepWoodsMod
                 for (int y = 0; y < resourceClumpSize.Height; y++)
                 {
                     Vector2 check = new Vector2(location.X + x, location.Y + y);
-                    if (deepWoods.terrainFeatures.ContainsKey(location) || !deepWoods.isTileLocationTotallyClearAndPlaceable(location))
+                    if (deepWoods.terrainFeatures.ContainsKey(check)
+                        || !deepWoods.isTileLocationTotallyClearAndPlaceable(check))
                         return false;
                 }
             }
@@ -246,7 +280,7 @@ namespace DeepWoodsMod
 
         private int GetRandomResourceClumpType()
         {
-            if (this.random.GetChance(CHANCE_FOR_METEORITE))
+            if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_METEORITE && this.random.GetChance(CHANCE_FOR_METEORITE))
             {
                 return ResourceClump.meteoriteIndex;
             }

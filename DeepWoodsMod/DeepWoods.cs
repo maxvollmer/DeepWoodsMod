@@ -22,8 +22,13 @@ namespace DeepWoodsMod
         public const string DEFAULT_OUTDOOR_TILESHEET_ID = "DefaultOutdoor";
         public const string FESTIVAL_TILESHEET_ID = "Festivals";
 
+        private const int MIN_LEVEL_FOR_LICHTUNG = 10;
+        private static Luck LUCK_FOR_LICHTUNG = new Luck(10, 50);
+
+        private const int CRITTER_MULTIPLIER = 5;
+
         public static Location ENTER_LOCATION = new Location(DeepWoodsSpaceManager.MIN_MAP_WIDTH/2, 0);
-        private static Location WOODS_WARP_LOCATION = new Location(26, 30);
+        private static Location WOODS_WARP_LOCATION = new Location(26, 31);
 
         private static HashSet<DeepWoods> allDeepWoods = new HashSet<DeepWoods>();
         private static DeepWoods root;
@@ -243,8 +248,12 @@ namespace DeepWoodsMod
         private DeepWoodsSpaceManager spaceManager;
         private long uniqueMultiplayerID;
         private bool wasConstructedOverNetwork;
+        public bool isLichtung;
 
         public NetObjectList<ResourceClump> resourceClumps = new NetObjectList<ResourceClump>();
+
+        public List<Vector2> baubles = new List<Vector2>();
+        public List<WeatherDebris> weatherDebris = new List<WeatherDebris>();
 
         // We need a public default constructor for Stardew Valley's network code (it sends entire objects over the wire 🙄)
         // We don't initialize anything here, instead we set a flag and sort this out in resetLocalState() or resetSharedState() further down.
@@ -465,6 +474,11 @@ namespace DeepWoodsMod
             return this.random.GetSeed();
         }
 
+        public int GetLevel()
+        {
+            return this.level;
+        }
+
         private void CreateSpace()
         {
             // Generate random size
@@ -472,6 +486,7 @@ namespace DeepWoodsMod
             int mapHeight = this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_MAP_HEIGHT, DeepWoodsSpaceManager.MAX_MAP_HEIGHT);
             this.spaceManager = new DeepWoodsSpaceManager(mapWidth, mapHeight);
             this.enterLocation = this.level == 1 ? ENTER_LOCATION : this.spaceManager.GetRandomEnterLocation(this.enterDir, this.random);
+            this.isLichtung = this.level >= MIN_LEVEL_FOR_LICHTUNG && !this.parent.isLichtung && mapWidth <= DeepWoodsSpaceManager.MAX_MAP_SIZE_FOR_LICHTUNG && mapHeight <= DeepWoodsSpaceManager.MAX_MAP_SIZE_FOR_LICHTUNG && this.random.GetLuck(LUCK_FOR_LICHTUNG, this.GetLuckLevel());
         }
 
         private void GenerateMap()
@@ -505,9 +520,21 @@ namespace DeepWoodsMod
         // This is the default day update method of GameLocation, called only on the server
         public override void DayUpdate(int dayOfMonth)
         {
+            // DeepWoodsStuffCreator.AddStuff(this, this.random, this.spaceManager);
+            // DeepWoodsMonsters.AddMonsters(this, this.random, this.spaceManager);
+
             base.DayUpdate(dayOfMonth);
         }
 
+        public int GetMapWidth()
+        {
+            return this.spaceManager.GetMapWidth();
+        }
+
+        public int GetMapHeight()
+        {
+            return this.spaceManager.GetMapHeight();
+        }
 
         private string GetParentLocationName()
         {
@@ -545,29 +572,45 @@ namespace DeepWoodsMod
             switch (exitDir)
             {
                 case ExitDirection.TOP:
-                    AddWarp(location.X - 1, -1, targetLocationName, targetLocation);
-                    AddWarp(location.X + 0, -1, targetLocationName, targetLocation);
-                    AddWarp(location.X + 1, -1, targetLocationName, targetLocation);
+                    AddWarp(location.X, -1, targetLocationName, targetLocation);
+                    for (int i = 1; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+                    {
+                        AddWarp(location.X - i, -1, targetLocationName, targetLocation - new Location(i, 0));
+                        AddWarp(location.X + i, -1, targetLocationName, targetLocation + new Location(i, 0));
+                    }
                     break;
                 case ExitDirection.BOTTOM:
-                    AddWarp(location.X - 1, this.spaceManager.GetMapHeight(), targetLocationName, targetLocation);
-                    AddWarp(location.X + 0, this.spaceManager.GetMapHeight(), targetLocationName, targetLocation);
-                    AddWarp(location.X + 1, this.spaceManager.GetMapHeight(), targetLocationName, targetLocation);
+                    {
+                        // When warping into the map from the bottom, we want to end up one tile "too far" in, so the character is completely visible.
+                        Location displacedTargetLocation = new Location(targetLocation.X, targetLocation.Y + 1);
+                        AddWarp(location.X, this.spaceManager.GetMapHeight(), targetLocationName, displacedTargetLocation);
+                        for (int i = 1; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+                        {
+                            AddWarp(location.X - i, this.spaceManager.GetMapHeight(), targetLocationName, displacedTargetLocation - new Location(i, 0));
+                            AddWarp(location.X + i, this.spaceManager.GetMapHeight(), targetLocationName, displacedTargetLocation + new Location(i, 0));
+                        }
+                    }
                     break;
                 case ExitDirection.LEFT:
                     {
                         // For some reason when warping into the map from the right, we always end up one tile too far left.
                         // We correct this here.
                         Location weirdBugfixLocation = new Location(targetLocation.X + 1, targetLocation.Y);
-                        AddWarp(-1, location.Y - 1, targetLocationName, weirdBugfixLocation);
-                        AddWarp(-1, location.Y + 0, targetLocationName, weirdBugfixLocation);
-                        AddWarp(-1, location.Y + 1, targetLocationName, weirdBugfixLocation);
+                        AddWarp(-1, location.Y, targetLocationName, weirdBugfixLocation);
+                        for (int i = 1; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+                        {
+                            AddWarp(-1, location.Y - i, targetLocationName, weirdBugfixLocation - new Location(0, i));
+                            AddWarp(-1, location.Y + i, targetLocationName, weirdBugfixLocation + new Location(0, i));
+                        }
                     }
                     break;
                 case ExitDirection.RIGHT:
-                    AddWarp(this.spaceManager.GetMapWidth(), location.Y - 1, targetLocationName, targetLocation);
-                    AddWarp(this.spaceManager.GetMapWidth(), location.Y + 0, targetLocationName, targetLocation);
-                    AddWarp(this.spaceManager.GetMapWidth(), location.Y + 1, targetLocationName, targetLocation);
+                    AddWarp(this.spaceManager.GetMapWidth(), location.Y, targetLocationName, targetLocation);
+                    for (int i = 1; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+                    {
+                        AddWarp(this.spaceManager.GetMapWidth(), location.Y - i, targetLocationName, targetLocation - new Location(0, i));
+                        AddWarp(this.spaceManager.GetMapWidth(), location.Y + i, targetLocationName, targetLocation + new Location(0, i));
+                    }
                     break;
             }
         }
@@ -601,10 +644,13 @@ namespace DeepWoodsMod
 
         public override bool isCollidingPosition(Microsoft.Xna.Framework.Rectangle position, xTile.Dimensions.Rectangle viewport, bool isFarmer, int damagesFarmer, bool glider, Character character)
         {
-            foreach (ResourceClump resourceClump in this.resourceClumps)
+            if (!glider)
             {
-                if (resourceClump.getBoundingBox(resourceClump.tile).Intersects(position))
-                    return true;
+                foreach (ResourceClump resourceClump in this.resourceClumps)
+                {
+                    if (resourceClump.getBoundingBox(resourceClump.tile).Intersects(position))
+                        return true;
+                }
             }
             return base.isCollidingPosition(position, viewport, isFarmer, damagesFarmer, glider, character);
         }
@@ -613,12 +659,11 @@ namespace DeepWoodsMod
         {
             foreach (ResourceClump resourceClump in this.resourceClumps)
             {
-                if (resourceClump.getBoundingBox(resourceClump.tile).Contains(tileX * 64, tileY * 64))
+                if (resourceClump.occupiesTile(tileX, tileY))
                 {
                     if (resourceClump.performToolAction(t, 1, resourceClump.tile, this))
                     {
                         this.resourceClumps.Remove(resourceClump);
-                        this.terrainFeatures.Remove(resourceClump.tile);
                     }
                     return true;
                 }
@@ -626,14 +671,129 @@ namespace DeepWoodsMod
             return false;
         }
 
+        public bool IsLocationOnBorderOrExit(Vector2 v)
+        {
+            int mapWidth = this.spaceManager.GetMapWidth();
+            int mapHeight = this.spaceManager.GetMapHeight();
+
+            // No placements on border tiles.
+            if (v.X <= 0 || v.Y <= 0 || v.X >= (mapWidth - 2) || v.Y >= (mapHeight - 2))
+                return true;
+
+            // No placements on exits.
+            foreach (var exit in this.exits)
+            {
+                Microsoft.Xna.Framework.Rectangle exitRectangle = new Microsoft.Xna.Framework.Rectangle(exit.Value.location.X - DeepWoodsSpaceManager.EXIT_RADIUS, exit.Value.location.Y - DeepWoodsSpaceManager.EXIT_RADIUS, DeepWoodsSpaceManager.EXIT_RADIUS * 2 + 1, DeepWoodsSpaceManager.EXIT_RADIUS * 2 + 1);
+                if (exitRectangle.Contains((int)v.X, (int)v.Y))
+                {
+                    return true;
+                }
+            }
+
+            // No placements on enter location as well.
+            Microsoft.Xna.Framework.Rectangle enterRectangle = new Microsoft.Xna.Framework.Rectangle(enterLocation.X - DeepWoodsSpaceManager.EXIT_RADIUS, enterLocation.Y - DeepWoodsSpaceManager.EXIT_RADIUS, DeepWoodsSpaceManager.EXIT_RADIUS * 2 + 1, DeepWoodsSpaceManager.EXIT_RADIUS * 2 + 1);
+            if (enterRectangle.Contains((int)v.X, (int)v.Y))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public override bool isTileLocationTotallyClearAndPlaceable(Vector2 v)
         {
+            // No placements on tiles that are covered in forest.
+            if (this.map.GetLayer("Buildings").Tiles[(int)v.X, (int)v.Y] != null)
+                return false;
+
+            // No placements on borders, exits and enter locations.
+            if (IsLocationOnBorderOrExit(v))
+                return false;
+
+            // No placements if something is placed here already.
             foreach (ResourceClump resourceClump in this.resourceClumps)
             {
                 if (resourceClump.occupiesTile((int)v.X, (int)v.Y))
                     return false;
             }
+
+            // No placements if something is placed here already.
+            foreach (LargeTerrainFeature largeTerrainFeature in this.largeTerrainFeatures)
+            {
+                if (largeTerrainFeature.getBoundingBox().Intersects(new Microsoft.Xna.Framework.Rectangle((int)v.X * 64, (int)v.Y * 64, 64, 64)))
+                    return false;
+            }
+
+            // Call parent method for further checks.
             return base.isTileLocationTotallyClearAndPlaceable(v);
+        }
+
+        public override bool isTileOccupied(Vector2 tileLocation, string characterToIgnore = "")
+        {
+            // Check resourceClumps.
+            foreach (ResourceClump resourceClump in this.resourceClumps)
+            {
+                if (resourceClump.occupiesTile((int)tileLocation.X, (int)tileLocation.Y))
+                    return true;
+            }
+
+            // Call parent method for further checks.
+            return base.isTileOccupied(tileLocation, characterToIgnore);
+        }
+
+        public virtual bool CanPlaceMonsterHere(int x, int y, Monster monster)
+        {
+            Vector2 v = new Vector2(x, y);
+            if (monster.isGlider)
+            {
+                if (IsLocationOnBorderOrExit(v))
+                    return false;
+
+                Microsoft.Xna.Framework.Rectangle rectangle = monster.GetBoundingBox();
+                rectangle.X = x;
+                rectangle.Y = y;
+                foreach (NPC npc in this.characters)
+                {
+                    if (npc.GetBoundingBox().Intersects(rectangle))
+                        return false;
+                }
+
+                return true;
+            }
+            else
+            {
+                if (isTileLocationTotallyClearAndPlaceable(v))
+                    return true;
+
+                if (this.terrainFeatures.ContainsKey(v) && this.terrainFeatures[v] is Grass)
+                    return true;
+
+                return false;
+            }
+        }
+
+        public bool AddMonsterAtRandomLocation(Monster monster)
+        {
+            int x = Game1.random.Next(0, this.spaceManager.GetMapWidth());
+            int y = Game1.random.Next(0, this.spaceManager.GetMapHeight());
+
+            int numTries = 0;
+            for (; numTries < DeepWoodsMonsters.NUM_MONSTER_SPAWN_TRIES && !this.CanPlaceMonsterHere(x, y, monster); numTries++)
+            {
+                x = Game1.random.Next(0, this.spaceManager.GetMapWidth());
+                y = Game1.random.Next(0, this.spaceManager.GetMapHeight());
+            }
+
+            if (numTries < DeepWoodsMonsters.NUM_MONSTER_SPAWN_TRIES)
+            {
+                monster.Position = new Vector2(x * 64f, y * 64f) - new Vector2(0, monster.Sprite.SpriteHeight - 64);
+                this.addCharacter(monster);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         protected override void resetSharedState()
@@ -660,11 +820,28 @@ namespace DeepWoodsMod
             }
 
             base.resetLocalState();
+
+            for (int i = 0; i < CRITTER_MULTIPLIER; i++)
+            {
+                this.tryToAddCritters(false);
+            }
+
+            DeepWoodsDebris.Initialize(this);
+
             foreach (Vector2 lightSource in this.lightSources)
             {
                 Game1.currentLightSources.Add(new LightSource(LightSource.indoorWindowLight, lightSource * 64f, 1.0f));
             }
             DeepWoods.FixLighting();
+        }
+
+        public override void performTenMinuteUpdate(int timeOfDay)
+        {
+            base.performTenMinuteUpdate(timeOfDay);
+            for (int i = 0; i < CRITTER_MULTIPLIER; i++)
+            {
+                this.tryToAddCritters(true);
+            }
         }
 
         public override void checkForMusic(GameTime time)
@@ -678,13 +855,26 @@ namespace DeepWoodsMod
             }
             else
             {
-                if (Game1.random.NextDouble() < 0.75)
+                if (Game1.timeOfDay < 2500)
                 {
-                    Game1.changeMusicTrack("woodsTheme");
-                }
-                else
-                {
-                    Game1.changeMusicTrack(Game1.currentSeason + "_day_ambient");
+                    if (Game1.random.NextDouble() < 0.75)
+                    {
+                        Game1.changeMusicTrack("woodsTheme");
+                    }
+                    else
+                    {
+                        if (Game1.isDarkOut())
+                        {
+                            if (Game1.currentSeason != "winter")
+                            {
+                                Game1.changeMusicTrack("spring_night_ambient");
+                            }
+                        }
+                        else
+                        {
+                            Game1.changeMusicTrack(Game1.currentSeason + "_day_ambient");
+                        }
+                    }
                 }
             }
         }
@@ -692,6 +882,7 @@ namespace DeepWoodsMod
         public override void cleanupBeforePlayerExit()
         {
             base.cleanupBeforePlayerExit();
+            DeepWoodsDebris.Clear(this);
             Game1.changeMusicTrack("");
         }
 
@@ -703,11 +894,20 @@ namespace DeepWoodsMod
         public override void UpdateWhenCurrentLocation(GameTime time)
         {
             base.UpdateWhenCurrentLocation(time);
+            DeepWoodsDebris.Update(this, time);
+            foreach (ResourceClump resourceClump in this.resourceClumps)
+            {
+                resourceClump.tickUpdate(time, resourceClump.tile, this);
+            }
         }
 
         public override void draw(SpriteBatch b)
         {
             base.draw(b);
+            foreach (ResourceClump resourceClump in this.resourceClumps)
+            {
+                resourceClump.draw(b, resourceClump.tile);
+            }
         }
 
         public override void drawAboveAlwaysFrontLayer(SpriteBatch b)
@@ -717,6 +917,7 @@ namespace DeepWoodsMod
             {
                 (character as Monster)?.drawAboveAllLayers(b);
             }
+            DeepWoodsDebris.Draw(this, b);
             DrawLevelDisplay(b);
         }
 
@@ -749,6 +950,50 @@ namespace DeepWoodsMod
             }
             StardewValley.Object @fish = new StardewValley.Object(800, 1, false, -1, 0);
             return fish;
+        }
+
+        public int GetCombatLevel()
+        {
+            int totalCombatLevel = 0;
+            int totalCombatLevelCount = 0;
+            foreach (Farmer farmer in Game1.getOnlineFarmers())
+            {
+                if (farmer.currentLocation == this || farmer.currentLocation == this.parent)
+                {
+                    totalCombatLevel += farmer.CombatLevel;
+                    totalCombatLevelCount++;
+                }
+            }
+            if (totalCombatLevelCount > 0)
+            {
+                return totalCombatLevel / totalCombatLevelCount;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public int GetLuckLevel()
+        {
+            int totalLuckLevel = 0;
+            int totalLuckLevelCount = 0;
+            foreach (Farmer farmer in Game1.getOnlineFarmers())
+            {
+                if (farmer.currentLocation == this || farmer.currentLocation == this.parent)
+                {
+                    totalLuckLevel += farmer.LuckLevel;
+                    totalLuckLevelCount++;
+                }
+            }
+            if (totalLuckLevelCount > 0)
+            {
+                return totalLuckLevel / totalLuckLevelCount;
+            }
+            else
+            {
+                return 0;
+            }
         }
     }
 }

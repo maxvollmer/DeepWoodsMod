@@ -1,6 +1,8 @@
 ﻿using StardewModdingAPI.Utilities;
 using StardewValley;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using static DeepWoodsMod.DeepWoodsEnterExit;
 
 namespace DeepWoodsMod
@@ -9,9 +11,27 @@ namespace DeepWoodsMod
     {
         private const int MAGIC_SALT = 854574563;
 
+        public const int NEUTRAL_LUCK_WEIGHT = 0;
+        public const int NEUTRAL_LUCK_LEVEL = 5;
+
         private readonly int seed;
         private readonly Random random;
         private int masterModeCounter;
+
+        public struct WeightedValue
+        {
+            public readonly int value;
+            public readonly int weight;
+            public WeightedValue(int value, int weight)
+            {
+                this.value = value;
+                this.weight = weight;
+            }
+            public static implicit operator WeightedValue(int[] i)
+            {
+                return new WeightedValue(i[0], i[1]);
+            }
+        }
 
         public class Probability
         {
@@ -40,9 +60,45 @@ namespace DeepWoodsMod
             }
         }
 
+        public class Luck
+        {
+            private int minProbability;
+            private int maxProbability;
+            private int range;
+
+            public Luck(int minProbability, int maxProbability, int range = Probability.PROCENT)
+            {
+                this.minProbability = minProbability;
+                this.maxProbability = maxProbability;
+                this.range = range;
+            }
+
+            public int GetMinProbability()
+            {
+                return this.minProbability;
+            }
+
+            public int GetMaxProbability()
+            {
+                return this.maxProbability;
+            }
+
+            public int GetRange()
+            {
+                return this.range;
+            }
+        }
+
         public DeepWoodsRandom(int level, EnterDirection enterDir, int? salt)
         {
             this.seed = CalculateSeed(level, enterDir, salt);
+            this.random = new Random(this.seed);
+            this.masterModeCounter = 0;
+        }
+
+        public DeepWoodsRandom(int seed)
+        {
+            this.seed = seed;
             this.random = new Random(this.seed);
             this.masterModeCounter = 0;
         }
@@ -100,6 +156,33 @@ namespace DeepWoodsMod
             return GetRandomValue(0, probability.GetRange()) < probability.GetValue();
         }
 
+        public bool GetLuck(Probability probability, int luckWeight = NEUTRAL_LUCK_WEIGHT, int luckLevel = NEUTRAL_LUCK_LEVEL)
+        {
+            // Daily luck in range from -100 to 100:
+            int dailyLuck = Math.Min(100, Math.Max(-100, (int)((Game1.dailyLuck / 0.12) * 100.0)));
+
+            // Player luck in range from -100 to 100:
+            int playerLuck = Math.Min(100, Math.Max(-100, (luckLevel * 20) - 100));
+
+            // Total luck in range from -100 to 100:
+            int totalLuck = Math.Min(100, Math.Max(-100, (dailyLuck + playerLuck) / 2));
+
+            // Luck modifier in range from -luckWeight to luckWeight:
+            int luckModifier = Math.Min(luckWeight, Math.Max(-luckWeight, (totalLuck * luckWeight) / 100));
+
+            // Use new probability modified with luck:
+            return GetChance(new Probability(probability.GetValue() + luckModifier, probability.GetRange()));
+        }
+
+        public bool GetLuck(Luck luck, int luckLevel = NEUTRAL_LUCK_LEVEL)
+        {
+            int minProbability = luck.GetMinProbability();
+            int maxProbability = luck.GetMaxProbability();
+            int range = luck.GetRange();
+            int delta = maxProbability - minProbability;
+            return GetLuck(new Probability(minProbability + delta / 2, range), delta / 2, luckLevel);
+        }
+
         public Random GetRandom()
         {
             if (this.IsInMasterMode())
@@ -141,6 +224,28 @@ namespace DeepWoodsMod
             {
                 return values[GetRandomValue(0, values.Length)];
             }
+        }
+
+
+        public int GetRandomValue(WeightedValue[] values)
+        {
+            if (values == null || values.Length == 0)
+                throw new ArgumentException("values is null or empty");
+
+            int total = values.Sum(wv => wv.weight);
+            int n = GetRandomValue(0, total);
+
+            int sum = 0;
+            for (int i = 0; i < values.Length; i++)
+            {
+                sum += values[i].weight;
+                if (n < sum)
+                {
+                    return values[i].value;
+                }
+            }
+
+            throw new InvalidOperationException("Impossible to get here.");
         }
 
         public void EnterMasterMode()

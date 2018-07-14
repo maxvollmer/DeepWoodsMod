@@ -9,15 +9,6 @@ namespace DeepWoodsMod
     // Hacky class that overrides StardewValley's bush class to allow destroying bushes with an axe anywhere.
     class DestroyableBush : Bush
     {
-        private class Game1MultiplayerAccessProvider : Game1
-        {
-            private Game1MultiplayerAccessProvider() { }
-            public static Multiplayer GetMultiplayer()
-            {
-                return Game1.multiplayer;
-            }
-        }
-
         private Multiplayer GetMultiplayer()
         {
             return Game1MultiplayerAccessProvider.GetMultiplayer();
