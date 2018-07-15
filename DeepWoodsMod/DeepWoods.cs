@@ -7,6 +7,7 @@ using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Locations;
 using StardewValley.Monsters;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using xTile;
 using xTile.Dimensions;
@@ -20,7 +21,6 @@ namespace DeepWoodsMod
     public class DeepWoods : GameLocation
     {
         public const string DEFAULT_OUTDOOR_TILESHEET_ID = "DefaultOutdoor";
-        public const string FESTIVAL_TILESHEET_ID = "Festivals";
 
         private const int MIN_LEVEL_FOR_LICHTUNG = 10;
         private static Luck LUCK_FOR_LICHTUNG = new Luck(10, 50);
@@ -317,6 +317,7 @@ namespace DeepWoodsMod
             this.ignoreDebrisWeather.Value = true;
             this.ignoreOutdoorLighting.Value = true;
             this.forceViewportPlayerFollow = true;
+            this.critters = new List<Critter>();
         }
 
         private void RemovePlayer(Farmer who)
@@ -499,7 +500,6 @@ namespace DeepWoodsMod
 
             // Add outdoor tilesheet
             this.map.AddTileSheet(new TileSheet(DEFAULT_OUTDOOR_TILESHEET_ID, this.map, "Maps\\" + Game1.currentSeason.ToLower() + "_outdoorsTileSheet", new Size(25, 79), new Size(16, 16)));
-            this.map.AddTileSheet(new TileSheet(FESTIVAL_TILESHEET_ID, this.map, "Maps\\Festivals", new Size(32, 32), new Size(16, 16)));
             this.map.LoadTileSheets(Game1.mapDisplayDevice);
 
             // Add default layers
