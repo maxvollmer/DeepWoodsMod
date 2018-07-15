@@ -53,7 +53,9 @@
     <Compile Include="DeepWoodsTileDefinitions.cs" />
     <Compile Include="DestroyableBush.cs" />
     <Compile Include="EasterEgg.cs" />
+    <Compile Include="EasterEggFunctions.cs" />
     <Compile Include="EasterEggItem.cs" />
+    <Compile Include="FarmerSprite.cs" />
     <Compile Include="Flower.cs" />
     <Compile Include="Game1MultiplayerAccessProvider.cs" />
     <Compile Include="GingerBreadHouse.cs" />

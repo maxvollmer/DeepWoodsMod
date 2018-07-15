@@ -93,6 +93,12 @@ namespace DeepWoodsMod
             }
         }
 
+        public override void drawWhenHeld(SpriteBatch spriteBatch, Vector2 objectPosition, Farmer who)
+        {
+            // TODO
+            // spriteBatch.Draw(this.texture, objectPosition, new Microsoft.Xna.Framework.Rectangle?(Game1.getSourceRectForStandardTileSheet(this.texture, this.eggTileIndex, 16, 16)), Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, Math.Max(0, who.getStandingY() + 2 / 10000f));
+        }
+
         public override string getDescription()
         {
             return "It's an Easter Egg ^_^";

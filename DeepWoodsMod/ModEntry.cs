@@ -72,7 +72,7 @@ namespace DeepWoodsMod
             this.Monitor.Log("SaveEvents_BeforeSave()", LogLevel.Error);
             DeepWoods.Save();
             DeepWoods.Remove();
-            EasterEgg.RemoveAllEasterEggsFromGame();
+            EasterEggFunctions.RemoveAllEasterEggsFromGame();
         }
 
         private void SaveEvents_AfterSave(object sender, EventArgs args)
@@ -99,7 +99,7 @@ namespace DeepWoodsMod
             this.Monitor.Log("TimeEvents_AfterDayStarted()", LogLevel.Error);
 
             DeepWoods.LocalDayUpdate(Game1.dayOfMonth);
-            EasterEgg.InterceptIncubatorEggs();
+            EasterEggFunctions.InterceptIncubatorEggs();
 
             // TODO: TEMPTEMPTEMP
             // Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", DeepWoods.ENTER_LOCATION.X, DeepWoods.ENTER_LOCATION.Y, false));
@@ -160,7 +160,7 @@ namespace DeepWoodsMod
 
             if (newLocation is AnimalHouse animalHouse)
             {
-                EasterEgg.CheckEggHatched(who, animalHouse);
+                EasterEggFunctions.CheckEggHatched(who, animalHouse);
             }
         }
 
