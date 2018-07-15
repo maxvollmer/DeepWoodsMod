@@ -1,4 +1,5 @@
-﻿using StardewValley;
+﻿using Microsoft.Xna.Framework;
+using StardewValley;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,7 +131,7 @@ namespace DeepWoodsMod
         {
             if (who.mostRecentlyGrabbedItem is EasterEggItem easterEggItem)
             {
-                ShowEasterEggItemIntake(who);
+                ShowEasterEggItemIntake(who, easterEggItem);
             }
             else
             {
@@ -138,9 +139,123 @@ namespace DeepWoodsMod
             }
         }
 
-        private static void ShowEasterEggItemIntake(Farmer who)
+        private static void ShowEasterEggItemIntake(Farmer who, EasterEggItem easterEggItem)
         {
-            // TODO
+            if (easterEggItem == null)
+                return;
+
+            bool finishedPickingUp = who.ActiveObject is EasterEggItem && who.FarmerSprite.currentAnimationIndex == 5;
+
+            if (!finishedPickingUp)
+            {
+                TemporaryAnimatedSprite temporaryAnimatedSprite = CreateTemporaryAnimatedSpriteForEasterEggItemIntake(who, easterEggItem);
+                who.currentLocation.temporarySprites.Add(temporaryAnimatedSprite);
+            }
+
+            if (who.FarmerSprite.currentAnimationIndex == 5)
+            {
+                who.Halt();
+                who.FarmerSprite.CurrentAnimation = null;
+            }
+        }
+
+        private static TemporaryAnimatedSprite CreateTemporaryAnimatedSpriteForEasterEggItemIntake(Farmer who, EasterEggItem easterEggItem)
+        {
+            float layerDepth = who.getStandingY() / 10000f + 0.01f;
+            if (who.FacingDirection == 0)
+                layerDepth = who.getStandingY() / 10000f - 0.001f;
+
+            Vector2 location = who.Position + GetEasterEggItemIntakeOffsetFor(who.FacingDirection, who.FarmerSprite.currentAnimationIndex);
+
+            float animationInterval = 100f;
+            if (who.FarmerSprite.currentAnimationIndex > 3)
+                animationInterval = 200f;
+
+            float alphaFade = 0;
+            float scaleChange = 0;
+            if (who.FarmerSprite.currentAnimationIndex == 5)
+            {
+                alphaFade = 0.02f;
+                scaleChange = -0.02f;
+            }
+
+            return CreateTemporaryAnimatedSpriteForEasterEggItemIntake(easterEggItem, animationInterval, location, layerDepth, alphaFade, scaleChange);
+        }
+
+        private static Vector2 GetEasterEggItemIntakeOffsetFor(int facingDirection, int animationIndex)
+        {
+            switch (facingDirection)
+            {
+                case 0:
+                    switch (animationIndex)
+                    {
+                        case 1:
+                            return new Vector2(0.0f, -32f);
+                        case 2:
+                            return new Vector2(0.0f, -43f);
+                        case 3:
+                            return new Vector2(0.0f, -128f);
+                        case 4:
+                            return new Vector2(0.0f, -120f);
+                        case 5:
+                            return new Vector2(0.0f, -120f);
+                    }
+                    break;
+                case 1:
+                    switch (animationIndex)
+                    {
+                        case 1:
+                            return new Vector2(28f, -64f);
+                        case 2:
+                            return new Vector2(24f, -72f);
+                        case 3:
+                            return new Vector2(4f, -128f);
+                        case 4:
+                            return new Vector2(0.0f, -124f);
+                        case 5:
+                            return new Vector2(0.0f, -124f);
+                    }
+                    break;
+                case 2:
+                    switch (animationIndex)
+                    {
+                        case 1:
+                            return new Vector2(0.0f, -32f);
+                        case 2:
+                            return new Vector2(0.0f, -43f);
+                        case 3:
+                            return new Vector2(0.0f, -128f);
+                        case 4:
+                            return new Vector2(0.0f, -120f);
+                        case 5:
+                            return new Vector2(0.0f, -120f);
+                    }
+                    break;
+                case 3:
+                    switch (animationIndex)
+                    {
+                        case 1:
+                            return new Vector2(-32f, -64f);
+                        case 2:
+                            return new Vector2(-28f, -76f);
+                        case 3:
+                            return new Vector2(-16f, -128f);
+                        case 4:
+                            return new Vector2(0.0f, -124f);
+                        case 5:
+                            return new Vector2(0.0f, -124f);
+                    }
+                    break;
+            }
+
+            throw new ArgumentException("facingDirection and/or animationIndex out of range: " + facingDirection + ", " + animationIndex);
+        }
+
+        private static TemporaryAnimatedSprite CreateTemporaryAnimatedSpriteForEasterEggItemIntake(EasterEggItem easterEggItem, float animationInterval, Vector2 location, float layerDepth, float alphaFade, float scaleChange)
+        {
+            Rectangle sourceRectangle = Game1.getSourceRectForStandardTileSheet(easterEggItem.texture, easterEggItem.eggTileIndex, 16, 16);
+
+            return new TemporaryAnimatedSprite("Maps\\Festivals", sourceRectangle, animationInterval, 1, 0, location, false, false, layerDepth, alphaFade, Color.White, 4f, scaleChange, 0.0f, 0.0f, false);
         }
     }
 }

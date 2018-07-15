@@ -14,13 +14,12 @@ namespace DeepWoodsMod
     {
         public const int PARENT_SHEET_INDEX = 1;
 
-        private int eggTileIndex;
-        private Texture2D texture;
+        public readonly int eggTileIndex;
+        public readonly Texture2D texture;
 
         public EasterEggItem()
             : base()
         {
-            // InitNetFields();
             this.displayName = "Easter Egg";
             this.name = "DeepWoodsModEasterEggItemIHopeThisNameIsUniqueEnoughToNotMessOtherModsUpw5365r6zgdhrt6u";
             this.Category = StardewValley.Object.EggCategory;
@@ -93,10 +92,12 @@ namespace DeepWoodsMod
             }
         }
 
-        public override void drawWhenHeld(SpriteBatch spriteBatch, Vector2 objectPosition, Farmer who)
+        public override void drawWhenHeld(SpriteBatch b, Vector2 objectPosition, Farmer who)
         {
-            // TODO
-            // spriteBatch.Draw(this.texture, objectPosition, new Microsoft.Xna.Framework.Rectangle?(Game1.getSourceRectForStandardTileSheet(this.texture, this.eggTileIndex, 16, 16)), Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, Math.Max(0, who.getStandingY() + 2 / 10000f));
+            Rectangle destinationRectangle = new Rectangle((int)objectPosition.X, (int)objectPosition.Y, 64, 64);
+            Rectangle sourceRectangle = Game1.getSourceRectForStandardTileSheet(this.texture, this.eggTileIndex, 16, 16);
+
+            b.Draw(this.texture, destinationRectangle, sourceRectangle, Color.White, 0, Vector2.Zero, SpriteEffects.None, Math.Max(0, (who.getStandingY() + 2) / 10000f));
         }
 
         public override string getDescription()
