@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.BellsAndWhistles;
 using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,8 @@ namespace DeepWoodsMod
         private const int MIN_LEVEL_FOR_FLOWERS = 10;
         private const int MIN_LEVEL_FOR_FRUITS = 10;
         private const int MIN_LEVEL_FOR_GINGERBREAD_HOUSE = 20;
+
+        private const int MAX_EASTER_EGGS_PER_WOOD = 4;
 
         private readonly static Probability CHANCE_FOR_GINGERBREAD_HOUSE = new Probability(1);
         private readonly static Probability CHANCE_FOR_RESOURCECLUMP = new Probability(5);
@@ -39,6 +42,10 @@ namespace DeepWoodsMod
         private readonly static Probability CHANCE_FOR_HOLLOWLOG = new Probability(30);
 
         private readonly static Probability CHANCE_FOR_FRUIT = new Probability(50);
+
+        private readonly static Luck LUCK_FOR_EASTEREGG = new Luck(5, 25, 1000);
+        private readonly static Luck LUCK_FOR_MAX_EASTER_EGGS_INCREASE = new Luck(0, 25);
+        private readonly static Luck LUCK_FOR_MAX_EASTER_EGGS_NOT_HALFED = new Luck(75, 100);
 
         private DeepWoods deepWoods;
         private DeepWoodsRandom random;
@@ -91,6 +98,21 @@ namespace DeepWoodsMod
 
             // Calculate maximum theoretical amount of terrain features for the current map.
             int maxTerrainFeatures = (mapWidth * mapHeight) / DeepWoodsSpaceManager.MINIMUM_TILES_FOR_TERRAIN_FEATURE;
+
+            int numEasterEggs = 0;
+            int maxEasterEggs = 0;
+            if (IsEasterEggDay())
+            {
+                maxEasterEggs = 1 + this.random.GetRandomValue(0, MAX_EASTER_EGGS_PER_WOOD);
+                if (this.random.GetLuck(LUCK_FOR_MAX_EASTER_EGGS_INCREASE))
+                {
+                    maxEasterEggs++;
+                }
+                if (!this.random.GetLuck(LUCK_FOR_MAX_EASTER_EGGS_NOT_HALFED))
+                {
+                    maxEasterEggs = Math.Max(1, maxEasterEggs/2);
+                }
+            }
 
             for (int i = 0; i < maxTerrainFeatures; i++)
             {
@@ -160,11 +182,18 @@ namespace DeepWoodsMod
                 {
                     deepWoods.terrainFeatures.Add(location, new Flower(GetRandomFlowerType(), location));
                 }
+                else if (IsEasterEggDay() && numEasterEggs < maxEasterEggs && this.random.GetLuck(LUCK_FOR_EASTEREGG))
+                {
+                    deepWoods.terrainFeatures.Add(location, new EasterEgg());
+                    numEasterEggs++;
+                }
                 else
                 {
                     deepWoods.terrainFeatures.Add(location, new LootFreeGrass(GetSeasonGrassType(), this.random.GetRandomValue(1, 3)));
                 }
             }
+
+            ModEntry.Log("Easter eggs added: " + numEasterEggs + " (max: " + maxEasterEggs + ")");
 
             // Fill up with grass
             int maxGrass = maxTerrainFeatures * 2;
@@ -182,6 +211,12 @@ namespace DeepWoodsMod
 
                 deepWoods.terrainFeatures.Add(location, new LootFreeGrass(GetSeasonGrassType(), this.random.GetRandomValue(1, 3)));
             }
+        }
+
+        private bool IsEasterEggDay()
+        {
+            // return Game1.currentSeason == "spring" && (Game1.dayOfMonth == 13 || Game1.dayOfMonth == 14);
+            return true;
         }
 
         private int GetRandomFlowerType()
