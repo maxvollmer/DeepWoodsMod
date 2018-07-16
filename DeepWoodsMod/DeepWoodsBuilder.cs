@@ -35,6 +35,10 @@ namespace DeepWoodsMod
         private const int FOREST_ROW_TREESTUMP_LEFT = 1144;
         private const int FOREST_ROW_TREESTUMP_RIGHT = 1145;
 
+        private const int NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH = 16;
+
+        private const int DEBUG_PINK_LEAVES = 68;
+
         private enum GrassType
         {
             BLACK,
@@ -523,7 +527,7 @@ namespace DeepWoodsMod
         private void Build()
         {
             GenerateForestBorder();
-            // GenerateForestPatches();
+            GenerateForestPatches();
             GenerateGround();
         }
 
@@ -568,9 +572,6 @@ namespace DeepWoodsMod
 
         private void GenerateGround()
         {
-            TileSheet tileSheet = this.map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
-            Layer backLayer = this.map.GetLayer("Back");
-
             int mapWidth = this.spaceManager.GetMapWidth();
             int mapHeight = this.spaceManager.GetMapHeight();
 
@@ -578,12 +579,7 @@ namespace DeepWoodsMod
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    if (backLayer.Tiles[x, y] == null)
-                    {
-                        // StaticTile[] tiles = new StaticTile[]{};
-                        // new AnimatedTile(backLayer, tiles, 100);
-                        backLayer.Tiles[x, y] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, GetRandomGrassTileIndex(GrassType.NORMAL));
-                    }
+                    PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.NORMAL), x, y);
                 }
             }
         }
@@ -647,7 +643,7 @@ namespace DeepWoodsMod
             }
         }
 
-        private void GenerateForestRow(Placing placing, int numTiles, DeepWoodsRowTileMatrix matrix)
+        private void GenerateForestRow(Placing placing, int numTiles, DeepWoodsRowTileMatrix matrix, int y = 0, bool noBlackGrass = false)
         {
             // Out of range check
             if (numTiles <= 0)
@@ -657,7 +653,6 @@ namespace DeepWoodsMod
             }
 
             bool lastStepWasBumpOut = false;
-            int y = 0;
             for (int x = 0; x < numTiles; x++)
             {
                 if (y > 0 && (x >= (numTiles - Math.Abs(y)) || (!lastStepWasBumpOut && this.random.GetChance(CHANCE_FOR_FOREST_ROW_BUMP))))
@@ -667,7 +662,7 @@ namespace DeepWoodsMod
                     PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CORNER_BACK, placing, x, y - 1);
                     PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CONCAVE_CORNER, placing, x, y + 0);
                     PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CONVEX_CORNER, placing, x, y + 1);
-                    if (matrix.HAS_BLACK_GRASS)
+                    if (!noBlackGrass && matrix.HAS_BLACK_GRASS)
                     {
                         PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 0, PlaceMode.OVERRIDE);
                         PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT_CONCAVE_CORNER, placing, x, y + 1, PlaceMode.OVERRIDE);
@@ -691,7 +686,7 @@ namespace DeepWoodsMod
                     PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CORNER_BACK, placing, x, y - 1);
                     PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CONCAVE_CORNER, placing, x, y + 0);
                     PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CONVEX_CORNER, placing, x, y + 1);
-                    if (matrix.HAS_BLACK_GRASS)
+                    if (!noBlackGrass && matrix.HAS_BLACK_GRASS)
                     {
                         PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 0, PlaceMode.OVERRIDE);
                         PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT_CONCAVE_CORNER, placing, x, y + 1, PlaceMode.OVERRIDE);
@@ -712,7 +707,7 @@ namespace DeepWoodsMod
                     PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, placing, x, y + 0);
                     PlaceTile(alwaysFrontLayer, matrix.FOREST_BACK, placing, x, y + 0);
                     PlaceTile(alwaysFrontLayer, matrix.FOREST_FRONT, placing, x, y + 1);
-                    if (matrix.HAS_BLACK_GRASS)
+                    if (!noBlackGrass && matrix.HAS_BLACK_GRASS)
                     {
                         PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 0, PlaceMode.OVERRIDE);
                         PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 1, PlaceMode.OVERRIDE);
@@ -771,25 +766,25 @@ namespace DeepWoodsMod
                     {
                         FillForestTile(curXPos, y);
                     }
-                    buildingsLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER_HORIZONTAL_BACK);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 2 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONVEX_CORNER);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos, curYPos + 0 * yDir);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_HORIZONTAL_BACK, curXPos, curYPos + 0 * yDir);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER, curXPos, curYPos + 1 * yDir);
+                    PlaceTile(alwaysFrontLayer, matrix.CONVEX_CORNER, curXPos, curYPos + 2 * yDir);
 
-                    backLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK));
-                    backLayer.Tiles[curXPos, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK));
+                    PlaceTile(backLayer, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK), curXPos, curYPos + 1 * yDir);
+                    PlaceTile(backLayer, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK), curXPos, curYPos + 2 * yDir);
 
-                    backLayer.Tiles[curXPos + 1 * xDir, curYPos + 1 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONCAVE_CORNER : matrix.DARK_GRASS_CONCAVE_CORNER);
-                    backLayer.Tiles[curXPos + 1 * xDir, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONVEX_CORNER : matrix.DARK_GRASS_CONVEX_CORNER);
-                    backLayer.Tiles[curXPos + 0 * xDir, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL);
+                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONCAVE_CORNER : matrix.DARK_GRASS_CONCAVE_CORNER, curXPos + 1 * xDir, curYPos + 1 * yDir);
+                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONVEX_CORNER : matrix.DARK_GRASS_CONVEX_CORNER, curXPos + 1 * xDir, curYPos + 2 * yDir);
+                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL, curXPos + 0 * xDir, curYPos + 2 * yDir);
 
                     if (matrix.HAS_BLACK_GRASS)
                     {
                         // Add dark grass
-                        backLayer.Tiles[curXPos + 2 * xDir, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_CONCAVE_CORNER);
-                        backLayer.Tiles[curXPos + 2 * xDir, curYPos + 3 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_CONVEX_CORNER);
-                        backLayer.Tiles[curXPos + 1 * xDir, curYPos + 3 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_HORIZONTAL);
-                        backLayer.Tiles[curXPos + 0 * xDir, curYPos + 3 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_HORIZONTAL);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_CONCAVE_CORNER, curXPos + 2 * xDir, curYPos + 2 * yDir);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_CONVEX_CORNER, curXPos + 2 * xDir, curYPos + 3 * yDir);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos + 1 * xDir, curYPos + 3 * yDir);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos + 0 * xDir, curYPos + 3 * yDir);
                     }
 
                     curXPos -= xDir;
@@ -802,16 +797,16 @@ namespace DeepWoodsMod
                     {
                         FillForestTile(curXPos, y);
                     }
-                    buildingsLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(matrix.HORIZONTAL_BACK));
-                    alwaysFrontLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(matrix.HORIZONTAL_FRONT));
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos, curYPos + 0 * yDir);
+                    PlaceTile(alwaysFrontLayer, this.random.GetRandomValue(matrix.HORIZONTAL_BACK), curXPos, curYPos + 0 * yDir);
+                    PlaceTile(alwaysFrontLayer, this.random.GetRandomValue(matrix.HORIZONTAL_FRONT), curXPos, curYPos + 1 * yDir);
 
-                    backLayer.Tiles[curXPos, curYPos + 1 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL);
+                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL, curXPos, curYPos + 1 * yDir);
 
                     if (matrix.HAS_BLACK_GRASS)
                     {
                         // Add dark grass
-                        backLayer.Tiles[curXPos, curYPos + 2 * yDir] = new StaticTile(backLayer, tileSheet, BlendMode.Alpha, matrix.DARK_GRASS_HORIZONTAL);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos, curYPos + 2 * yDir);
                     }
 
                     curXPos -= xDir;
@@ -824,23 +819,14 @@ namespace DeepWoodsMod
                         FillForestTile(curXPos - 1 * xDir, y);
                         FillForestTile(curXPos - 0 * xDir, y);
                     }
-                    buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
-                    buildingsLayer.Tiles[curXPos - 0 * xDir, curYPos + 0 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
-                    buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
-                    alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER_DIAGONAL_BACK);
-                    alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 0 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER_HORIZONTAL_BACK);
-                    alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER_VERTICAL_BACK);
-                    alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, matrix.CONCAVE_CORNER);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 1 * xDir, curYPos + 0 * yDir);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 0 * xDir, curYPos + 0 * yDir);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 1 * xDir, curYPos + 1 * yDir);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_DIAGONAL_BACK, curXPos - 1 * xDir, curYPos + 0 * yDir);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_HORIZONTAL_BACK, curXPos - 0 * xDir, curYPos + 0 * yDir);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_VERTICAL_BACK, curXPos - 1 * xDir, curYPos + 1 * yDir);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER, curXPos - 0 * xDir, curYPos + 1 * yDir);
                     curYPos += yDir;
-                    /*
-                    while (curYPos != endYPos)
-                    {
-                        buildingsLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, matrix.PLAIN_FOREST_BACKGROUND);
-                        alwaysFrontLayer.Tiles[curXPos - 1 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(matrix.VERTICAL_BACK));
-                        alwaysFrontLayer.Tiles[curXPos - 0 * xDir, curYPos + 1 * yDir] = new StaticTile(alwaysFrontLayer, tileSheet, BlendMode.Alpha, this.random.GetRandomValue(matrix.VERTICAL_FRONT));
-                        curYPos += yDir;
-                    }
-                    */
                     if (curYPos != endYPos)
                     {
                         height -= Math.Abs(curYPos - endYPos);
@@ -856,7 +842,6 @@ namespace DeepWoodsMod
 
         private void GenerateExits()
         {
-            Layer buildingsLayer = this.map.GetLayer("Buildings");
             foreach (var exit in this.exitLocations)
             {
                 switch (exit.Key)
@@ -961,6 +946,18 @@ namespace DeepWoodsMod
             return false;
         }
 
+        private bool ClearTile(Layer layer, int x, int y)
+        {
+            if (x < 0 || y < 0 || x >= this.spaceManager.GetMapWidth() || y >= this.spaceManager.GetMapHeight())
+            {
+                // ModEntry.Log("Tile out of range: " +  x + ", " + y, StardewModdingAPI.LogLevel.Debug);
+                return false;
+            }
+
+            layer.Tiles[x, y] = null;
+            return true;
+        }
+
         private void FillForestTile(int x, int y)
         {
             PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, x, y);
@@ -974,16 +971,63 @@ namespace DeepWoodsMod
 
         private void GenerateForestPatch(xTile.Dimensions.Rectangle rectangle)
         {
-            TileSheet tileSheet = this.map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
-            Layer buildingsLayer = this.map.GetLayer("Buildings");
-            Layer alwaysFrontLayer = this.map.GetLayer("AlwaysFront");
+            int offset = FOREST_ROW_MAX_INWARDS_BUMP + 1;
 
-            for (int x = 0; x < rectangle.Width; x++)
+            GenerateForestRow(
+                new Placing(new Location(rectangle.X + offset + 1, rectangle.Y + offset), PlacingDirection.DOWNWARDS, PlacingDirection.LEFTWARDS),
+                rectangle.Height - offset * 2,
+                DeepWoodsRowTileMatrix.RIGHT,
+                0);
+
+            GenerateForestRow(
+                new Placing(new Location(rectangle.X + rectangle.Width - offset - 1, rectangle.Y + offset), PlacingDirection.DOWNWARDS, PlacingDirection.RIGHTWARDS),
+                rectangle.Height - offset * 2,
+                DeepWoodsRowTileMatrix.LEFT,
+                0);
+
+            GenerateForestRow(
+                new Placing(new Location(rectangle.X + offset, rectangle.Y + offset + 1), PlacingDirection.RIGHTWARDS, PlacingDirection.UPWARDS),
+                rectangle.Width - offset * 2,
+                DeepWoodsRowTileMatrix.BOTTOM,
+                0);
+
+            GenerateForestRow(
+                new Placing(new Location(rectangle.X + offset, rectangle.Y + rectangle.Height - offset - 1), PlacingDirection.RIGHTWARDS, PlacingDirection.DOWNWARDS),
+                rectangle.Width - offset * 2,
+                DeepWoodsRowTileMatrix.TOP,
+                0,
+                true);
+
+            PlaceTile(backLayer, DeepWoodsRowTileMatrix.BOTTOM.DARK_GRASS_RIGHT_CONVEX_CORNER, rectangle.X + 2, rectangle.Y + 2);
+            PlaceTile(backLayer, DeepWoodsRowTileMatrix.TOP.DARK_GRASS_RIGHT_CONVEX_CORNER, rectangle.X + 2, rectangle.Y + rectangle.Height - 3);
+            PlaceTile(backLayer, DeepWoodsRowTileMatrix.BOTTOM.DARK_GRASS_LEFT_CONVEX_CORNER, rectangle.X + rectangle.Width - 3, rectangle.Y + 2);
+            PlaceTile(backLayer, DeepWoodsRowTileMatrix.TOP.DARK_GRASS_LEFT_CONVEX_CORNER, rectangle.X + rectangle.Width - 3, rectangle.Y + rectangle.Height - 3);
+
+            ClearTile(buildingsLayer, rectangle.X + 3, rectangle.Y + 3);
+            ClearTile(buildingsLayer, rectangle.X + 3, rectangle.Y + rectangle.Height - 4);
+            ClearTile(buildingsLayer, rectangle.X + rectangle.Width - 4, rectangle.Y + 3);
+            ClearTile(buildingsLayer, rectangle.X + rectangle.Width - 4, rectangle.Y + rectangle.Height - 4);
+
+            int minFillX = rectangle.X + offset + 2;
+            int maxFillX = rectangle.X + rectangle.Width - offset - 1;
+            int minFillY = rectangle.Y + offset + 2;
+            int maxFillY = rectangle.Y + rectangle.Height - offset - 1;
+
+            int numFillTiles = 0;
+            for (int x = minFillX; x < maxFillX; x++)
             {
-                for (int y = 0; y < rectangle.Height; y++)
+                for (int y = minFillY; y < maxFillY; y++)
                 {
-                    buildingsLayer.Tiles[rectangle.X + x, rectangle.Y + y] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, PLAIN_FOREST_BACKGROUND);
+                    FillForestTile(x, y);
+                    numFillTiles++;
                 }
+            }
+
+            int maxLightSources = Math.Max(1, numFillTiles / NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH);
+            int numLightSources = 1 + this.random.GetRandomValue(0, maxLightSources);
+            for (int i = 0; i < numLightSources; i++)
+            {
+                deepWoods.lightSources.Add(new Vector2(this.random.GetRandomValue(minFillX, maxFillX + 1), this.random.GetRandomValue(minFillY, maxFillY + 1)));
             }
         }
 

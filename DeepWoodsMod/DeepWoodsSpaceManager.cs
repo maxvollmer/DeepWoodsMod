@@ -26,7 +26,7 @@ namespace DeepWoodsMod
 
         public const int MAX_MAP_SIZE_FOR_LICHTUNG = 32;
 
-        public const int MIN_FOREST_PATCH_DIAMETER = 8;
+        public const int MIN_FOREST_PATCH_DIAMETER = 12;
         public const int MAX_FOREST_PATCH_DIAMETER = 24;
         public const int FOREST_PATCH_MIN_GAP_TO_MAPBORDER = 6;
         public const int FOREST_PATCH_MIN_GAP_TO_EACHOTHER = 4;
