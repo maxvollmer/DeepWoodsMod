@@ -221,6 +221,12 @@ namespace DeepWoodsMod
             public int BRIGHT_GRASS_RIGHT_CONCAVE_CORNER;
             public int BRIGHT_GRASS_RIGHT_CONVEX_CORNER;
 
+            public int BRIGHT_GRASS_TINY_FRONT;  // 326 -> 302
+            public int BRIGHT_GRASS_LEFT_STEEP_CORNER;   // 328 -> 261
+            public int BRIGHT_GRASS_RIGHT_STEEP_CORNER; // 378 -> 281
+            public int BRIGHT_GRASS_FRONT_RIGHT_STEEP_CORNER;    // 301
+            public int BRIGHT_GRASS_FRONT_LEFT_STEEP_CORNER; // 303
+
             public bool HAS_BLACK_GRASS;
 
             private DeepWoodsRowTileMatrix() { }
@@ -268,6 +274,12 @@ namespace DeepWoodsMod
                 BRIGHT_GRASS_RIGHT_CONCAVE_CORNER = 327,
                 BRIGHT_GRASS_RIGHT_CONVEX_CORNER = 378,
 
+                BRIGHT_GRASS_TINY_FRONT = 302,  // 326 -> 302
+                BRIGHT_GRASS_LEFT_STEEP_CORNER = 261,   // 328 -> 261
+                BRIGHT_GRASS_RIGHT_STEEP_CORNER = 281, // 378 -> 281
+                BRIGHT_GRASS_FRONT_RIGHT_STEEP_CORNER = 301,    // 301
+                BRIGHT_GRASS_FRONT_LEFT_STEEP_CORNER = 303,// 303
+
                 HAS_BLACK_GRASS = true
             };
 
@@ -305,6 +317,12 @@ namespace DeepWoodsMod
                 BRIGHT_GRASS_LEFT_CONVEX_CORNER = 403,
                 BRIGHT_GRASS_RIGHT_CONCAVE_CORNER = 377,
                 BRIGHT_GRASS_RIGHT_CONVEX_CORNER = 353,
+
+                BRIGHT_GRASS_TINY_FRONT = 277,
+                BRIGHT_GRASS_LEFT_STEEP_CORNER = 311,
+                BRIGHT_GRASS_RIGHT_STEEP_CORNER = 331,
+                BRIGHT_GRASS_FRONT_RIGHT_STEEP_CORNER = 276,
+                BRIGHT_GRASS_FRONT_LEFT_STEEP_CORNER = 278,
 
                 HAS_BLACK_GRASS = false
             };
@@ -344,6 +362,12 @@ namespace DeepWoodsMod
                 BRIGHT_GRASS_RIGHT_CONCAVE_CORNER = 375,
                 BRIGHT_GRASS_RIGHT_CONVEX_CORNER = 403,
 
+                BRIGHT_GRASS_TINY_FRONT = 286,
+                BRIGHT_GRASS_LEFT_STEEP_CORNER = 301,
+                BRIGHT_GRASS_RIGHT_STEEP_CORNER = 276,
+                BRIGHT_GRASS_FRONT_RIGHT_STEEP_CORNER = 261,
+                BRIGHT_GRASS_FRONT_LEFT_STEEP_CORNER = 311,
+
                 HAS_BLACK_GRASS = false
             };
 
@@ -381,6 +405,12 @@ namespace DeepWoodsMod
                 BRIGHT_GRASS_LEFT_CONVEX_CORNER = 378,
                 BRIGHT_GRASS_RIGHT_CONCAVE_CORNER = 377,
                 BRIGHT_GRASS_RIGHT_CONVEX_CORNER = 353,
+
+                BRIGHT_GRASS_TINY_FRONT = 306,
+                BRIGHT_GRASS_LEFT_STEEP_CORNER = 303,
+                BRIGHT_GRASS_RIGHT_STEEP_CORNER = 278,
+                BRIGHT_GRASS_FRONT_RIGHT_STEEP_CORNER = 281,
+                BRIGHT_GRASS_FRONT_LEFT_STEEP_CORNER = 331,
 
                 HAS_BLACK_GRASS = false
             };
@@ -527,7 +557,14 @@ namespace DeepWoodsMod
         private void Build()
         {
             GenerateForestBorder();
-            GenerateForestPatches();
+            if (deepWoods.isLichtung)
+            {
+                GenerateLichtung();
+            }
+            else
+            {
+                GenerateForestPatches();
+            }
             GenerateGround();
         }
 
@@ -766,25 +803,25 @@ namespace DeepWoodsMod
                     {
                         FillForestTile(curXPos, y);
                     }
-                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos, curYPos + 0 * yDir);
-                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_HORIZONTAL_BACK, curXPos, curYPos + 0 * yDir);
-                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER, curXPos, curYPos + 1 * yDir);
-                    PlaceTile(alwaysFrontLayer, matrix.CONVEX_CORNER, curXPos, curYPos + 2 * yDir);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos, curYPos + 0 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_HORIZONTAL_BACK, curXPos, curYPos + 0 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER, curXPos, curYPos + 1 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, matrix.CONVEX_CORNER, curXPos, curYPos + 2 * yDir, PlaceMode.OVERRIDE);
 
-                    PlaceTile(backLayer, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK), curXPos, curYPos + 1 * yDir);
-                    PlaceTile(backLayer, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK), curXPos, curYPos + 2 * yDir);
+                    PlaceTile(backLayer, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK), curXPos, curYPos + 1 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(backLayer, GetRandomGrassTileIndex(matrix.HAS_BLACK_GRASS ? GrassType.BLACK : GrassType.DARK), curXPos, curYPos + 2 * yDir, PlaceMode.OVERRIDE);
 
-                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONCAVE_CORNER : matrix.DARK_GRASS_CONCAVE_CORNER, curXPos + 1 * xDir, curYPos + 1 * yDir);
-                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONVEX_CORNER : matrix.DARK_GRASS_CONVEX_CORNER, curXPos + 1 * xDir, curYPos + 2 * yDir);
-                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL, curXPos + 0 * xDir, curYPos + 2 * yDir);
+                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONCAVE_CORNER : matrix.DARK_GRASS_CONCAVE_CORNER, curXPos + 1 * xDir, curYPos + 1 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_CONVEX_CORNER : matrix.DARK_GRASS_CONVEX_CORNER, curXPos + 1 * xDir, curYPos + 2 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL, curXPos + 0 * xDir, curYPos + 2 * yDir, PlaceMode.OVERRIDE);
 
                     if (matrix.HAS_BLACK_GRASS)
                     {
                         // Add dark grass
-                        PlaceTile(backLayer, matrix.DARK_GRASS_CONCAVE_CORNER, curXPos + 2 * xDir, curYPos + 2 * yDir);
-                        PlaceTile(backLayer, matrix.DARK_GRASS_CONVEX_CORNER, curXPos + 2 * xDir, curYPos + 3 * yDir);
-                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos + 1 * xDir, curYPos + 3 * yDir);
-                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos + 0 * xDir, curYPos + 3 * yDir);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_CONCAVE_CORNER, curXPos + 2 * xDir, curYPos + 2 * yDir, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_CONVEX_CORNER, curXPos + 2 * xDir, curYPos + 3 * yDir, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos + 1 * xDir, curYPos + 3 * yDir, PlaceMode.OVERRIDE);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos + 0 * xDir, curYPos + 3 * yDir, PlaceMode.OVERRIDE);
                     }
 
                     curXPos -= xDir;
@@ -797,16 +834,16 @@ namespace DeepWoodsMod
                     {
                         FillForestTile(curXPos, y);
                     }
-                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos, curYPos + 0 * yDir);
-                    PlaceTile(alwaysFrontLayer, this.random.GetRandomValue(matrix.HORIZONTAL_BACK), curXPos, curYPos + 0 * yDir);
-                    PlaceTile(alwaysFrontLayer, this.random.GetRandomValue(matrix.HORIZONTAL_FRONT), curXPos, curYPos + 1 * yDir);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos, curYPos + 0 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, this.random.GetRandomValue(matrix.HORIZONTAL_BACK), curXPos, curYPos + 0 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, this.random.GetRandomValue(matrix.HORIZONTAL_FRONT), curXPos, curYPos + 1 * yDir, PlaceMode.OVERRIDE);
 
-                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL, curXPos, curYPos + 1 * yDir);
+                    PlaceTile(backLayer, matrix.HAS_BLACK_GRASS ? matrix.BLACK_GRASS_HORIZONTAL : matrix.DARK_GRASS_HORIZONTAL, curXPos, curYPos + 1 * yDir, PlaceMode.OVERRIDE);
 
                     if (matrix.HAS_BLACK_GRASS)
                     {
                         // Add dark grass
-                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos, curYPos + 2 * yDir);
+                        PlaceTile(backLayer, matrix.DARK_GRASS_HORIZONTAL, curXPos, curYPos + 2 * yDir, PlaceMode.OVERRIDE);
                     }
 
                     curXPos -= xDir;
@@ -819,13 +856,13 @@ namespace DeepWoodsMod
                         FillForestTile(curXPos - 1 * xDir, y);
                         FillForestTile(curXPos - 0 * xDir, y);
                     }
-                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 1 * xDir, curYPos + 0 * yDir);
-                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 0 * xDir, curYPos + 0 * yDir);
-                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 1 * xDir, curYPos + 1 * yDir);
-                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_DIAGONAL_BACK, curXPos - 1 * xDir, curYPos + 0 * yDir);
-                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_HORIZONTAL_BACK, curXPos - 0 * xDir, curYPos + 0 * yDir);
-                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_VERTICAL_BACK, curXPos - 1 * xDir, curYPos + 1 * yDir);
-                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER, curXPos - 0 * xDir, curYPos + 1 * yDir);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 1 * xDir, curYPos + 0 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 0 * xDir, curYPos + 0 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, curXPos - 1 * xDir, curYPos + 1 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_DIAGONAL_BACK, curXPos - 1 * xDir, curYPos + 0 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_HORIZONTAL_BACK, curXPos - 0 * xDir, curYPos + 0 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER_VERTICAL_BACK, curXPos - 1 * xDir, curYPos + 1 * yDir, PlaceMode.OVERRIDE);
+                    PlaceTile(alwaysFrontLayer, matrix.CONCAVE_CORNER, curXPos - 0 * xDir, curYPos + 1 * yDir, PlaceMode.OVERRIDE);
                     curYPos += yDir;
                     if (curYPos != endYPos)
                     {
@@ -871,24 +908,6 @@ namespace DeepWoodsMod
             PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_FRONT, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 0);
             PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CONVEX_CORNER, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 1);
 
-            // Add bright grass some paces inwards
-            int brightGrassPacesInwards = this.random.GetRandomValue(2, 3);
-
-            PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_CONCAVE_CORNER, placing, -1, 0);
-            PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, 0);
-            PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONCAVE_CORNER, placing, 1, 0);
-
-            for (int i = 1; i <= brightGrassPacesInwards; i++)
-            {
-                PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT, placing, -1, i);
-                PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, i);
-                PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT, placing, 1, i);
-            }
-
-            PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_CONVEX_CORNER, placing, -1, 3);
-            PlaceTile(backLayer, matrix.BRIGHT_GRASS_FRONT, placing, 0, 3);
-            PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONVEX_CORNER, placing, 1, 3);
-
             // Add forest "shadow" (dark grass) left and right
             PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 0);
             PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 1);
@@ -915,6 +934,58 @@ namespace DeepWoodsMod
                 PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, -DeepWoodsSpaceManager.EXIT_RADIUS, 2);
                 PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, DeepWoodsSpaceManager.EXIT_RADIUS, 2);
             }
+
+            // Add bright grass entrance tiles
+            PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_CONCAVE_CORNER, placing, -1, 0);
+            PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, 0);
+            PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONCAVE_CORNER, placing, 1, 0);
+
+            // If this level is a lichtung, GenerateLichtung() will generate bright grass growing out from this entrance,
+            // so we don't need to generate any tiles here.
+            // In normal forest levels, we generate the rest of the bright entrance tiles here.
+            if (!deepWoods.isLichtung)
+            {
+                // Add bright grass some paces inwards
+                int brightGrassPacesInwards = this.random.GetRandomValue(2, 4);
+
+                for (int i = 1; i < brightGrassPacesInwards; i++)
+                {
+                    PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT, placing, -1, i);
+                    PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, i);
+                    PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT, placing, 1, i);
+                }
+
+                // Add one of 4 possible bright grass ends
+                switch (this.random.GetRandomValue(0,4))
+                {
+                    case 0:
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_CONVEX_CORNER, placing, -1, brightGrassPacesInwards);
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_FRONT_RIGHT_STEEP_CORNER, placing, 0, brightGrassPacesInwards);    // 301
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_STEEP_CORNER, placing, 1, brightGrassPacesInwards - 1, PlaceMode.OVERRIDE);   // 328 -> 261
+                        break;
+                    case 1:
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_STEEP_CORNER, placing, -1, brightGrassPacesInwards - 1, PlaceMode.OVERRIDE); // 378 -> 281
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_FRONT_LEFT_STEEP_CORNER, placing, 0, brightGrassPacesInwards); // 303
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONVEX_CORNER, placing, 1, brightGrassPacesInwards);
+                        break;
+                    case 2:
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_STEEP_CORNER, placing, -1, brightGrassPacesInwards - 1, PlaceMode.OVERRIDE); // 378 -> 281
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_TINY_FRONT, placing, 0, brightGrassPacesInwards);  // 326 -> 302
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_STEEP_CORNER, placing, 1, brightGrassPacesInwards - 1, PlaceMode.OVERRIDE);   // 328 -> 261
+                        break;
+                    case 3:
+                    default:
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_CONVEX_CORNER, placing, -1, brightGrassPacesInwards);
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_FRONT, placing, 0, brightGrassPacesInwards);
+                        PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONVEX_CORNER, placing, 1, brightGrassPacesInwards);
+                        break;
+                }
+            }
+        }
+
+        private void GenerateLichtung()
+        {
+            // TODO!
         }
 
         private bool PlaceTile(Layer layer, int[] tileIndices, Placing placing, int steps, int stepsInward, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE)

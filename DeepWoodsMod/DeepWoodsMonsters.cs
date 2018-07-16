@@ -61,6 +61,9 @@ namespace DeepWoodsMod
             if (!Game1.IsMasterGame)
                 return;
 
+            if (deepWoods.isLichtung)
+                return;
+
             random.EnterMasterMode();
 
             deepWoods.characters.Clear();
