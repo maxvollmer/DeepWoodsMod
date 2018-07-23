@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.TerrainFeatures;
+using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,8 @@ using System.Threading.Tasks;
 namespace DeepWoodsMod
 {
     // Makes the hoedirt invisible, but shows the flower.
+    // Removes itself when the flower was plucked.
+    // Doesn't allow tools (watering, destroying flower with pickaxe etc.)
     // This way we can have flowers grow in the forest without grass being ruined by a dirt patch.
     class Flower : HoeDirt
     {
@@ -25,16 +28,23 @@ namespace DeepWoodsMod
             this.crop.growCompletely();
         }
 
+        public override bool tickUpdate(GameTime time, Vector2 tileLocation, GameLocation location)
+        {
+            if (this.crop == null || this.crop.dead)
+                return true;
+            return base.tickUpdate(time, tileLocation, location);
+        }
+
         public override bool performUseAction(Vector2 tileLocation, GameLocation location)
         {
-            base.performUseAction(tileLocation, location);
-            return this.crop.dead || this.crop == null;
+            if (this.crop == null || this.crop.dead)
+                return false;
+            return base.performUseAction(tileLocation, location);
         }
 
         public override bool performToolAction(Tool t, int damage, Vector2 tileLocation, GameLocation location)
         {
-            base.performToolAction(t, damage, tileLocation, location);
-            return this.crop.dead || this.crop == null;
+            return this.crop == null || this.crop.dead;
         }
 
         public override void drawInMenu(SpriteBatch spriteBatch, Vector2 positionOnScreen, Vector2 tileLocation, float scale, float layerDepth)
