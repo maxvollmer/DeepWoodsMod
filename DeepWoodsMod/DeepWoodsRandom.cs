@@ -12,7 +12,7 @@ namespace DeepWoodsMod
         private const int MAGIC_SALT = 854574563;
 
         public const int NEUTRAL_LUCK_WEIGHT = 0;
-        public const int NEUTRAL_LUCK_LEVEL = 5;
+        public const int NEUTRAL_LUCK_LEVEL = 0;
 
         private readonly int seed;
         private readonly Random random;
@@ -126,7 +126,7 @@ namespace DeepWoodsMod
                 // Calculate seed from multiplayer ID, DeepWoods level, enter direction and time since start.
                 // This makes sure the seed is the same for all players entering the same DeepWoods level during the same game hour,
                 // but still makes it unique for each game and pseudorandom enough for players to not be able to reasonably predict the woods.
-                return GetHashFromUniqueMultiplayerID() ^ UniformAnyInt(level) ^ UniformAnyInt((int)enterDir) ^ UniformAnyInt(HoursSinceStart()) ^ salt.Value;
+                return GetHashFromUniqueMultiplayerID() ^ UniformAnyInt(level) ^ UniformAnyInt((int)enterDir) ^ UniformAnyInt(HoursSinceStart()) ^ (salt.HasValue ? salt.Value : MAGIC_SALT);
             }
         }
 
@@ -141,7 +141,7 @@ namespace DeepWoodsMod
 
         private int GetHashFromUniqueMultiplayerID()
         {
-            long uniqueMultiplayerID = Game1.MasterPlayer.UniqueMultiplayerID;
+            ulong uniqueMultiplayerID = Game1.uniqueIDForThisGame; //Game1.MasterPlayer.UniqueMultiplayerID;
             return UniformAnyInt((int)((uniqueMultiplayerID >> 32) ^ uniqueMultiplayerID));
         }
 
@@ -161,8 +161,8 @@ namespace DeepWoodsMod
             // Daily luck in range from -100 to 100:
             int dailyLuck = Math.Min(100, Math.Max(-100, (int)((Game1.dailyLuck / 0.12) * 100.0)));
 
-            // Player luck in range from -100 to 100:
-            int playerLuck = Math.Min(100, Math.Max(-100, (luckLevel * 20) - 100));
+            // Player luck in range from 0 to 100:
+            int playerLuck = Math.Min(100, Math.Max(0, luckLevel * 10));
 
             // Total luck in range from -100 to 100:
             int totalLuck = Math.Min(100, Math.Max(-100, (dailyLuck + playerLuck) / 2));
@@ -195,6 +195,29 @@ namespace DeepWoodsMod
             }
         }
 
+        public int GetLuckValue(Luck luck, int luckLevel = NEUTRAL_LUCK_LEVEL)
+        {
+            // Daily luck in range from -100 to 100:
+            int dailyLuck = Math.Min(100, Math.Max(-100, (int)((Game1.dailyLuck / 0.12) * 100.0)));
+
+            // Player luck in range from 0 to 100:
+            int playerLuck = Math.Min(100, Math.Max(0, luckLevel * 10));
+
+            // Total luck in range from -100 to 100:
+            int totalLuck = Math.Min(100, Math.Max(-100, (dailyLuck + playerLuck) / 2));
+
+            // Total luck in range from 0 to 100:
+            totalLuck = Math.Min(100, Math.Max(0, (totalLuck + 100) / 2));
+
+            // Total misfortune in range from 0 to 100:
+            int totalMisfortune = Math.Min(100, Math.Max(0, 100 - totalLuck));
+
+            int min = (luck.GetMinProbability() * totalMisfortune) / 100;
+            int max = (luck.GetMaxProbability() * totalLuck) / 100;
+
+            return min + max;
+        }
+
         public int GetRandomValue(int min, int max)
         {
             if (this.IsInMasterMode())
@@ -205,6 +228,11 @@ namespace DeepWoodsMod
             {
                 return GetRandom().Next(min, max);
             }
+        }
+
+        public int GetRandomValue(Luck min, Luck max, int luckLevel = NEUTRAL_LUCK_LEVEL)
+        {
+            return GetRandomValue(GetLuckValue(min, luckLevel), GetLuckValue(max, luckLevel));
         }
 
         public int GetRandomValue(int[] values, Probability firstValueProbability = null)
