@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -48,6 +49,7 @@
     <Compile Include="DeepWoodsEnterExit.cs" />
     <Compile Include="DeepWoodsMonsters.cs" />
     <Compile Include="DeepWoodsRandom.cs" />
+    <Compile Include="DeepWoodsSettings.cs" />
     <Compile Include="DeepWoodsSpaceManager.cs" />
     <Compile Include="DeepWoodsStuffCreator.cs" />
     <Compile Include="DeepWoodsTileDefinitions.cs" />
@@ -55,13 +57,24 @@
     <Compile Include="EasterEgg.cs" />
     <Compile Include="EasterEggFunctions.cs" />
     <Compile Include="EasterEggItem.cs" />
+    <Compile Include="Excalibur.cs" />
+    <Compile Include="ExcaliburStone.cs" />
     <Compile Include="FarmerSprite.cs" />
     <Compile Include="Flower.cs" />
     <Compile Include="Game1MultiplayerAccessProvider.cs" />
     <Compile Include="GingerBreadHouse.cs" />
+    <Compile Include="HealingFountain.cs" />
+    <Compile Include="IridiumTree.cs" />
     <Compile Include="LootFreeGrass.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sounds.cs" />
+    <Compile Include="Textures.cs" />
+    <Compile Include="ThornyBush.cs" />
+    <Compile Include="TreasureChest.cs" />
+    <Compile Include="Unicorn.cs" />
+    <Compile Include="WoodsObelisk.cs" />
+    <Compile Include="WoodsObeliskMenu.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="manifest.json" />
