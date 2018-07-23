@@ -71,6 +71,23 @@ namespace DeepWoodsMod
             }
         }
 
+        public static int EnterDirToFacingDirection(EnterDirection enterDir)
+        {
+            switch (enterDir)
+            {
+                case EnterDirection.FROM_LEFT:
+                    return 1;
+                case EnterDirection.FROM_TOP:
+                    return 2;
+                case EnterDirection.FROM_RIGHT:
+                    return 3;
+                case EnterDirection.FROM_BOTTOM:
+                    return 0;
+                default:
+                    return 2;
+            }
+        }
+
         public static ExitDirection CastEnterDirToExitDir(EnterDirection enterDir)
         {
             switch (enterDir)
