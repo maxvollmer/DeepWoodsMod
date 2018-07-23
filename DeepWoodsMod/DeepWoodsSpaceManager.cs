@@ -40,6 +40,10 @@ namespace DeepWoodsMod
         public const int MINIMUM_TILES_FOR_BAUBLE = 16;
         public const int MINIMUM_TILES_FOR_LEAVES = 16;
 
+        public const int LICHTUNG_ENTRANCE_DEPTH = 5;
+        public const int NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH = 16;
+        public const int NUM_TILES_PER_LIGHTSOURCE_IN_LICHTUNG = 16;
+
         private int mapWidth;
         private int mapHeight;
         private List<xTile.Dimensions.Rectangle> occupiedRectangles = new List<xTile.Dimensions.Rectangle>();
