@@ -40,7 +40,7 @@ namespace DeepWoodsMod
 
         public override bool isPassable(Character c = null)
         {
-            return this.wasPickedUp;
+            return true;// this.wasPickedUp;
         }
 
         public override bool performUseAction(Vector2 tileLocation, GameLocation location)
