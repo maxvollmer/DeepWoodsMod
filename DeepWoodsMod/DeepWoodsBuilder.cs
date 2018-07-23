@@ -26,6 +26,9 @@ namespace DeepWoodsMod
 
         private static Probability CHANCE_FOR_FOREST_ROW_TREESTUMPS = new Probability(50);
 
+        private static Probability CHANCE_FOR_WATER_LILY = new Probability(8);
+        private static Probability CHANCE_FOR_BLOSSOM_ON_WATER_LILY = new Probability(30);
+
         private const int FOREST_ROW_MAX_INWARDS_BUMP = 2;
         private static Probability CHANCE_FOR_FOREST_ROW_BUMP = new Probability(50);
 
@@ -35,9 +38,36 @@ namespace DeepWoodsMod
         private const int FOREST_ROW_TREESTUMP_LEFT = 1144;
         private const int FOREST_ROW_TREESTUMP_RIGHT = 1145;
 
-        private const int NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH = 16;
+        private static readonly int[] WATER_LILY = new int[] { 1293, 1294, 1295, 1296 };
+        private static readonly int[] WATER_LILY_WITH_BLOSSOM = new int[] { 1318, 1319, 1320, 1321 };
+        private static readonly int WATER_LILY_SHADOW = 1299;
 
-        private const int DEBUG_PINK_LEAVES = 68;
+        private static readonly WeightedValue[] WATER_TILES = new WeightedValue[] {
+            // Normal
+            new WeightedValue(1246, 100),
+            new WeightedValue(1271, 100),
+            new WeightedValue(1274, 100),
+            // Stones
+            new WeightedValue(1247, 10),
+            new WeightedValue(1248, 10),
+            new WeightedValue(1249, 10),
+            new WeightedValue(1272, 10),
+            new WeightedValue(1273, 10),
+            new WeightedValue(1324, 10),
+            // Shells
+            // new WeightedValue(1297, 20),
+            // Clam
+            // new WeightedValue(1298, 20),
+            // Plants
+            new WeightedValue(1322, 50),
+            new WeightedValue(1323, 50),
+
+        };
+
+        private const int DEBUG_PINK = 68;
+        private const int DEBUG_DARK = 115;
+        private const int DEBUG_YELLOW = 226;
+        private const int DEBUG_RED = 292;
 
         private enum GrassType
         {
@@ -176,6 +206,88 @@ namespace DeepWoodsMod
         {
             DONT_OVERRIDE,
             OVERRIDE
+        }
+
+        private class DeepWoodsLichtungTileMatrix
+        {
+            public int HORIZONTAL;
+            public int VERTICAL;
+            public int CONCAVE_CORNER;
+            public int CONVEX_CORNER;
+            public int INVERSE_CONVEX_CORNER;
+            public int VERTICAL_TO_STEEP;
+            public int STEEP_TO_HORIZONTAL;
+            
+            public int[] WATER_HORIZONTAL;
+            public int[] WATER_VERTICAL;
+            public int WATER_CONCAVE_CORNER;
+            public int WATER_CONVEX_CORNER;
+
+            private DeepWoodsLichtungTileMatrix() { }
+
+            public static readonly DeepWoodsLichtungTileMatrix LEFT_TO_TOP = new DeepWoodsLichtungTileMatrix()
+            {
+                HORIZONTAL = 376,
+                VERTICAL = 352,
+                CONCAVE_CORNER = 377,
+                CONVEX_CORNER = 353,
+                INVERSE_CONVEX_CORNER = 378,
+                VERTICAL_TO_STEEP = 331,
+                STEEP_TO_HORIZONTAL = 278,
+
+                WATER_HORIZONTAL = new int[] { 1, 2 },
+                WATER_VERTICAL = new int[] { 8, 16 },
+                WATER_CONCAVE_CORNER = 0,
+                WATER_CONVEX_CORNER = 33,
+            };
+
+            public static readonly DeepWoodsLichtungTileMatrix TOP_TO_RIGHT = new DeepWoodsLichtungTileMatrix()
+            {
+                HORIZONTAL = 350,
+                VERTICAL = 376,
+                CONCAVE_CORNER = 375,
+                CONVEX_CORNER = 403,
+                INVERSE_CONVEX_CORNER = 353,
+                VERTICAL_TO_STEEP = 276,
+                STEEP_TO_HORIZONTAL = 311,
+
+                WATER_HORIZONTAL = new int[] { 11, 19 },
+                WATER_VERTICAL = new int[] { 1, 2 },
+                WATER_CONCAVE_CORNER = 3,
+                WATER_CONVEX_CORNER = 32,
+            };
+
+            public static readonly DeepWoodsLichtungTileMatrix RIGHT_TO_BOTTOM = new DeepWoodsLichtungTileMatrix()
+            {
+                HORIZONTAL = 326,
+                VERTICAL = 350,
+                CONCAVE_CORNER = 325,
+                CONVEX_CORNER = 328,
+                INVERSE_CONVEX_CORNER = 403,
+                VERTICAL_TO_STEEP = 261,
+                STEEP_TO_HORIZONTAL = 301,
+
+                WATER_HORIZONTAL = new int[] { 25, 26 },
+                WATER_VERTICAL = new int[] { 11, 19 },
+                WATER_CONCAVE_CORNER = 27,
+                WATER_CONVEX_CORNER = 34,
+            };
+
+            public static readonly DeepWoodsLichtungTileMatrix BOTTOM_TO_LEFT = new DeepWoodsLichtungTileMatrix()
+            {
+                HORIZONTAL = 352,
+                VERTICAL = 326,
+                CONCAVE_CORNER = 327,
+                CONVEX_CORNER = 378,
+                INVERSE_CONVEX_CORNER = 328,
+                VERTICAL_TO_STEEP = 303,
+                STEEP_TO_HORIZONTAL = 281,
+
+                WATER_HORIZONTAL = new int[] { 8, 16 },
+                WATER_VERTICAL = new int[] { 25, 26 },
+                WATER_CONCAVE_CORNER = 24,
+                WATER_CONVEX_CORNER = 35,
+            };
         }
 
         private class DeepWoodsRowTileMatrix
@@ -528,7 +640,8 @@ namespace DeepWoodsMod
         private DeepWoodsSpaceManager spaceManager;
         private Map map;
         private Dictionary<ExitDirection, Location> exitLocations;
-        private TileSheet tileSheet;
+        private TileSheet defaultOutdoorTileSheet;
+        private TileSheet lakeTileSheet;
         private Layer backLayer;
         private Layer buildingsLayer;
         private Layer frontLayer;
@@ -542,16 +655,19 @@ namespace DeepWoodsMod
             this.spaceManager = spaceManager;
             this.map = map;
             this.exitLocations = exitLocations;
-            this.tileSheet = map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
+            this.defaultOutdoorTileSheet = map.GetTileSheet(DeepWoods.DEFAULT_OUTDOOR_TILESHEET_ID);
+            this.lakeTileSheet = map.GetTileSheet(DeepWoods.LAKE_TILESHEET_ID);
             this.backLayer = map.GetLayer("Back");
             this.buildingsLayer = map.GetLayer("Buildings");
             this.frontLayer = map.GetLayer("Front");
             this.alwaysFrontLayer = map.GetLayer("AlwaysFront");
         }
 
-        public static void Build(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location> exitLocations)
+        public static DeepWoodsBuilder Build(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location> exitLocations)
         {
-            new DeepWoodsBuilder(deepWoods, random, spaceManager, map, exitLocations).Build();
+            DeepWoodsBuilder deepWoodsBuilder = new DeepWoodsBuilder(deepWoods, random, spaceManager, map, exitLocations);
+            deepWoodsBuilder.Build();
+            return deepWoodsBuilder;
         }
 
         private void Build()
@@ -566,6 +682,11 @@ namespace DeepWoodsMod
                 GenerateForestPatches();
             }
             GenerateGround();
+        }
+
+        private int GetRandomWaterTileIndex()
+        {
+            return this.random.GetRandomValue(WATER_TILES);
         }
 
         private int GetRandomGrassTileIndex(GrassType grassType)
@@ -605,6 +726,36 @@ namespace DeepWoodsMod
             }
 
             throw new ArgumentException("Unknown GrassType: " + grassType);
+        }
+
+        private bool IsTileBrightGrass(Location tileLocation, bool includeDarkPatches = false)
+        {
+            return IsTileBrightGrass(tileLocation.X, tileLocation.Y, includeDarkPatches);
+        }
+
+        private bool IsTileBrightGrass(int x, int y, bool includeDarkPatches = false)
+        {
+            return DeepWoodsBuilder.IsTileIndexBrightGrass(backLayer.Tiles[x, y]?.TileIndex ?? 0, includeDarkPatches);
+        }
+
+        public static bool IsTileIndexBrightGrass(int tileIndex, bool includeDarkPatches = false)
+        {
+            if (includeDarkPatches)
+            {
+                return tileIndex == 175
+                    || tileIndex == 275
+                    || tileIndex == 402
+                    || tileIndex == 401
+                    || tileIndex == 400
+                    || tileIndex == 150
+                    || tileIndex == 254
+                    || tileIndex == 255
+                    || tileIndex == 256;
+            }
+            else
+            {
+                return tileIndex == 175 || tileIndex == 275 || tileIndex == 402 || tileIndex == 150;
+            }
         }
 
         private void GenerateGround()
@@ -940,22 +1091,22 @@ namespace DeepWoodsMod
             PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, 0);
             PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONCAVE_CORNER, placing, 1, 0);
 
-            // If this level is a lichtung, GenerateLichtung() will generate bright grass growing out from this entrance,
-            // so we don't need to generate any tiles here.
-            // In normal forest levels, we generate the rest of the bright entrance tiles here.
+            // If this level is a lichtung, GenerateLichtung() will generate bright grass growing out from each exit,
+            // so we need to generate LICHTUNG_ENTRANCE_DEPTH tiles here, that are "open ended".
+            // In normal forest levels, we generate a random amount of tiles with variable end pieces.
+            int brightGrassPacesInwards = deepWoods.isLichtung ? DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH : this.random.GetRandomValue(2, 4);
+
+            // Add bright grass some paces inwards
+            for (int i = 1; i < brightGrassPacesInwards; i++)
+            {
+                PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT, placing, -1, i);
+                PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, i);
+                PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT, placing, 1, i);
+            }
+
+            // Add one of 4 possible bright grass ends
             if (!deepWoods.isLichtung)
             {
-                // Add bright grass some paces inwards
-                int brightGrassPacesInwards = this.random.GetRandomValue(2, 4);
-
-                for (int i = 1; i < brightGrassPacesInwards; i++)
-                {
-                    PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT, placing, -1, i);
-                    PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), placing, 0, i);
-                    PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT, placing, 1, i);
-                }
-
-                // Add one of 4 possible bright grass ends
                 switch (this.random.GetRandomValue(0,4))
                 {
                     case 0:
@@ -983,9 +1134,358 @@ namespace DeepWoodsMod
             }
         }
 
+        private Location GetExitLocationForLichtung(ExitDirection exitDir)
+        {
+            if (this.exitLocations.ContainsKey(exitDir))
+            {
+                return this.exitLocations[exitDir];
+            }
+            else
+            {
+                switch(exitDir)
+                {
+                    case ExitDirection.LEFT:
+                        return new Location(0, this.spaceManager.GetMapHeight() / 2);
+                    case ExitDirection.RIGHT:
+                        return new Location(this.spaceManager.GetMapWidth() - 1, this.spaceManager.GetMapHeight() / 2);
+                    case ExitDirection.TOP:
+                        return new Location(this.spaceManager.GetMapWidth() / 2, 0);
+                    case ExitDirection.BOTTOM:
+                        return new Location(this.spaceManager.GetMapWidth() / 2, this.spaceManager.GetMapHeight() - 1);
+                }
+            }
+            throw new ArgumentException("Invalid ExitDirection: " + exitDir);
+        }
+
+        // Called by DeepWoodsStuffCreator
+        public void AddLakeToLichtung()
+        {
+            Location leftPos = GetExitLocationForLichtung(ExitDirection.LEFT);
+            Location rightPos = GetExitLocationForLichtung(ExitDirection.RIGHT);
+            Location topPos = GetExitLocationForLichtung(ExitDirection.TOP);
+            Location bottomPos = GetExitLocationForLichtung(ExitDirection.BOTTOM);
+
+            GenerateLichtungLakeCorner(leftPos, topPos, 1, 0, 0, -1, DeepWoodsLichtungTileMatrix.LEFT_TO_TOP);
+            GenerateLichtungLakeCorner(topPos, rightPos, 0, 1, 1, 0, DeepWoodsLichtungTileMatrix.TOP_TO_RIGHT);
+            GenerateLichtungLakeCorner(rightPos, bottomPos, -1, 0, 0, 1, DeepWoodsLichtungTileMatrix.RIGHT_TO_BOTTOM);
+            GenerateLichtungLakeCorner(bottomPos, leftPos, 0, -1, -1, 0, DeepWoodsLichtungTileMatrix.BOTTOM_TO_LEFT);
+
+            deepWoods.waterTiles = new bool[this.spaceManager.GetMapWidth(), this.spaceManager.GetMapHeight()];
+
+            int minX = leftPos.X + DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            int maxX = rightPos.X - DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            int minY = topPos.Y + DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            int maxY = bottomPos.Y - DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+
+            while (minX < maxX && buildingsLayer.Tiles[minX, leftPos.Y] == null)
+                minX++;
+
+            while (maxX > minX && buildingsLayer.Tiles[maxX, rightPos.Y] == null)
+                maxX--;
+
+            while (minY < maxY && buildingsLayer.Tiles[topPos.X, minY] == null)
+                minY++;
+
+            while (maxY > minY && buildingsLayer.Tiles[bottomPos.X, maxY] == null)
+                maxY--;
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    if (IsTileBrightGrass(x, y, true))
+                    {
+                        if (deepWoods.doesTileHaveProperty(x, y - 1, "Water", "Back") != null
+                            && buildingsLayer.Tiles[x, y - 1] == null
+                            && this.random.GetChance(CHANCE_FOR_WATER_LILY))
+                        {
+                            if (this.random.GetChance(CHANCE_FOR_BLOSSOM_ON_WATER_LILY))
+                                PlaceAnimatedTile(buildingsLayer, defaultOutdoorTileSheet, WATER_LILY_WITH_BLOSSOM, x, y - 1);
+                            else
+                                PlaceAnimatedTile(buildingsLayer, defaultOutdoorTileSheet, WATER_LILY, x, y - 1);
+                            PlaceTile(backLayer, WATER_LILY_SHADOW, x, y, PlaceMode.OVERRIDE);
+                        }
+                        else
+                        {
+                            PlaceTile(backLayer, GetRandomWaterTileIndex(), x, y, PlaceMode.OVERRIDE);
+                        }
+                        backLayer.Tiles[x, y].Properties.Add("Water", "T");
+                        deepWoods.waterTiles[x, y] = true;
+                    }
+                }
+            }
+        }
+
+        private void GenerateLichtungLakeCorner(Location startLocation, Location stopLocation, int xDir, int yDir, int xDirInwards, int yDirInwards, DeepWoodsLichtungTileMatrix matrix)
+        {
+            startLocation.X += xDir * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            startLocation.Y += yDir * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            stopLocation.X -= xDirInwards * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            stopLocation.Y -= yDirInwards * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+
+            while (!IsTileBrightGrass(stopLocation + new Location(xDir, yDir), true))
+            {
+                stopLocation.X -= xDirInwards;
+                stopLocation.Y -= yDirInwards;
+            }
+
+            while (!IsTileBrightGrass(startLocation + new Location(xDirInwards, yDirInwards), true))
+            {
+                startLocation.X += xDir;
+                startLocation.Y += yDir;
+            }
+
+            bool xDeltaIsNegative = (startLocation.X - stopLocation.X) < 0;
+            bool yDeltaIsNegative = (startLocation.Y - stopLocation.Y) < 0;
+
+            Location curLocation;
+            if (IsTileBrightGrass(startLocation - new Location(xDirInwards, yDirInwards), true))
+            {
+                PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_VERTICAL), startLocation.X, startLocation.Y);
+                Location nextLocation = startLocation - new Location(xDirInwards, yDirInwards);
+                while (IsTileBrightGrass(nextLocation, true))
+                {
+                    PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_VERTICAL), nextLocation.X, nextLocation.Y);
+                    nextLocation -= new Location(xDirInwards, yDirInwards);
+                }
+                curLocation = startLocation + new Location(xDirInwards, yDirInwards);
+            }
+            else
+            {
+                PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_CONCAVE_CORNER), startLocation.X, startLocation.Y);
+                curLocation = startLocation + new Location(xDirInwards, yDirInwards);
+            }
+
+            bool left = false;
+            bool top = false;
+            Location lastLocation = curLocation;
+            while ((curLocation.X == stopLocation.X || xDeltaIsNegative == ((curLocation.X - stopLocation.X) < 0))
+                && (curLocation.Y == stopLocation.Y || yDeltaIsNegative == ((curLocation.Y - stopLocation.Y) < 0)))
+            {
+                lastLocation = curLocation;
+                left = !IsTileBrightGrass(curLocation - new Location(xDir, yDir), true);
+                top = !IsTileBrightGrass(curLocation + new Location(xDirInwards, yDirInwards), true);
+                if (left && top)
+                {
+                    PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_CONCAVE_CORNER), curLocation.X, curLocation.Y);
+                    curLocation.X += xDir;
+                    curLocation.Y += yDir;
+                }
+                else if (top)
+                {
+                    PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_HORIZONTAL), curLocation.X, curLocation.Y);
+                    curLocation.X += xDir;
+                    curLocation.Y += yDir;
+                }
+                else if (left)
+                {
+                    PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_VERTICAL), curLocation.X, curLocation.Y);
+                    curLocation.X += xDirInwards;
+                    curLocation.Y += yDirInwards;
+                }
+                else
+                {
+                    PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_CONVEX_CORNER), curLocation.X, curLocation.Y);
+                    curLocation.X += xDirInwards;
+                    curLocation.Y += yDirInwards;
+                }
+            }
+
+            // Last tile must be closed at top, if algorithm did it wrong (because it didn't predict that it's the last tile), override here.
+            if (!top)
+            {
+                if (left)
+                    PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_CONCAVE_CORNER), lastLocation.X, lastLocation.Y, PlaceMode.OVERRIDE);
+                else
+                    PlaceAnimatedTile(buildingsLayer, lakeTileSheet, GetWaterTileWithAnimationPartner(matrix.WATER_HORIZONTAL), lastLocation.X, lastLocation.Y, PlaceMode.OVERRIDE);
+            }
+        }
+
+        private int[] GetWaterTileWithAnimationPartner(int[] tileIndices)
+        {
+            return GetWaterTileWithAnimationPartner(this.random.GetRandomValue(tileIndices));
+        }
+
+        private int[] GetWaterTileWithAnimationPartner(int tileIndex)
+        {
+            return new int[] { tileIndex, tileIndex + 4 };
+        }
+
         private void GenerateLichtung()
         {
-            // TODO!
+            Location leftPos = GetExitLocationForLichtung(ExitDirection.LEFT);
+            Location rightPos = GetExitLocationForLichtung(ExitDirection.RIGHT);
+            Location topPos = GetExitLocationForLichtung(ExitDirection.TOP);
+            Location bottomPos = GetExitLocationForLichtung(ExitDirection.BOTTOM);
+
+            GenerateLichtungCorner(leftPos + new Location(0, -1), topPos + new Location(-1, 0), 1, 0, 0, -1, DeepWoodsLichtungTileMatrix.LEFT_TO_TOP);
+            GenerateLichtungCorner(topPos + new Location(1, 0), rightPos + new Location(0, -1), 0, 1, 1, 0, DeepWoodsLichtungTileMatrix.TOP_TO_RIGHT);
+            GenerateLichtungCorner(rightPos + new Location(0, 1), bottomPos + new Location(1, 0), -1, 0, 0, 1, DeepWoodsLichtungTileMatrix.RIGHT_TO_BOTTOM);
+            GenerateLichtungCorner(bottomPos + new Location(-1, 0), leftPos + new Location(0, 1), 0, -1, -1, 0, DeepWoodsLichtungTileMatrix.BOTTOM_TO_LEFT);
+
+            GenerateLichtungEntranceTilesIfNecessary(ExitDirection.LEFT, leftPos, 1, 0, 0, -1, DeepWoodsLichtungTileMatrix.LEFT_TO_TOP);
+            GenerateLichtungEntranceTilesIfNecessary(ExitDirection.TOP, topPos, 0, 1, 1, 0, DeepWoodsLichtungTileMatrix.TOP_TO_RIGHT);
+            GenerateLichtungEntranceTilesIfNecessary(ExitDirection.RIGHT, rightPos, -1, 0, 0, 1, DeepWoodsLichtungTileMatrix.RIGHT_TO_BOTTOM);
+            GenerateLichtungEntranceTilesIfNecessary(ExitDirection.BOTTOM, bottomPos, 0, -1, -1, 0, DeepWoodsLichtungTileMatrix.BOTTOM_TO_LEFT);
+
+            int minX = DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            int minY = DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            int maxX = this.spaceManager.GetMapWidth() - DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            int maxY = this.spaceManager.GetMapHeight() - DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+
+            deepWoods.lightSources.Add(new Vector2(this.spaceManager.GetMapWidth() / 2, this.spaceManager.GetMapHeight() / 2));
+            int numAdditionalLights = ((maxX - minX) * (maxY - minY)) / DeepWoodsSpaceManager.NUM_TILES_PER_LIGHTSOURCE_IN_LICHTUNG;
+            for (int i = 0; i < numAdditionalLights; i++)
+            {
+                int x = this.random.GetRandomValue(minX, maxX);
+                int y = this.random.GetRandomValue(minY, maxY);
+                deepWoods.lightSources.Add(new Vector2(x, y));
+            }
+
+            deepWoods.lichtungCenter = (leftPos + rightPos + topPos + bottomPos) / 4;
+        }
+
+        private void GenerateLichtungEntranceTilesIfNecessary(ExitDirection exitDir, Location pos, int xDir, int yDir, int xDirInwards, int yDirInwards, DeepWoodsLichtungTileMatrix matrix)
+        {
+            // Lichtungen are generated as "growing" out from entrances from each map side.
+            // However, when a side doesn't actually have an entrance,
+            // the algorithm still behaves the same way from that side, assuming an entrance in the center of that side.
+            // Here we simply generate 3 tiles that "close" the gap that exists, because there are no entrance tiles.
+
+            if (this.exitLocations.ContainsKey(exitDir))
+                return;
+
+            pos.X += xDir * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            pos.Y += yDir * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+
+            PlaceTile(backLayer, HasGroundTile(pos.X + 2 * xDirInwards, pos.Y + 2 * yDirInwards) ? matrix.VERTICAL : matrix.CONVEX_CORNER, pos.X + xDirInwards, pos.Y + yDirInwards, PlaceMode.OVERRIDE);
+            PlaceTile(backLayer, matrix.VERTICAL, pos.X, pos.Y, PlaceMode.OVERRIDE);
+            PlaceTile(backLayer, HasGroundTile(pos.X - 2 * xDirInwards, pos.Y - 2 * yDirInwards) ? matrix.VERTICAL : matrix.INVERSE_CONVEX_CORNER, pos.X - xDirInwards, pos.Y - yDirInwards, PlaceMode.OVERRIDE);
+        }
+
+        private bool HasGroundTile(int x, int y)
+        {
+            return this.backLayer.Tiles[x, y] != null;
+        }
+
+        private void GenerateLichtungCorner(Location startLocation, Location stopLocation, int xDir, int yDir, int xDirInwards, int yDirInwards, DeepWoodsLichtungTileMatrix matrix)
+        {
+            startLocation.X += xDir * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            startLocation.Y += yDir * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            stopLocation.X -= xDirInwards * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+            stopLocation.Y -= yDirInwards * DeepWoodsSpaceManager.LICHTUNG_ENTRANCE_DEPTH;
+
+            FillLichtungRow(startLocation - new Location(xDirInwards, yDirInwards), stopLocation - new Location(xDirInwards, yDirInwards), xDir, yDir);
+
+            Location curLocation = new Location(startLocation.X, startLocation.Y);
+            bool isSteep = false;
+            bool isHorizontal = true;
+
+            while (Math.Abs(curLocation.X - stopLocation.X) > 1 && Math.Abs(curLocation.Y - stopLocation.Y) > 1)
+            {
+                bool isVerticalBlocked = backLayer.Tiles[curLocation.X + xDirInwards, curLocation.Y + yDirInwards] != null;
+                bool goHorizontal = isSteep || isVerticalBlocked || this.random.GetChance(GetProbabilityForHorizontal(curLocation, stopLocation, xDir == 0));
+                bool goSteep = !isSteep && !isHorizontal && !goHorizontal && this.random.GetChance(Probability.FIFTY_FIFTY);
+
+                PlaceTile(backLayer, ChoseLichtungCornerTile(matrix, isHorizontal, goHorizontal, isSteep, goSteep), curLocation.X, curLocation.Y, PlaceMode.OVERRIDE);
+                FillLichtungRow(curLocation, stopLocation, xDir, yDir);
+
+                if (goSteep)
+                {
+                    curLocation.X += xDir + xDirInwards;
+                    curLocation.Y += yDir + yDirInwards;
+                }
+                else if (goHorizontal)
+                {
+                    curLocation.X += xDir;
+                    curLocation.Y += yDir;
+                }
+                else
+                {
+                    curLocation.X += xDirInwards;
+                    curLocation.Y += yDirInwards;
+                }
+
+                isHorizontal = goHorizontal;
+                isSteep = goSteep;
+            }
+
+            // Finish last tiles from curLocation to stop in x direction:
+            while (Math.Abs((curLocation.X - stopLocation.X) * xDir) > 0 || Math.Abs((curLocation.Y - stopLocation.Y) * yDir) > 0)
+            {
+                PlaceTile(backLayer, ChoseLichtungCornerTile(matrix, isHorizontal, true, isSteep, false), curLocation.X, curLocation.Y, PlaceMode.OVERRIDE);
+                FillLichtungRow(curLocation, stopLocation, xDir, yDir);
+
+                curLocation.X += xDir;
+                curLocation.Y += yDir;
+
+                isHorizontal = true;
+                isSteep = false;
+            }
+
+            // Finish last tiles from curLocation to stop in y direction:
+            while (Math.Abs((curLocation.X - stopLocation.X) * xDirInwards) > 0 || Math.Abs((curLocation.Y - stopLocation.Y) * yDirInwards) > 0)
+            {
+                PlaceTile(backLayer, ChoseLichtungCornerTile(matrix, isHorizontal, false, isSteep, false), curLocation.X, curLocation.Y, PlaceMode.OVERRIDE);
+                FillLichtungRow(curLocation, stopLocation, xDir, yDir);
+
+                curLocation.X += xDirInwards;
+                curLocation.Y += yDirInwards;
+
+                isHorizontal = false;
+                isSteep = false;
+            }
+
+            // Finish last tile at stop:
+            PlaceTile(backLayer, ChoseLichtungCornerTile(matrix, isHorizontal, false, isSteep, false), curLocation.X, curLocation.Y, PlaceMode.OVERRIDE);
+            FillLichtungRow(curLocation, stopLocation, xDir, yDir);
+        }
+
+        private void FillLichtungRow(Location curLocation, Location stopLocation, int xDir, int yDir)
+        {
+            int numTilesToFillIn = 1 + Math.Max(Math.Abs((stopLocation.X - curLocation.X) * xDir), Math.Abs((stopLocation.Y - curLocation.Y) * yDir));
+            for (int i = 0; i <= numTilesToFillIn; i++)
+            {
+                PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BRIGHT), curLocation.X + i * xDir, curLocation.Y + i * yDir);
+            }
+        }
+
+        private int ChoseLichtungCornerTile(DeepWoodsLichtungTileMatrix matrix, bool isHorizontal, bool goHorizontal, bool isSteep, bool goSteep)
+        {
+            if (isSteep)
+            {
+                if (goHorizontal)
+                    return matrix.STEEP_TO_HORIZONTAL;
+
+                throw new ArgumentException("ChoseLichtungCornerTile: Invalid parameters, can't go from steep tile to anything but horizontal! (isHorizontal=" + isHorizontal + ", goHorizontal=" + goHorizontal + ", isSteep=" + isSteep + ", goSteep=" + goSteep + ")");
+            }
+
+            if (isHorizontal)
+            {
+                if (goHorizontal)
+                    return matrix.HORIZONTAL;
+                else if (goSteep)
+                    throw new ArgumentException("ChoseLichtungCornerTile: Invalid parameters, can't go to steep tile from anything but vertical! (isHorizontal=" + isHorizontal + ", goHorizontal=" + goHorizontal + ", isSteep=" + isSteep + ", goSteep=" + goSteep + ")");
+                else
+                    return matrix.CONCAVE_CORNER;
+            }
+            else
+            {
+                if (goHorizontal)
+                    return matrix.CONVEX_CORNER;
+                else if (goSteep)
+                    return matrix.VERTICAL_TO_STEEP;
+                else
+                    return matrix.VERTICAL;
+            }
+        }
+
+        private Probability GetProbabilityForHorizontal(Location location1, Location location2, bool flipped)
+        {
+            int xDiff = Math.Abs(location1.X - location2.X);
+            int yDiff = Math.Abs(location1.Y - location2.Y);
+            int total = xDiff + yDiff;
+            return new Probability(flipped ? yDiff : xDiff, total);
         }
 
         private bool PlaceTile(Layer layer, int[] tileIndices, Placing placing, int steps, int stepsInward, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE)
@@ -1000,6 +1500,11 @@ namespace DeepWoodsMod
             return PlaceTile(layer, tileIndex, x, y, placeMode);
         }
 
+        private bool PlaceTile(Layer layer, int[] tileIndices, int x, int y, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE)
+        {
+            return PlaceTile(layer, this.random.GetRandomValue(tileIndices), x, y, placeMode);
+        }
+
         private bool PlaceTile(Layer layer, int tileIndex, int x, int y, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE)
         {
             if (x < 0 || y < 0 || x >= this.spaceManager.GetMapWidth() || y >= this.spaceManager.GetMapHeight())
@@ -1010,7 +1515,30 @@ namespace DeepWoodsMod
 
             if (placeMode == PlaceMode.OVERRIDE || layer.Tiles[x, y] == null)
             {
-                layer.Tiles[x, y] = new StaticTile(layer, tileSheet, BlendMode.Alpha, tileIndex);
+                layer.Tiles[x, y] = new StaticTile(layer, defaultOutdoorTileSheet, BlendMode.Alpha, tileIndex);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool PlaceAnimatedTile(Layer layer, TileSheet tileSheet, int[][] tileIndicesFrames, int x, int y, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE, int frameInterval = 400)
+        {
+            return PlaceAnimatedTile(layer, tileSheet, tileIndicesFrames[this.random.GetRandomValue(0, tileIndicesFrames.Length)], x, y, placeMode, frameInterval);
+        }
+
+        private bool PlaceAnimatedTile(Layer layer, TileSheet tileSheet, int[] tileIndexFrames, int x, int y, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE, int frameInterval = 400)
+        {
+            if (x < 0 || y < 0 || x >= this.spaceManager.GetMapWidth() || y >= this.spaceManager.GetMapHeight())
+            {
+                // ModEntry.Log("Tile out of range: " +  x + ", " + y, StardewModdingAPI.LogLevel.Debug);
+                return false;
+            }
+
+            if (placeMode == PlaceMode.OVERRIDE || layer.Tiles[x, y] == null)
+            {
+                StaticTile[] frames = new List<int>(tileIndexFrames).ConvertAll<StaticTile>(tileIndex => new StaticTile(layer, tileSheet, BlendMode.Alpha, tileIndex)).ToArray();
+                layer.Tiles[x, y] = new AnimatedTile(layer, frames, frameInterval);
                 return true;
             }
 
@@ -1094,7 +1622,7 @@ namespace DeepWoodsMod
                 }
             }
 
-            int maxLightSources = Math.Max(1, numFillTiles / NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH);
+            int maxLightSources = Math.Max(1, numFillTiles / DeepWoodsSpaceManager.NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH);
             int numLightSources = 1 + this.random.GetRandomValue(0, maxLightSources);
             for (int i = 0; i < numLightSources; i++)
             {
