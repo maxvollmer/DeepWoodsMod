@@ -18,30 +18,23 @@ namespace DeepWoodsMod
         private const int SPAWN_FOOD_HEALTH_STEP_SIZE = 20;
         private const int MINIMUM_AXE_LEVEL = 0; // 0 for debugging purposes for now
 
-        private Texture2D texture;
         private new int parentSheetIndex;
         private float nextSpawnFoodHealth;
-
-        private int lol;
 
         public GingerBreadHouse()
             : base()
         {
-            this.texture = Game1.content.Load<Texture2D>("Buildings\\Plank Cabin");
             this.parentSheetIndex = 0;
             this.health.Value = START_HEALTH;
             this.nextSpawnFoodHealth = START_HEALTH - SPAWN_FOOD_HEALTH_STEP_SIZE;
-            this.lol = Game1.random.Next();
         }
 
         public GingerBreadHouse(Vector2 tile)
             : base(602, 5, 3, tile)
         {
-            this.texture = Game1.content.Load<Texture2D>("Buildings\\Plank Cabin");
             this.parentSheetIndex = 0;
             this.health.Value = START_HEALTH;
             this.nextSpawnFoodHealth = START_HEALTH - SPAWN_FOOD_HEALTH_STEP_SIZE;
-            this.lol = Game1.random.Next();
         }
 
         public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)
@@ -52,11 +45,11 @@ namespace DeepWoodsMod
                 globalPosition.X += (float)Math.Sin(2.0 * Math.PI / this.shakeTimer) * 4f;
             }
 
-            Rectangle upperHousePartRectangle = Game1.getSourceRectForStandardTileSheet(texture, this.parentSheetIndex, 16, 16);
+            Rectangle upperHousePartRectangle = Game1.getSourceRectForStandardTileSheet(Textures.gingerbreadHouse, this.parentSheetIndex, 16, 16);
             upperHousePartRectangle.Width = 5 * 16;
             upperHousePartRectangle.Height = 4 * 16;
 
-            Rectangle bottomHousePartRectangle = Game1.getSourceRectForStandardTileSheet(texture, this.parentSheetIndex, 16, 16);
+            Rectangle bottomHousePartRectangle = Game1.getSourceRectForStandardTileSheet(Textures.gingerbreadHouse, this.parentSheetIndex, 16, 16);
             bottomHousePartRectangle.Y += 4 * 16;
             bottomHousePartRectangle.Width = 5 * 16;
             bottomHousePartRectangle.Height = 3 * 16;
@@ -64,8 +57,8 @@ namespace DeepWoodsMod
             Vector2 upperHousePartPosition = globalPosition;
             upperHousePartPosition.Y -= 4 * 64;
 
-            spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, upperHousePartPosition), upperHousePartRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((this.tile.Y + 1f) * 64f / 10000f + this.tile.X / 100000f));
-            spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, globalPosition), bottomHousePartRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((this.tile.Y + 1f) * 64f / 10000f + this.tile.X / 100000f));
+            spriteBatch.Draw(Textures.gingerbreadHouse, Game1.GlobalToLocal(Game1.viewport, upperHousePartPosition), upperHousePartRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((this.tile.Y + 1f) * 64f / 10000f + this.tile.X / 100000f));
+            spriteBatch.Draw(Textures.gingerbreadHouse, Game1.GlobalToLocal(Game1.viewport, globalPosition), bottomHousePartRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((this.tile.Y + 1f) * 64f / 10000f + this.tile.X / 100000f));
         }
 
         public override bool performToolAction(Tool t, int damage, Vector2 tileLocation, GameLocation location)
@@ -85,7 +78,7 @@ namespace DeepWoodsMod
 
             location.playSound("axchop");
             Game1.createRadialDebris(Game1.currentLocation, Debris.woodDebris, (int)debrisLocation.X, (int)tileLocation.Y, Game1.random.Next(4, 9), false, -1, false, -1);
-            this.health.Value -= SPAWN_FOOD_HEALTH_STEP_SIZE;// Math.Max(1f, (t.upgradeLevel + 1) * 0.75f);
+            this.health.Value -= Math.Max(1f, (t.upgradeLevel + 1) * 0.75f);
 
             if (this.health > 0)
             {
@@ -106,7 +99,6 @@ namespace DeepWoodsMod
 
             PlayDestroyedSounds(location);
 
-            // TODO: Spawn lots of stuffs :3
             for (int x = 0; x < this.width; x++)
             {
                 for (int y = 0; y < this.height; y++)
@@ -116,7 +108,6 @@ namespace DeepWoodsMod
                 }
             }
 
-            ModEntry.Log("GingerBreadHouse died: " + this.lol);
             return true;
         }
 
@@ -146,14 +137,6 @@ namespace DeepWoodsMod
                 // Non-food items with hardcoded weight (their price is too low, they would always spawn)
                 new WeightedValue(388, 3000),  // Wood // 2 // 3000 (50000)
                 new WeightedValue(92, 3000),   // Sap  // 2 // 3000 (50000)
-                /* // TODO: Figure out how to add these!
-                // Non-food items with hardcoded weight (they don't have a sell price and are not included in ObjectInformation)
-                new WeightedValue(40, 10000),   // Big Green Cane // x // 100 (x)
-                new WeightedValue(41, 10000),   // Green Canes    // x // 100 (x)
-                new WeightedValue(42, 10000),   // Mixed Cane     // x // 100 (x)
-                new WeightedValue(43, 10000),   // Red Canes      // x // 100 (x)
-                new WeightedValue(44, 10000),   // Big Red Cane   // x // 100 (x)
-                */
             });
         }
 
