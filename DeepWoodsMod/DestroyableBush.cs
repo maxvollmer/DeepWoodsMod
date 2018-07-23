@@ -9,19 +9,19 @@ namespace DeepWoodsMod
     // Hacky class that overrides StardewValley's bush class to allow destroying bushes with an axe anywhere.
     class DestroyableBush : Bush
     {
-        private Multiplayer GetMultiplayer()
-        {
-            return Game1MultiplayerAccessProvider.GetMultiplayer();
-        }
+        private const int MIN_AXE_LEVEL = 0;    // TODO: 0 for development
+        protected int minAxeLevel;
 
         public DestroyableBush()
             : base()
         {
+            minAxeLevel = MIN_AXE_LEVEL;
         }
 
         public DestroyableBush(Vector2 tileLocation, int size, GameLocation location)
             : base(tileLocation, size, location)
         {
+            minAxeLevel = MIN_AXE_LEVEL;
         }
 
         public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)
@@ -31,15 +31,13 @@ namespace DeepWoodsMod
             if (explosion > 0)
             {
                 ModEntry.GetReflection().GetMethod(this, "shake").Invoke(tileLocation, true);
-                // this.shake(tileLocation, true);
                 return false;
             }
             if (t != null && t is Axe)
             {
                 location.playSound("leafrustle");
                 ModEntry.GetReflection().GetMethod(this, "shake").Invoke(tileLocation, true);
-                //this.shake(tileLocation, true);
-                if ((t as Axe).upgradeLevel >= 1)
+                if ((t as Axe).upgradeLevel >= minAxeLevel)
                 {
                     this.health -= (t as Axe).upgradeLevel / 5f;
                     if ((double)this.health <= -1.0)
@@ -69,8 +67,7 @@ namespace DeepWoodsMod
                         {
                             for (int index2 = 0; index2 < 12; ++index2)
                             {
-                                // Game1.multiplayer.broadcastSprites(location, new TemporaryAnimatedSprite[1]
-                                GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
+                                Game1MultiplayerAccessProvider.GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
                                 {
                                       new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(355, 1200 + (Game1.IsFall ? 16 : (Game1.IsWinter ? -16 : 0)), 16, 16), Utility.getRandomPositionInThisRectangle(this.getBoundingBox(), Game1.random) - new Vector2(0.0f, (float) Game1.random.Next(64)), false, 0.01f, Game1.IsWinter ? Color.Cyan : Color.White)
                                       {
@@ -87,13 +84,11 @@ namespace DeepWoodsMod
                                 });
                                 if (index2 % 6 == 0)
                                 {
-                                    // Game1.multiplayer.broadcastSprites(location, new TemporaryAnimatedSprite[1]
-                                    GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
+                                    Game1MultiplayerAccessProvider.GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
                                     {
                                         new TemporaryAnimatedSprite(50, Utility.getRandomPositionInThisRectangle(this.getBoundingBox(), Game1.random) - new Vector2(32f, (float) Game1.random.Next(32, 64)), color, 8, false, 100f, 0, -1, -1f, -1, 0)
                                     });
-                                    // Game1.multiplayer.broadcastSprites(location, new TemporaryAnimatedSprite[1]
-                                    GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
+                                    Game1MultiplayerAccessProvider.GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
                                     {
                                         new TemporaryAnimatedSprite(12, Utility.getRandomPositionInThisRectangle(this.getBoundingBox(), Game1.random) - new Vector2(32f, (float) Game1.random.Next(32, 64)), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
                                     });
