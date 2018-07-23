@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Xml.Serialization;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
@@ -33,7 +34,7 @@ string modFolder = helper.DirectoryPath;
 
 namespace DeepWoodsMod
 {
-    public class ModEntry : Mod, IAssetEditor
+    public class ModEntry : Mod, IAssetEditor, IAssetLoader
     {
         private Dictionary<long, GameLocation> playerLocations = new Dictionary<long, GameLocation>();
 
@@ -49,6 +50,11 @@ namespace DeepWoodsMod
             return ModEntry.mod?.Helper?.Reflection;
         }
 
+        public static IModHelper GetHelper()
+        {
+            return ModEntry.mod?.Helper;
+        }
+
         public override void Entry(IModHelper helper)
         {
             ModEntry.mod = this;
@@ -58,6 +64,8 @@ namespace DeepWoodsMod
             TimeEvents.AfterDayStarted += this.TimeEvents_AfterDayStarted;
             TimeEvents.TimeOfDayChanged += this.TimeEvents_TimeOfDayChanged;
             GameEvents.UpdateTick += this.GameEvents_UpdateTick;
+            Game1MultiplayerAccessProvider.InterceptMultiplayer();
+            Textures.LoadAll();
         }
 
         private void LoadAndAddDeepWoods()
@@ -102,7 +110,8 @@ namespace DeepWoodsMod
             EasterEggFunctions.InterceptIncubatorEggs();
 
             // TODO: TEMPTEMPTEMP
-            // Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", DeepWoods.ENTER_LOCATION.X, DeepWoods.ENTER_LOCATION.Y, false));
+            Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", DeepWoods.ENTER_LOCATION.X, DeepWoods.ENTER_LOCATION.Y, false));
+            // Game1.player.warpFarmer(new Warp(0, 0, "WizardHouse", 9, 15, false));
         }
 
         private void TimeEvents_TimeOfDayChanged(object sender, EventArgs args)
@@ -149,6 +158,10 @@ namespace DeepWoodsMod
 
             // Fix lighting in Woods and DeepWoods
             DeepWoods.FixLighting();
+
+            // Add woods obelisk to wizard shop if possible and necessary,
+            // intercept Building.obeliskWarpForReal() calls.
+            WoodsObelisk.InjectWoodsObeliskIntoGame();
         }
 
         private void PlayerWarped(Farmer who, GameLocation prevLocation, GameLocation newLocation)
@@ -218,6 +231,23 @@ namespace DeepWoodsMod
             }
 
             return warps.Trim();
+        }
+
+        public bool CanLoad<T>(IAssetInfo asset)
+        {
+            return asset.AssetNameEquals("Buildings\\Woods Obelisk") || asset.AssetNameEquals("Content\\Buildings\\Woods Obelisk.xnb") || asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet");
+        }
+
+        public T Load<T>(IAssetInfo asset)
+        {
+            if (asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet"))
+            {
+                return (T)(object)Textures.lakeTilesheet;
+            }
+            else
+            {
+                return (T)(object)Textures.woodsObelisk;
+            }
         }
     }
 }
