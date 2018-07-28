@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
+using StardewValley;
 using System.IO;
 
 namespace DeepWoodsMod
@@ -17,6 +18,7 @@ namespace DeepWoodsMod
         public static Texture2D unicorn;
         public static Texture2D excaliburStone;
         public static Texture2D lakeTilesheet;
+        public static Texture2D festivals;
 
         public static void LoadAll()
         {
@@ -28,6 +30,7 @@ namespace DeepWoodsMod
             unicorn = ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "unicorn.png"), ContentSource.ModFolder);
             excaliburStone = ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "excalibur_stone.png"), ContentSource.ModFolder);
             lakeTilesheet = ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "lake_tilesheet.png"), ContentSource.ModFolder);
+            festivals = Game1.content.Load<Texture2D>("Maps\\Festivals");
         }
     }
 }

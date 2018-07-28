@@ -1,16 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using StardewValley.Buildings;
-using StardewValley.Locations;
-using StardewValley.Menus;
-using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DeepWoodsMod
 {
@@ -19,16 +10,11 @@ namespace DeepWoodsMod
     /// </summary>
     class EasterEgg : TerrainFeature
     {
-        // public const string FESTIVAL_TILESHEET_ID = "Festivals";
-        // this.map.AddTileSheet(new TileSheet(FESTIVAL_TILESHEET_ID, this.map, "Maps\\Festivals", new Size(32, 32), new Size(16, 16)));
-
-        private Texture2D texture;
         private int eggTileIndex;
         private bool wasPickedUp;
 
         public EasterEgg()
         {
-            this.texture = Game1.content.Load<Texture2D>("Maps\\Festivals");
             this.eggTileIndex = Game1.random.Next(67, 71);
             this.wasPickedUp = false;
         }
@@ -80,9 +66,9 @@ namespace DeepWoodsMod
             Vector2 local = Game1.GlobalToLocal(Game1.viewport, new Vector2(tileLocation.X * 64, tileLocation.Y * 64));
 
             Rectangle destinationRectangle = new Rectangle((int)local.X, (int)local.Y, 64, 64);
-            Rectangle sourceRectangle = Game1.getSourceRectForStandardTileSheet(this.texture, this.eggTileIndex, 16, 16);
+            Rectangle sourceRectangle = Game1.getSourceRectForStandardTileSheet(Textures.festivals, this.eggTileIndex, 16, 16);
 
-            b.Draw(this.texture, destinationRectangle, sourceRectangle, Color.White);
+            b.Draw(Textures.festivals, destinationRectangle, sourceRectangle, Color.White);
         }
     }
 }

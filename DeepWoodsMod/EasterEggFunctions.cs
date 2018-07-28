@@ -9,7 +9,6 @@ namespace DeepWoodsMod
 {
     class EasterEggFunctions
     {
-
         private static int RemoveAllEggsFromLocation(GameLocation location)
         {
             if (location == null)

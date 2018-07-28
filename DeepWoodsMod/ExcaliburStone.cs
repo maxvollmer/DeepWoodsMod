@@ -60,7 +60,9 @@ namespace DeepWoodsMod
                 && Game1.player.FarmingLevel >= 10
                 && Game1.player.CombatLevel >= 10
                 && (Game1.player.timesReachedMineBottom >= 1 || Game1.MasterPlayer.timesReachedMineBottom >= 1)
-                && (Game1.player.mailReceived.Contains("museumComplete") || Game1.MasterPlayer.mailReceived.Contains("museumComplete")))
+                && Game1.getFarm().grandpaScore >= 4
+                && (!Game1.player.mailReceived.Contains("JojaMember") && !Game1.MasterPlayer.mailReceived.Contains("JojaMember"))
+                && (Game1.player.hasCompletedCommunityCenter() || Game1.MasterPlayer.hasCompletedCommunityCenter()))
             {
                 location.playSoundAt(Sounds.YOBA, this.tilePosition);
                 Game1.player.addItemByMenuIfNecessaryElseHoldUp(Excalibur.GetOne());

@@ -6,15 +6,12 @@ using StardewValley.Characters;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     class Unicorn : Horse
     {
-        private const int UNICORN_SCARE_DISTANCE = 8;
-        private const int UNICORN_SCARE_SPEED = 3;
-        private const int UNICORN_FLEE_SPEED = 12;
-
         private NetBool isScared = new NetBool(false);
         private NetBool isPetted = new NetBool(false);
         private NetInt fleeFacingDirection = new NetInt(0);

@@ -25,6 +25,7 @@ namespace DeepWoodsMod
         }
 
         /*
+         * TODO
         public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)
         {
             // We increase number of weeds before calling base.performToolAction, so it will never realize it "died" and thus never create loot.

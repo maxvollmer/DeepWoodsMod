@@ -1,40 +1,39 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static DeepWoodsMod.DeepWoodsRandom;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     class GingerBreadHouse : ResourceClump
     {
-        private const int START_HEALTH = 200;
-        private const int SPAWN_FOOD_HEALTH_STEP_SIZE = 20;
-        private const int MINIMUM_AXE_LEVEL = 0; // 0 for debugging purposes for now
-
         private new int parentSheetIndex;
-        private float nextSpawnFoodHealth;
+        private NetFloat nextSpawnFoodHealth = new NetFloat();
 
         public GingerBreadHouse()
             : base()
         {
+            InitNetFields();
             this.parentSheetIndex = 0;
-            this.health.Value = START_HEALTH;
-            this.nextSpawnFoodHealth = START_HEALTH - SPAWN_FOOD_HEALTH_STEP_SIZE;
         }
 
         public GingerBreadHouse(Vector2 tile)
             : base(602, 5, 3, tile)
         {
+            InitNetFields();
             this.parentSheetIndex = 0;
-            this.health.Value = START_HEALTH;
-            this.nextSpawnFoodHealth = START_HEALTH - SPAWN_FOOD_HEALTH_STEP_SIZE;
+            this.health.Value = GINGERBREAD_HOUSE_START_HEALTH;
+            this.nextSpawnFoodHealth.Value = GINGERBREAD_HOUSE_START_HEALTH - GINGERBREAD_HOUSE_SPAWN_FOOD_HEALTH_STEP_SIZE;
+        }
+
+        private void InitNetFields()
+        {
+            this.NetFields.AddFields(this.nextSpawnFoodHealth);
         }
 
         public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)
@@ -66,7 +65,7 @@ namespace DeepWoodsMod
             if (!(t is Axe))
                 return false;
 
-            if (t.upgradeLevel < MINIMUM_AXE_LEVEL)
+            if (t.upgradeLevel < GINGERBREAD_HOUSE_MINIMUM_AXE_LEVEL)
             {
                 location.playSound("axe");
                 Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:ResourceClump.cs.13948"));
@@ -90,7 +89,7 @@ namespace DeepWoodsMod
 
                     SpawnFoodItem(t, (int)tileLocation.X, (int)tileLocation.Y);
 
-                    this.nextSpawnFoodHealth = this.health - SPAWN_FOOD_HEALTH_STEP_SIZE;
+                    this.nextSpawnFoodHealth.Value = this.health - GINGERBREAD_HOUSE_SPAWN_FOOD_HEALTH_STEP_SIZE;
                 }
 
                 this.shakeTimer = 100f;

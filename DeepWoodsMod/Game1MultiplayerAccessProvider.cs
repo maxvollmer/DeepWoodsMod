@@ -5,17 +5,13 @@ using StardewValley.Network;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     class Game1MultiplayerAccessProvider : Game1
     {
-        public const byte MSG_TYPE_DEEPWOODS_WARP = 99; // Let's hope no other mod uses this value for a custom message :S
-
         private Game1MultiplayerAccessProvider() { }
 
         private class InterceptingMultiplayer : Multiplayer
@@ -132,7 +128,7 @@ namespace DeepWoodsMod
 
             private void InterceptProcessIncomingMessage(IncomingMessage msg)
             {
-                if (msg.MessageType == MSG_TYPE_DEEPWOODS_WARP)
+                if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
                 {
                     Farmer who = Game1.getFarmer(msg.FarmerID);
                     if (who == null)
@@ -143,7 +139,8 @@ namespace DeepWoodsMod
                     {
                         // Client requests that we load and activate a specific DeepWoods level they want to warp into.
                         DeepWoods.AddDeepWoodsFromObelisk(data.name, data.level, data.seed);
-                        who.queueMessage(Game1MultiplayerAccessProvider.MSG_TYPE_DEEPWOODS_WARP, Game1.MasterPlayer, new object[] { data.name, data.level, data.seed });
+                        // Send message to client telling them we have the level ready.
+                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS_WARP, Game1.MasterPlayer, new object[] { data.name, data.level, data.seed });
                     }
                     else
                     {

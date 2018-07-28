@@ -2,30 +2,23 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.TerrainFeatures;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     class ThornyBush : DestroyableBush
     {
-        private const int MIN_AXE_LEVEL = 0;    // TODO: 0 for development
-        private const int DAMAGE_PER_LEVEL = 5;
-
         public ThornyBush()
             : base()
         {
-            minAxeLevel = MIN_AXE_LEVEL;
+            minAxeLevel = THORNY_BUSH_MIN_AXE_LEVEL;
         }
 
         public ThornyBush(Vector2 tileLocation, GameLocation location)
             : base(tileLocation, Bush.smallBush, location)
         {
-            minAxeLevel = MIN_AXE_LEVEL;
+            minAxeLevel = THORNY_BUSH_MIN_AXE_LEVEL;
         }
 
         public override bool performUseAction(Vector2 tileLocation, GameLocation location)
@@ -51,7 +44,7 @@ namespace DeepWoodsMod
         private int GetDamage(DeepWoods deepWoods)
         {
             int level = deepWoods?.GetLevel() ?? 1;
-            return (1 + level / 10) * DAMAGE_PER_LEVEL;
+            return (1 + level / 10) * THORNY_BUSH_DAMAGE_PER_LEVEL;
         }
 
         public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)

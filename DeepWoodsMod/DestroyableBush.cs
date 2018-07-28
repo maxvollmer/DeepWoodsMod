@@ -1,27 +1,27 @@
-﻿using DeepWoodsMod;
+﻿
 using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     // Hacky class that overrides StardewValley's bush class to allow destroying bushes with an axe anywhere.
     class DestroyableBush : Bush
     {
-        private const int MIN_AXE_LEVEL = 0;    // TODO: 0 for development
         protected int minAxeLevel;
 
         public DestroyableBush()
             : base()
         {
-            minAxeLevel = MIN_AXE_LEVEL;
+            minAxeLevel = MIN_AXE_LEVEL_FOR_BUSH;
         }
 
         public DestroyableBush(Vector2 tileLocation, int size, GameLocation location)
             : base(tileLocation, size, location)
         {
-            minAxeLevel = MIN_AXE_LEVEL;
+            minAxeLevel = MIN_AXE_LEVEL_FOR_BUSH;
         }
 
         public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)

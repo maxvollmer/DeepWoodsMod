@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
@@ -21,7 +18,7 @@ namespace DeepWoodsMod
             : base()
         {
             this.displayName = "Easter Egg";
-            this.name = "DeepWoodsModEasterEggItemIHopeThisNameIsUniqueEnoughToNotMessOtherModsUpw5365r6zgdhrt6u";
+            this.name = UNIQUE_NAME_FOR_EASTER_EGG_ITEMS;
             this.Category = StardewValley.Object.EggCategory;
             this.ParentSheetIndex = PARENT_SHEET_INDEX;
             this.eggTileIndex = 67;

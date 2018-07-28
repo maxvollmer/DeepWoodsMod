@@ -1,115 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
-using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
-using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using xTile.Dimensions;
 using static DeepWoodsMod.DeepWoodsRandom;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     class DeepWoodsStuffCreator
     {
-        private const int MIN_LEVEL_FOR_METEORITE = 10;
-        private const int MIN_LEVEL_FOR_FLOWERS = 10;
-        private const int MIN_LEVEL_FOR_FRUITS = 10;
-        private const int MIN_LEVEL_FOR_GINGERBREAD_HOUSE = 20;
-
-        private const int MAX_EASTER_EGGS_PER_WOOD = 4;
-
-        private readonly static Probability CHANCE_FOR_GINGERBREAD_HOUSE = new Probability(1);
-        private readonly static Probability CHANCE_FOR_RESOURCECLUMP = new Probability(5);
-        private readonly static Probability CHANCE_FOR_LARGE_BUSH = new Probability(10);
-        private readonly static Probability CHANCE_FOR_MEDIUM_BUSH = new Probability(5);
-        private readonly static Probability CHANCE_FOR_SMALL_BUSH = new Probability(5);
-        private readonly static Probability CHANCE_FOR_GROWN_TREE = new Probability(25);
-        private readonly static Probability CHANCE_FOR_MEDIUM_TREE = new Probability(10);
-        private readonly static Probability CHANCE_FOR_SMALL_TREE = new Probability(10);
-        private readonly static Probability CHANCE_FOR_GROWN_FRUIT_TREE = new Probability(1);
-        private readonly static Probability CHANCE_FOR_SMALL_FRUIT_TREE = new Probability(5);
-        private readonly static Probability CHANCE_FOR_WEED = new Probability(20);
-        private readonly static Probability CHANCE_FOR_TWIG = new Probability(10);
-        private readonly static Probability CHANCE_FOR_STONE = new Probability(10);
-        private readonly static Probability CHANCE_FOR_MUSHROOM = new Probability(10);
-        private readonly static Probability CHANCE_FOR_FLOWER = new Probability(7);
-        private readonly static Probability CHANCE_FOR_FLOWER_IN_WINTER = new Probability(3);
-
-        private readonly static Probability CHANCE_FOR_METEORITE = new Probability(1);
-        private readonly static Probability CHANCE_FOR_BOULDER = new Probability(10);
-        private readonly static Probability CHANCE_FOR_HOLLOWLOG = new Probability(30);
-
-        private readonly static Probability CHANCE_FOR_FRUIT = new Probability(50);
-
-        private readonly static Probability CHANCE_FOR_FLOWER_ON_LICHTUNG = new Probability(5);
-
-        private readonly static Luck LUCK_FOR_EASTEREGG = new Luck(5, 25, 1000);
-        private readonly static Luck LUCK_FOR_MAX_EASTER_EGGS_INCREASE = new Luck(0, 25);
-        private readonly static Luck LUCK_FOR_MAX_EASTER_EGGS_NOT_HALFED = new Luck(75, 100);
-
-        // Possibilities for stuff in a Lichtung
-        private const int LICHTUNG_STUFF_NOTHING = 0;
-        private const int LICHTUNG_STUFF_LAKE = 1;
-        private const int LICHTUNG_STUFF_HEALING_FOUNTAIN = 2;
-        private const int LICHTUNG_STUFF_GINGERBREAD_HOUSE = 3;
-        private const int LICHTUNG_STUFF_TREASURE = 4;
-        private const int LICHTUNG_STUFF_IRIDIUM_TREE = 5;
-        private const int LICHTUNG_STUFF_UNICORN = 6;
-        private const int LICHTUNG_STUFF_EXCALIBUR = 7;
-
-        private readonly static WeightedValue[] LICHTUNG_STUFF = new WeightedValue[]{
-            new WeightedValue(LICHTUNG_STUFF_NOTHING, 1500),
-            new WeightedValue(LICHTUNG_STUFF_LAKE, 1500 * 1000),
-            new WeightedValue(LICHTUNG_STUFF_HEALING_FOUNTAIN, 1000),
-            new WeightedValue(LICHTUNG_STUFF_GINGERBREAD_HOUSE, 1000),
-            new WeightedValue(LICHTUNG_STUFF_TREASURE, 500),
-            new WeightedValue(LICHTUNG_STUFF_IRIDIUM_TREE, 500),
-            new WeightedValue(LICHTUNG_STUFF_UNICORN, 250),
-            new WeightedValue(LICHTUNG_STUFF_EXCALIBUR, 250)
-        };
-
-        private readonly static WeightedValue[] LICHTUNG_PILE_ITEM_IDS_FOR_TREASURE = new WeightedValue[] {
-            new WeightedValue(384, 2000),   // Gold ore
-            new WeightedValue(386, 300),    // Iridium ore
-            new WeightedValue(80, 75),      // Quartz (25g)
-            new WeightedValue(82, 75),      // Fire Quartz (80g)
-            new WeightedValue(66, 75),      // Amethyst (100g)
-            new WeightedValue(62, 50),      // Aquamarine (180g)
-            new WeightedValue(60, 40),      // Emerald (250g)
-            new WeightedValue(64, 30),      // Ruby (250g)
-            new WeightedValue(72, 10),      // Diamond
-            new WeightedValue(74, 1),       // Prismatic Shard
-            new WeightedValue(166, 1),      // Treasure Chest
-        };
-
-        private readonly static WeightedValue[] LICHTUNG_PILE_ITEM_IDS_FOR_TRASH = new WeightedValue[] {
-            new WeightedValue(168, 2000),   // Trash
-            new WeightedValue(172, 1000),   // Old Newspaper
-            new WeightedValue(170, 1000),   // Glasses
-            new WeightedValue(171, 500),    // CD
-            new WeightedValue(167, 100),    // Joja Cola
-            new WeightedValue(122, 5),      // Ancient Dwarf Computer
-            new WeightedValue(118, 5),      // Glass Shards
-            // new WeightedValue(169, 2000),// Driftwood
-        };
-
-        private readonly static Probability CHANCE_FOR_LEWIS_SHORTS_IN_TRASH = new Probability(1, 1000);
-
-        private readonly static Probability CHANCE_FOR_METALBARS_IN_TREASURE = new Probability(10);
-        private readonly static Probability CHANCE_FOR_ELIXIRS_IN_TREASURE = new Probability(10);
-        private readonly static Probability CHANCE_FOR_GOLDENMASK_IN_TREASURE = new Probability(10);
-        private readonly static Probability CHANCE_FOR_DWARF_SCROLL_IN_TREASURE = new Probability(10);
-        private readonly static Probability CHANCE_FOR_RING_IN_TREASURE = new Probability(10);
-
-        // If daily luck is negative, this value will be used to determine if a Lichtung has a pile of trash instead of something awesome
-        private readonly static Luck LUCK_FOR_LICHTUNG_STUFF_NOT_TRASH = new Luck(0, 100);
-
         private DeepWoods deepWoods;
         private DeepWoodsRandom random;
         private DeepWoodsSpaceManager spaceManager;
@@ -156,8 +58,11 @@ namespace DeepWoodsMod
             int mapWidth = this.spaceManager.GetMapWidth();
             int mapHeight = this.spaceManager.GetMapHeight();
 
-            // TODO: Add thorny bushes around entrance area.
-            // deepWoods.terrainFeatures[new Vector2(10, 10), new ThornyBush(new Vector2(10, 10), deepWoods));
+            if (deepWoods.GetLevel() > MIN_LEVEL_FOR_THORNY_BUSHES)
+            {
+                // TODO: Add thorny bushes around entrance area.
+                // deepWoods.terrainFeatures[new Vector2(10, 10), new ThornyBush(new Vector2(10, 10), deepWoods));
+            }
 
             if (deepWoods.isLichtung)
             {
@@ -172,7 +77,7 @@ namespace DeepWoodsMod
             }
 
             // Calculate maximum theoretical amount of terrain features for the current map.
-            int maxTerrainFeatures = (mapWidth * mapHeight) / DeepWoodsSpaceManager.MINIMUM_TILES_FOR_TERRAIN_FEATURE;
+            int maxTerrainFeatures = (mapWidth * mapHeight) / MINIMUM_TILES_FOR_TERRAIN_FEATURE;
 
             int numEasterEggs = 0;
             int maxEasterEggs = 0;
@@ -322,51 +227,50 @@ namespace DeepWoodsMod
 
         private void AddSomethingAwesomeForLichtung(Vector2 location)
         {
-            if (true || this.random.GetLuck(LUCK_FOR_LICHTUNG_STUFF_NOT_TRASH, deepWoods.GetLuckLevel()))
+            switch (this.random.GetRandomValue(LICHTUNG_STUFF))
             {
-                switch (this.random.GetRandomValue(LICHTUNG_STUFF))
-                {
-                    case LICHTUNG_STUFF_LAKE:
-                        this.deepWoodsBuilder.AddLakeToLichtung();
-                        break;
-                    case LICHTUNG_STUFF_TREASURE:
+                case LICHTUNG_STUFF_LAKE:
+                    this.deepWoodsBuilder.AddLakeToLichtung();
+                    break;
+                case LICHTUNG_STUFF_TREASURE:
+                    if (this.random.GetLuck(LUCK_FOR_LICHTUNG_TREASURE_NOT_TRASH))
+                    {
                         deepWoods.objects[location] = new TreasureChest(location, CreateRandomTreasureChestItems());
                         AddLichtungStuffPile(location, LICHTUNG_PILE_ITEM_IDS_FOR_TREASURE);
-                        break;
-                    case LICHTUNG_STUFF_GINGERBREAD_HOUSE:
-                        deepWoods.resourceClumps.Add(new GingerBreadHouse(location - new Vector2(2, 4)));
-                        AddGingerBreadHouseDeco(location - new Vector2(2, 4));
-                        break;
-                    case LICHTUNG_STUFF_HEALING_FOUNTAIN:
-                        deepWoods.largeTerrainFeatures.Add(new HealingFountain(location - new Vector2(2, 0)));
-                        AddRipeFruitTreesAroundFountain(location - new Vector2(2, 2));
-                        if (Game1.currentSeason == "winter")
-                            AddWinterFruitsAroundFountain(location - new Vector2(2, 2));
-                        break;
-                    case LICHTUNG_STUFF_IRIDIUM_TREE:
-                        deepWoods.resourceClumps.Add(new IridiumTree(location));
-                        AddIridiumNodesAroundTree(location);
-                        Game1.currentLightSources.Add(new LightSource(LightSource.sconceLight, location, 6, new Color(1f, 0f, 0f)));
-                        break;
-                    case LICHTUNG_STUFF_UNICORN:
-                        if (!Game1.isRaining)
-                        {
-                            deepWoods.characters.Add(new Unicorn(location));
-                        }
-                        break;
-                    case LICHTUNG_STUFF_EXCALIBUR:
-                        deepWoods.largeTerrainFeatures.Add(new ExcaliburStone(location));
-                        break;
-                    case LICHTUNG_STUFF_NOTHING:
-                    default:
-                        break;
-                }
-            }
-            else
-            {
-                // Bad luck: Pile of trash
-                deepWoods.objects[location] = new TreasureChest(location, CreateRandomTrashCanItems(), true);
-                AddLichtungStuffPile(location, LICHTUNG_PILE_ITEM_IDS_FOR_TRASH);
+                    }
+                    else
+                    {
+                        deepWoods.objects[location] = new TreasureChest(location, CreateRandomTrashCanItems(), true);
+                        AddLichtungStuffPile(location, LICHTUNG_PILE_ITEM_IDS_FOR_TRASH);
+                    }
+                    break;
+                case LICHTUNG_STUFF_GINGERBREAD_HOUSE:
+                    deepWoods.resourceClumps.Add(new GingerBreadHouse(location - new Vector2(2, 4)));
+                    AddGingerBreadHouseDeco(location - new Vector2(2, 4));
+                    break;
+                case LICHTUNG_STUFF_HEALING_FOUNTAIN:
+                    deepWoods.largeTerrainFeatures.Add(new HealingFountain(location - new Vector2(2, 0)));
+                    AddRipeFruitTreesAroundFountain(location - new Vector2(2, 2));
+                    if (Game1.currentSeason == "winter")
+                        AddWinterFruitsAroundFountain(location - new Vector2(2, 2));
+                    break;
+                case LICHTUNG_STUFF_IRIDIUM_TREE:
+                    deepWoods.resourceClumps.Add(new IridiumTree(location));
+                    AddIridiumNodesAroundTree(location);
+                    Game1.currentLightSources.Add(new LightSource(LightSource.sconceLight, location, 6, new Color(1f, 0f, 0f)));
+                    break;
+                case LICHTUNG_STUFF_UNICORN:
+                    if (!Game1.isRaining)
+                    {
+                        deepWoods.characters.Add(new Unicorn(location));
+                    }
+                    break;
+                case LICHTUNG_STUFF_EXCALIBUR:
+                    deepWoods.largeTerrainFeatures.Add(new ExcaliburStone(location));
+                    break;
+                case LICHTUNG_STUFF_NOTHING:
+                default:
+                    break;
             }
         }
 
@@ -680,7 +584,6 @@ namespace DeepWoodsMod
             }
             else
             {
-                // TODO: Use season, sell price and player luck for probability
                 return this.random.GetRandomValue(new WeightedValue[] {
                     new WeightedValue(427, 290), // 591, // Tulip, spring (30g)
                     new WeightedValue(429, 140), // 597, // BlueJazz, spring (50g)

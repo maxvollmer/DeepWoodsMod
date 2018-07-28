@@ -5,15 +5,12 @@ using StardewValley.Buildings;
 using StardewValley.Menus;
 using System.Collections.Generic;
 using System.Reflection;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     class WoodsObelisk
     {
-        // TODO: Add description and displayname strings, add materials and fix money value.
-
-        private const int MONEY_REQUIRED_FOR_WOODS_OBELISK = 10;
-
         private static void ObeliskWarpForRealOverride()
         {
             Game1.activeClickableMenu = new WoodsObeliskMenu();
@@ -26,7 +23,7 @@ namespace DeepWoodsMod
                 if (a.behavior == a.doGlobalFade && a.afterFadeBehavior != null
                     && a.afterFadeBehavior.GetMethodInfo() == typeof(Building).GetMethod("obeliskWarpForReal", BindingFlags.Instance | BindingFlags.NonPublic)
                     && a.afterFadeBehavior.Target is Building building
-                    && building.buildingType == "Woods Obelisk")
+                    && building.buildingType == WOODS_OBELISK_BUILDING_NAME)
                 {
                     a.afterFadeBehavior = new Game1.afterFadeFunction(ObeliskWarpForRealOverride);
                 }
@@ -39,13 +36,17 @@ namespace DeepWoodsMod
                     // Create a new BluePrint based on "Earth Obelisk", override name, texture and resources.
                     BluePrint woodsObeliskBluePrint = new BluePrint("Earth Obelisk")
                     {
-                        name = "Woods Obelisk",
-                        displayName = "Woods Obelisk Displayname",
-                        description = "Woods Obelisk Description",
-                        moneyRequired = MONEY_REQUIRED_FOR_WOODS_OBELISK
+                        name = WOODS_OBELISK_BUILDING_NAME,
+                        displayName = WOODS_OBELISK_DISPLAY_NAME,
+                        description = WOODS_OBELISK_DESCRIPTION,
+                        moneyRequired = WOODS_OBELISK_MONEY_REQUIRED
                     };
                     woodsObeliskBluePrint.itemsRequired.Clear();
-                    SetBluePrintField(woodsObeliskBluePrint, "textureName", "Buildings\\Woods Obelisk");
+                    foreach (var item in WOODS_OBELISK_ITEMS_REQUIRED)
+                    {
+                        woodsObeliskBluePrint.itemsRequired.Add(item.Key, item.Value);
+                    }
+                    SetBluePrintField(woodsObeliskBluePrint, "textureName", "Buildings\\" + WOODS_OBELISK_BUILDING_NAME);
                     SetBluePrintField(woodsObeliskBluePrint, "texture", Game1.content.Load<Texture2D>(woodsObeliskBluePrint.textureName));
 
                     // Add Woods Obelisk directly after the other obelisks
@@ -72,7 +73,7 @@ namespace DeepWoodsMod
 
         private static bool HasBluePrint(CarpenterMenu carpenterMenu)
         {
-            return GetBluePrints(carpenterMenu).Exists(bluePrint => bluePrint.name == "Woods Obelisk");
+            return GetBluePrints(carpenterMenu).Exists(bluePrint => bluePrint.name == WOODS_OBELISK_BUILDING_NAME);
         }
     }
 }

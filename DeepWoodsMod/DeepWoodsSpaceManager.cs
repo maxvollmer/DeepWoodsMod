@@ -4,46 +4,12 @@ using StardewValley;
 using System.Collections.Generic;
 using xTile.Dimensions;
 using static DeepWoodsMod.DeepWoodsEnterExit;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     class DeepWoodsSpaceManager
     {
-        private const int TILE_SIZE_IN_ACTUAL_PIXEL = 64;
-
-        public const int MIN_CORNER_SIZE = 3;
-        public const int MAX_CORNER_SIZE = 8;
-
-        /// <summary>Amount of tiles exits expand in each direction</summary>
-        public const int EXIT_RADIUS = 2;
-
-        private const int MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION = MAX_CORNER_SIZE + EXIT_RADIUS + 2;   // => 12
-
-        public const int MIN_MAP_WIDTH = MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION * 2 + 4;   // => 28
-        public const int MAX_MAP_WIDTH = 64;
-        public const int MIN_MAP_HEIGHT = MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION * 2 + 4;  // => 28
-        public const int MAX_MAP_HEIGHT = 64;
-
-        public const int MAX_MAP_SIZE_FOR_LICHTUNG = 32;
-
-        public const int MIN_FOREST_PATCH_DIAMETER = 12;
-        public const int MAX_FOREST_PATCH_DIAMETER = 24;
-        public const int FOREST_PATCH_MIN_GAP_TO_MAPBORDER = 6;
-        public const int FOREST_PATCH_MIN_GAP_TO_EACHOTHER = 4;
-        public const int FOREST_PATCH_CENTER_MIN_DISTANCE_TO_MAPBORDER = FOREST_PATCH_MIN_GAP_TO_MAPBORDER + MIN_FOREST_PATCH_DIAMETER / 2;
-        public const int FOREST_PATCH_CENTER_MIN_DISTANCE_TO_EACHOTHER = FOREST_PATCH_MIN_GAP_TO_EACHOTHER + MIN_FOREST_PATCH_DIAMETER / 2;
-        public const int MINIMUM_TILES_FOR_FORESTPATCH = MIN_FOREST_PATCH_DIAMETER * MIN_FOREST_PATCH_DIAMETER;
-        private const int FOREST_PATCH_SHRINK_STEP_SIZE = 2;
-
-        public const int MINIMUM_TILES_FOR_MONSTER = 36;
-        public const int MINIMUM_TILES_FOR_TERRAIN_FEATURE = 4;
-        public const int MINIMUM_TILES_FOR_BAUBLE = 16;
-        public const int MINIMUM_TILES_FOR_LEAVES = 16;
-
-        public const int LICHTUNG_ENTRANCE_DEPTH = 5;
-        public const int NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH = 16;
-        public const int NUM_TILES_PER_LIGHTSOURCE_IN_LICHTUNG = 16;
-
         private int mapWidth;
         private int mapHeight;
         private List<xTile.Dimensions.Rectangle> occupiedRectangles = new List<xTile.Dimensions.Rectangle>();
@@ -194,7 +160,7 @@ namespace DeepWoodsMod
         public Location GetActualTitleSafeTopleftCorner()
         {
             Microsoft.Xna.Framework.Rectangle titleSafeArea = Game1.game1.GraphicsDevice.Viewport.GetTitleSafeArea();
-            int currentMapWidthInPixel = this.mapWidth * TILE_SIZE_IN_ACTUAL_PIXEL;
+            int currentMapWidthInPixel = this.mapWidth * 64;
             Location location = new Location(titleSafeArea.Left, titleSafeArea.Top);
             if (currentMapWidthInPixel < titleSafeArea.Width)
             {

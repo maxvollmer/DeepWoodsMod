@@ -1,9 +1,7 @@
 ﻿using StardewModdingAPI.Utilities;
 using StardewValley;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using static DeepWoodsMod.DeepWoodsEnterExit;
 
 namespace DeepWoodsMod
 {
@@ -89,7 +87,7 @@ namespace DeepWoodsMod
             }
         }
 
-        public DeepWoodsRandom(int level, EnterDirection enterDir, int? salt)
+        public DeepWoodsRandom(int level, DeepWoodsEnterExit.EnterDirection enterDir, int? salt)
         {
             this.seed = CalculateSeed(level, enterDir, salt);
             this.random = new Random(this.seed);
@@ -113,7 +111,7 @@ namespace DeepWoodsMod
             return this.seed;
         }
 
-        private int CalculateSeed(int level, EnterDirection enterDir, int? salt)
+        private int CalculateSeed(int level, DeepWoodsEnterExit.EnterDirection enterDir, int? salt)
         {
             if (level == 1)
             {

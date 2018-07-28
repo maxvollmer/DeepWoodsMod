@@ -7,8 +7,6 @@ using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Locations;
 using StardewValley.Monsters;
-using StardewValley.Network;
-using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using xTile;
 using xTile.Dimensions;
@@ -16,24 +14,12 @@ using xTile.Layers;
 using xTile.Tiles;
 using static DeepWoodsMod.DeepWoodsEnterExit;
 using static DeepWoodsMod.DeepWoodsRandom;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     public class DeepWoods : GameLocation
     {
-        public const string DEFAULT_OUTDOOR_TILESHEET_ID = "DefaultOutdoor";
-        public const string LAKE_TILESHEET_ID = "WaterBorderTiles";
-
-        private const int TIME_BEFORE_DELETION_ALLOWED_IF_OBELISK_SPAWNED = 100;
-
-        private const int MIN_LEVEL_FOR_LICHTUNG = 10;
-        private static Luck LUCK_FOR_LICHTUNG = new Luck(10, 50);
-
-        private const int CRITTER_MULTIPLIER = 5;
-
-        public static Location ENTER_LOCATION = new Location(DeepWoodsSpaceManager.MIN_MAP_WIDTH/2, 0);
-        private static Location WOODS_WARP_LOCATION = new Location(26, 31);
-
         private static HashSet<DeepWoods> allDeepWoods = new HashSet<DeepWoods>();
         private static DeepWoods root;
 
@@ -42,7 +28,7 @@ namespace DeepWoodsMod
             // Warp into root level if appropriate.
             if (level <= 1)
             {
-                Game1.warpFarmer("DeepWoods", ENTER_LOCATION.X, ENTER_LOCATION.Y, false);
+                Game1.warpFarmer("DeepWoods", DEEPWOODS_ENTER_LOCATION.X, DEEPWOODS_ENTER_LOCATION.Y, false);
             }
 
             // First check if a level already exists and teleport player there.
@@ -74,7 +60,7 @@ namespace DeepWoodsMod
             allDeepWoods.Add(deepWoods);
             if (!Game1.IsMasterGame)
             {
-                Game1.MasterPlayer.queueMessage(Game1MultiplayerAccessProvider.MSG_TYPE_DEEPWOODS_WARP, Game1.player, new object[] { deepWoods.Name, deepWoods.level, deepWoods.GetSeed() });
+                Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS_WARP, Game1.player, new object[] { deepWoods.Name, deepWoods.level, deepWoods.GetSeed() });
             }
             else
             {
@@ -593,20 +579,24 @@ namespace DeepWoodsMod
 
         private void CreateSpace()
         {
-            // Generate random size
-            int mapWidth = this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_MAP_WIDTH, DeepWoodsSpaceManager.MAX_MAP_WIDTH);
-            int mapHeight = this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_MAP_HEIGHT, DeepWoodsSpaceManager.MAX_MAP_HEIGHT);
-
             // TODO: TEMPTEMPTEMP
-            mapWidth = DeepWoodsSpaceManager.MIN_MAP_WIDTH;
-            mapHeight = DeepWoodsSpaceManager.MIN_MAP_HEIGHT;
+            this.isLichtung = true;// this.level >= MIN_LEVEL_FOR_LICHTUNG && this.parent != null && !this.parent.isLichtung && this.random.GetLuck(LUCK_FOR_LICHTUNG, this.GetLuckLevel());
+
+            // Generate random size
+            int mapWidth, mapHeight;
+            if (this.isLichtung)
+            {
+                mapWidth = this.random.GetRandomValue(MIN_MAP_WIDTH, MAX_MAP_SIZE_FOR_LICHTUNG);
+                mapHeight = this.random.GetRandomValue(MIN_MAP_WIDTH, MAX_MAP_SIZE_FOR_LICHTUNG);
+            }
+            else
+            {
+                mapWidth = this.random.GetRandomValue(MIN_MAP_WIDTH, MAX_MAP_WIDTH);
+                mapHeight = this.random.GetRandomValue(MIN_MAP_HEIGHT, MAX_MAP_HEIGHT);
+            }
 
             this.spaceManager = new DeepWoodsSpaceManager(mapWidth, mapHeight);
-            this.enterLocation = this.level == 1 ? ENTER_LOCATION : this.spaceManager.GetRandomEnterLocation(this.enterDir, this.random);
-            this.isLichtung = this.level >= MIN_LEVEL_FOR_LICHTUNG && this.parent != null && !this.parent.isLichtung && mapWidth <= DeepWoodsSpaceManager.MAX_MAP_SIZE_FOR_LICHTUNG && mapHeight <= DeepWoodsSpaceManager.MAX_MAP_SIZE_FOR_LICHTUNG && this.random.GetLuck(LUCK_FOR_LICHTUNG, this.GetLuckLevel());
-
-            // TODO: TEMPTEMPTEMP
-            this.isLichtung = true;
+            this.enterLocation = this.level == 1 ? DEEPWOODS_ENTER_LOCATION : this.spaceManager.GetRandomEnterLocation(this.enterDir, this.random);
         }
 
         private void GenerateMap()
@@ -693,7 +683,7 @@ namespace DeepWoodsMod
             {
                 case ExitDirection.TOP:
                     AddWarp(location.X, -1, targetLocationName, targetLocation);
-                    for (int i = 1; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+                    for (int i = 1; i <= DEEPWOODS_EXIT_RADIUS; i++)
                     {
                         AddWarp(location.X - i, -1, targetLocationName, targetLocation - new Location(i, 0));
                         AddWarp(location.X + i, -1, targetLocationName, targetLocation + new Location(i, 0));
@@ -704,7 +694,7 @@ namespace DeepWoodsMod
                         // When warping into the map from the bottom, we want to end up one tile "too far" in, so the character is completely visible.
                         Location displacedTargetLocation = new Location(targetLocation.X, targetLocation.Y + 1);
                         AddWarp(location.X, this.spaceManager.GetMapHeight(), targetLocationName, displacedTargetLocation);
-                        for (int i = 1; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+                        for (int i = 1; i <= DEEPWOODS_EXIT_RADIUS; i++)
                         {
                             AddWarp(location.X - i, this.spaceManager.GetMapHeight(), targetLocationName, displacedTargetLocation - new Location(i, 0));
                             AddWarp(location.X + i, this.spaceManager.GetMapHeight(), targetLocationName, displacedTargetLocation + new Location(i, 0));
@@ -717,7 +707,7 @@ namespace DeepWoodsMod
                         // We correct this here.
                         Location weirdBugfixLocation = new Location(targetLocation.X + 1, targetLocation.Y);
                         AddWarp(-1, location.Y, targetLocationName, weirdBugfixLocation);
-                        for (int i = 1; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+                        for (int i = 1; i <= DEEPWOODS_EXIT_RADIUS; i++)
                         {
                             AddWarp(-1, location.Y - i, targetLocationName, weirdBugfixLocation - new Location(0, i));
                             AddWarp(-1, location.Y + i, targetLocationName, weirdBugfixLocation + new Location(0, i));
@@ -726,7 +716,7 @@ namespace DeepWoodsMod
                     break;
                 case ExitDirection.RIGHT:
                     AddWarp(this.spaceManager.GetMapWidth(), location.Y, targetLocationName, targetLocation);
-                    for (int i = 1; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+                    for (int i = 1; i <= DEEPWOODS_EXIT_RADIUS; i++)
                     {
                         AddWarp(this.spaceManager.GetMapWidth(), location.Y - i, targetLocationName, targetLocation - new Location(0, i));
                         AddWarp(this.spaceManager.GetMapWidth(), location.Y + i, targetLocationName, targetLocation + new Location(0, i));
@@ -803,7 +793,7 @@ namespace DeepWoodsMod
             // No placements on exits.
             foreach (var exit in this.exits)
             {
-                Microsoft.Xna.Framework.Rectangle exitRectangle = new Microsoft.Xna.Framework.Rectangle(exit.Value.location.X - DeepWoodsSpaceManager.EXIT_RADIUS, exit.Value.location.Y - DeepWoodsSpaceManager.EXIT_RADIUS, DeepWoodsSpaceManager.EXIT_RADIUS * 2 + 1, DeepWoodsSpaceManager.EXIT_RADIUS * 2 + 1);
+                Microsoft.Xna.Framework.Rectangle exitRectangle = new Microsoft.Xna.Framework.Rectangle(exit.Value.location.X - DEEPWOODS_EXIT_RADIUS, exit.Value.location.Y - DEEPWOODS_EXIT_RADIUS, DEEPWOODS_EXIT_RADIUS * 2 + 1, DEEPWOODS_EXIT_RADIUS * 2 + 1);
                 if (exitRectangle.Contains((int)v.X, (int)v.Y))
                 {
                     return true;
@@ -811,7 +801,7 @@ namespace DeepWoodsMod
             }
 
             // No placements on enter location as well.
-            Microsoft.Xna.Framework.Rectangle enterRectangle = new Microsoft.Xna.Framework.Rectangle(enterLocation.X - DeepWoodsSpaceManager.EXIT_RADIUS, enterLocation.Y - DeepWoodsSpaceManager.EXIT_RADIUS, DeepWoodsSpaceManager.EXIT_RADIUS * 2 + 1, DeepWoodsSpaceManager.EXIT_RADIUS * 2 + 1);
+            Microsoft.Xna.Framework.Rectangle enterRectangle = new Microsoft.Xna.Framework.Rectangle(enterLocation.X - DEEPWOODS_EXIT_RADIUS, enterLocation.Y - DEEPWOODS_EXIT_RADIUS, DEEPWOODS_EXIT_RADIUS * 2 + 1, DEEPWOODS_EXIT_RADIUS * 2 + 1);
             if (enterRectangle.Contains((int)v.X, (int)v.Y))
             {
                 return true;
@@ -898,13 +888,13 @@ namespace DeepWoodsMod
             int y = Game1.random.Next(0, this.spaceManager.GetMapHeight());
 
             int numTries = 0;
-            for (; numTries < DeepWoodsMonsters.NUM_MONSTER_SPAWN_TRIES && !this.CanPlaceMonsterHere(x, y, monster); numTries++)
+            for (; numTries < NUM_MONSTER_SPAWN_TRIES && !this.CanPlaceMonsterHere(x, y, monster); numTries++)
             {
                 x = Game1.random.Next(0, this.spaceManager.GetMapWidth());
                 y = Game1.random.Next(0, this.spaceManager.GetMapHeight());
             }
 
-            if (numTries < DeepWoodsMonsters.NUM_MONSTER_SPAWN_TRIES)
+            if (numTries < NUM_MONSTER_SPAWN_TRIES)
             {
                 monster.Position = new Vector2(x * 64f, y * 64f) - new Vector2(0, monster.Sprite.SpriteHeight - 64);
                 this.addCharacter(monster);

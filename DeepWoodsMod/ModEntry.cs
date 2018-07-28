@@ -1,36 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Xml.Serialization;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
-using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Characters;
-using StardewValley.Monsters;
-using StardewValley.Objects;
-using StardewValley.TerrainFeatures;
 using xTile;
-using xTile.Dimensions;
 using xTile.Layers;
 using xTile.ObjectModel;
 using xTile.Tiles;
+using static DeepWoodsMod.DeepWoodsSettings;
 
-/*
-// ✘ Don't do this! It will crash on Linux/Mac.
-string path = helper.DirectoryPath + "\assets\asset.xnb";
-
-// ✓ This is OK
-string path = Path.Combine(helper.DirectoryPath, "assets", "asset.xnb");
-
-// ✘ Don't do this! It will crash if SMAPI rewrites the assembly (e.g. to update or crossplatform it).
-string modFolder = Assembly.GetCallingAssembly().Location;
-
-// ✓ This is OK
-string modFolder = helper.DirectoryPath;
-*/
 
 namespace DeepWoodsMod
 {
@@ -58,14 +36,20 @@ namespace DeepWoodsMod
         public override void Entry(IModHelper helper)
         {
             ModEntry.mod = this;
+            RegisterEvents();
+            DeepWoodsSettings.Load();
+            Game1MultiplayerAccessProvider.InterceptMultiplayer();
+            Textures.LoadAll();
+        }
+
+        private void RegisterEvents()
+        {
             SaveEvents.BeforeSave += this.SaveEvents_BeforeSave;
             SaveEvents.AfterSave += this.SaveEvents_AfterSave;
             SaveEvents.AfterLoad += this.SaveEvents_AfterLoad;
             TimeEvents.AfterDayStarted += this.TimeEvents_AfterDayStarted;
             TimeEvents.TimeOfDayChanged += this.TimeEvents_TimeOfDayChanged;
             GameEvents.UpdateTick += this.GameEvents_UpdateTick;
-            Game1MultiplayerAccessProvider.InterceptMultiplayer();
-            Textures.LoadAll();
         }
 
         private void LoadAndAddDeepWoods()
@@ -78,6 +62,7 @@ namespace DeepWoodsMod
         private void SaveEvents_BeforeSave(object sender, EventArgs args)
         {
             this.Monitor.Log("SaveEvents_BeforeSave()", LogLevel.Error);
+            DeepWoodsSettings.Save();
             DeepWoods.Save();
             DeepWoods.Remove();
             EasterEggFunctions.RemoveAllEasterEggsFromGame();
@@ -110,7 +95,7 @@ namespace DeepWoodsMod
             EasterEggFunctions.InterceptIncubatorEggs();
 
             // TODO: TEMPTEMPTEMP
-            Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", DeepWoods.ENTER_LOCATION.X, DeepWoods.ENTER_LOCATION.Y, false));
+            Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", DEEPWOODS_ENTER_LOCATION.X, DEEPWOODS_ENTER_LOCATION.Y, false));
             // Game1.player.warpFarmer(new Warp(0, 0, "WizardHouse", 9, 15, false));
         }
 
@@ -225,9 +210,9 @@ namespace DeepWoodsMod
         {
             string warps = "";
 
-            for (int i = -DeepWoodsSpaceManager.EXIT_RADIUS; i <= DeepWoodsSpaceManager.EXIT_RADIUS; i++)
+            for (int i = -DEEPWOODS_EXIT_RADIUS; i <= DEEPWOODS_EXIT_RADIUS; i++)
             {
-                warps += " " + (26 + i) + " 32 DeepWoods " + (DeepWoods.ENTER_LOCATION.X + i) + " 1";
+                warps += " " + (26 + i) + " 32 DeepWoods " + (DEEPWOODS_ENTER_LOCATION.X + i) + " 1";
             }
 
             return warps.Trim();

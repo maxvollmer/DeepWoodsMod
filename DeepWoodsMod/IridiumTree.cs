@@ -1,14 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using StardewModdingAPI;
+using Netcode;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
@@ -17,26 +14,25 @@ namespace DeepWoodsMod
         private const int TREE_TOP_TILE_INDEX = 0;
         private const int TREE_TRUNK_TILE_INDEX = 26;
 
-        // private static readonly Color TREE_COLOR = new Color(0.25f, 0.25f, 0.75f);
-
-        private const int START_HEALTH = 200;
-        private const int SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE = 20;
-        private const int MINIMUM_AXE_LEVEL = 0; // 0 for debugging purposes for now
-
-        private float nextSpawnIridiumOreHealth;
+        private NetFloat nextSpawnIridiumOreHealth = new NetFloat();
 
         public IridiumTree()
             : base()
         {
-            this.health.Value = START_HEALTH;
-            this.nextSpawnIridiumOreHealth = START_HEALTH - SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE;
+            InitNetFields();
         }
 
         public IridiumTree(Vector2 tile)
             : base(ResourceClump.meteoriteIndex, 2, 1, tile)
         {
-            this.health.Value = START_HEALTH;
-            this.nextSpawnIridiumOreHealth = START_HEALTH - SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE;
+            InitNetFields();
+            this.health.Value = IRIDIUM_TREE_START_HEALTH;
+            this.nextSpawnIridiumOreHealth.Value = IRIDIUM_TREE_START_HEALTH - IRIDIUM_TREE_SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE;
+        }
+
+        private void InitNetFields()
+        {
+            this.NetFields.AddFields(this.nextSpawnIridiumOreHealth);
         }
 
         public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)
@@ -70,7 +66,7 @@ namespace DeepWoodsMod
             if (!(t is Axe))
                 return false;
 
-            if (t.upgradeLevel < MINIMUM_AXE_LEVEL)
+            if (t.upgradeLevel < IRIDIUM_TREE_MINIMUM_AXE_LEVEL)
             {
                 location.playSound("axe");
                 Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:ResourceClump.cs.13948"));
@@ -93,7 +89,7 @@ namespace DeepWoodsMod
 
                     SpawnIridiumOre(t, (int)tileLocation.X, (int)tileLocation.Y);
 
-                    this.nextSpawnIridiumOreHealth = this.health - SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE;
+                    this.nextSpawnIridiumOreHealth.Value = this.health - IRIDIUM_TREE_SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE;
                 }
 
                 this.shakeTimer = 100f;

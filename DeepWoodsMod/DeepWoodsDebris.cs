@@ -3,9 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
@@ -19,7 +17,7 @@ namespace DeepWoodsMod
                 int mapWidth = deepWoods.GetMapWidth();
                 int mapHeight = deepWoods.GetMapHeight();
 
-                int numBaubles = (mapWidth * mapHeight) / DeepWoodsSpaceManager.MINIMUM_TILES_FOR_BAUBLE;
+                int numBaubles = (mapWidth * mapHeight) / MINIMUM_TILES_FOR_BAUBLE;
 
                 for (int index = 0; index < numBaubles; ++index)
                 {
@@ -28,7 +26,7 @@ namespace DeepWoodsMod
 
                 if (Game1.currentSeason != "winter" && !deepWoods.isLichtung)
                 {
-                    int numWeatherDebris = (mapWidth * mapHeight) / DeepWoodsSpaceManager.MINIMUM_TILES_FOR_LEAVES;
+                    int numWeatherDebris = (mapWidth * mapHeight) / MINIMUM_TILES_FOR_LEAVES;
 
                     for (int index = 0; index < numWeatherDebris; ++index)
                     {

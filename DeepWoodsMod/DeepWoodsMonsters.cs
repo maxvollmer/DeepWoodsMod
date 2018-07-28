@@ -2,44 +2,13 @@
 using StardewValley;
 using StardewValley.Monsters;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static DeepWoodsMod.DeepWoodsRandom;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
     class DeepWoodsMonsters
     {
-        private struct MonsterDecider
-        {
-            public readonly int minLevel;
-            public readonly Probability probability;
-            public MonsterDecider(int minLevel, int probability)
-            {
-                this.minLevel = minLevel;
-                this.probability = new Probability(probability);
-            }
-        }
-
-        public const int NUM_MONSTER_SPAWN_TRIES = 6;
-
-        private static readonly Luck LUCK_FOR_HALF_MONSTERS = new Luck(0, 50);
-        private static readonly Luck LUCK_FOR_UNBUFFED_MONSTERS = new Luck(25, 75);
-
-        private const int MIN_LEVEL_FOR_BUFFED_MONSTERS = 10;
-
-        private static readonly MonsterDecider BAT = new MonsterDecider(1, 10);
-        private static readonly MonsterDecider BIGSLIME = new MonsterDecider(2, 10);
-        private static readonly MonsterDecider GRUB = new MonsterDecider(2, 10);
-        private static readonly MonsterDecider FLY = new MonsterDecider(2, 10);
-        private static readonly MonsterDecider BRUTE = new MonsterDecider(5, 10);
-        private static readonly MonsterDecider GOLEM = new MonsterDecider(5, 10);
-        private static readonly MonsterDecider ROCK_CRAB = new MonsterDecider(10, 10);
-        private static readonly MonsterDecider GHOST = new MonsterDecider(10, 10);
-        private static readonly MonsterDecider PURPLE_SLIME = new MonsterDecider(10, 10);
-
         private DeepWoods deepWoods;
         private DeepWoodsRandom random;
         private DeepWoodsSpaceManager spaceManager;
@@ -72,7 +41,7 @@ namespace DeepWoodsMod
             int mapHeight = this.spaceManager.GetMapHeight();
 
             // Calculate maximum theoretical amount of monsters for the current map.
-            int maxMonsters = (mapWidth * mapHeight) / DeepWoodsSpaceManager.MINIMUM_TILES_FOR_MONSTER;
+            int maxMonsters = (mapWidth * mapHeight) / MINIMUM_TILES_FOR_MONSTER;
             int minMonsters = Math.Min(deepWoods.GetLevel(), maxMonsters);
 
             // Get a random value from 0 to maxMonsters, using a "two dice" method, where the center numbers are more likely than the edges.
