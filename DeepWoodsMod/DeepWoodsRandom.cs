@@ -9,93 +9,109 @@ namespace DeepWoodsMod
     {
         private const int MAGIC_SALT = 854574563;
 
-        public const int NEUTRAL_LUCK_WEIGHT = 0;
-        public const int NEUTRAL_LUCK_LEVEL = 0;
-
+        private readonly DeepWoods deepWoods;
         private readonly int seed;
         private readonly Random random;
         private int masterModeCounter;
 
-        public struct WeightedValue
+        public class LuckValue
         {
-            public readonly int value;
-            public readonly int weight;
-            public WeightedValue(int value, int weight)
+            public int BadLuck { get; }
+            public int Neutral { get; }
+            public int GoodLuck { get; }
+
+            public LuckValue(int badLuck, int goodLuck)
             {
-                this.value = value;
-                this.weight = weight;
+                BadLuck = badLuck;
+                GoodLuck = goodLuck;
+                Neutral = (BadLuck + GoodLuck) / 2;
             }
-            public static implicit operator WeightedValue(int[] i)
+
+            public LuckValue(int badLuck, int neutral, int goodLuck)
             {
-                return new WeightedValue(i[0], i[1]);
+                BadLuck = badLuck;
+                Neutral = neutral;
+                GoodLuck = goodLuck;
             }
         }
 
-        public class Probability
+        public class LuckRange
+        {
+            public LuckValue LowerBound { get; }
+            public LuckValue UpperBound { get; }
+
+            public LuckRange(LuckValue lowerBound, LuckValue upperBound)
+            {
+                LowerBound = lowerBound;
+                UpperBound = upperBound;
+            }
+        }
+
+        public class WeightedValue<T>
+        {
+            public T Value { get; }
+            public LuckValue Weight { get; }
+
+            public WeightedValue(T value, LuckValue weight)
+            {
+                Value = value;
+                Weight = weight;
+            }
+
+            public WeightedValue(T value, int weight)
+            {
+                Value = value;
+                Weight = new LuckValue(weight, weight, weight);
+            }
+        }
+
+        public class WeightedInt : WeightedValue<int>
+        {
+            public WeightedInt(int value, LuckValue weight)
+                : base(value, weight)
+            {
+            }
+
+            public WeightedInt(int value, int weight)
+                : base(value, weight)
+            {
+            }
+        }
+
+        public class Chance
         {
             public const int PROCENT = 100;
             public const int PROMILLE = 1000;
 
-            public readonly static Probability FIFTY_FIFTY = new Probability(50);
+            public readonly static Chance FIFTY_FIFTY = new Chance(50);
 
-            private int probability;
-            private int range;
+            public LuckValue Value { get; }
+            public int Range { get; }
 
-            public Probability(int probability, int range = PROCENT)
+            public Chance(LuckValue value, int range = PROCENT)
             {
-                this.probability = probability;
-                this.range = range;
+                Value = value;
+                Range = range;
             }
 
-            public int GetValue()
+            public Chance(int value, int range = PROCENT)
             {
-                return this.probability;
-            }
-
-            public int GetRange()
-            {
-                return this.range;
+                Value = new LuckValue(value, value, value);
+                Range = range;
             }
         }
 
-        public class Luck
+        public DeepWoodsRandom(DeepWoods deepWoods, int level, DeepWoodsEnterExit.EnterDirection enterDir, int? salt)
         {
-            private int minProbability;
-            private int maxProbability;
-            private int range;
-
-            public Luck(int minProbability, int maxProbability, int range = Probability.PROCENT)
-            {
-                this.minProbability = minProbability;
-                this.maxProbability = maxProbability;
-                this.range = range;
-            }
-
-            public int GetMinProbability()
-            {
-                return this.minProbability;
-            }
-
-            public int GetMaxProbability()
-            {
-                return this.maxProbability;
-            }
-
-            public int GetRange()
-            {
-                return this.range;
-            }
-        }
-
-        public DeepWoodsRandom(int level, DeepWoodsEnterExit.EnterDirection enterDir, int? salt)
-        {
+            this.deepWoods = deepWoods;
             this.seed = CalculateSeed(level, enterDir, salt);
             this.random = new Random(this.seed);
             this.masterModeCounter = 0;
         }
 
-        public DeepWoodsRandom(int seed)
+        public DeepWoodsRandom(DeepWoods deepWoods, int seed)
         {
+            this.deepWoods = deepWoods;
             this.seed = seed;
             this.random = new Random(this.seed);
             this.masterModeCounter = 0;
@@ -149,39 +165,7 @@ namespace DeepWoodsMod
             return hourOfDay + SDate.Now().DaysSinceStart * 20;
         }
 
-        public bool GetChance(Probability probability)
-        {
-            return GetRandomValue(0, probability.GetRange()) < probability.GetValue();
-        }
-
-        public bool GetLuck(Probability probability, int luckWeight = NEUTRAL_LUCK_WEIGHT, int luckLevel = NEUTRAL_LUCK_LEVEL)
-        {
-            // Daily luck in range from -100 to 100:
-            int dailyLuck = Math.Min(100, Math.Max(-100, (int)((Game1.dailyLuck / 0.12) * 100.0)));
-
-            // Player luck in range from 0 to 100:
-            int playerLuck = Math.Min(100, Math.Max(0, luckLevel * 10));
-
-            // Total luck in range from -100 to 100:
-            int totalLuck = Math.Min(100, Math.Max(-100, (dailyLuck + playerLuck) / 2));
-
-            // Luck modifier in range from -luckWeight to luckWeight:
-            int luckModifier = Math.Min(luckWeight, Math.Max(-luckWeight, (totalLuck * luckWeight) / 100));
-
-            // Use new probability modified with luck:
-            return GetChance(new Probability(probability.GetValue() + luckModifier, probability.GetRange()));
-        }
-
-        public bool GetLuck(Luck luck, int luckLevel = NEUTRAL_LUCK_LEVEL)
-        {
-            int minProbability = luck.GetMinProbability();
-            int maxProbability = luck.GetMaxProbability();
-            int range = luck.GetRange();
-            int delta = maxProbability - minProbability;
-            return GetLuck(new Probability(minProbability + delta / 2, range), delta / 2, luckLevel);
-        }
-
-        public Random GetRandom()
+        private Random GetRandom()
         {
             if (this.IsInMasterMode())
             {
@@ -193,81 +177,79 @@ namespace DeepWoodsMod
             }
         }
 
-        public int GetLuckValue(Luck luck, int luckLevel = NEUTRAL_LUCK_LEVEL)
+        private int GetAbsoluteLuckValue(LuckValue value)
         {
             // Daily luck in range from -100 to 100:
             int dailyLuck = Math.Min(100, Math.Max(-100, (int)((Game1.dailyLuck / 0.12) * 100.0)));
 
             // Player luck in range from 0 to 100:
-            int playerLuck = Math.Min(100, Math.Max(0, luckLevel * 10));
+            int playerLuck = Math.Min(100, Math.Max(0, deepWoods.GetLuckLevel() * 10));
 
             // Total luck in range from -100 to 100:
             int totalLuck = Math.Min(100, Math.Max(-100, (dailyLuck + playerLuck) / 2));
 
-            // Total luck in range from 0 to 100:
-            totalLuck = Math.Min(100, Math.Max(0, (totalLuck + 100) / 2));
+            if (totalLuck < 0)
+            {
+                int badLuckFactor = -totalLuck;
+                int neutralFactor = 100 - badLuckFactor;
+                return ((value.BadLuck * badLuckFactor) + (value.Neutral * neutralFactor)) / 100;
+            }
+            else
+            {
+                int goodLuckFactor = totalLuck;
+                int neutralFactor = 100 - goodLuckFactor;
+                return ((value.GoodLuck * goodLuckFactor) + (value.Neutral * neutralFactor)) / 100;
+            }
+        }
 
-            // Total misfortune in range from 0 to 100:
-            int totalMisfortune = Math.Min(100, Math.Max(0, 100 - totalLuck));
-
-            int min = (luck.GetMinProbability() * totalMisfortune) / 100;
-            int max = (luck.GetMaxProbability() * totalLuck) / 100;
-
-            return min + max;
+        public int GetRandomValue()
+        {
+            return GetRandom().Next();
         }
 
         public int GetRandomValue(int min, int max)
         {
-            if (this.IsInMasterMode())
-            {
-                return GetRandom().Next(min, max);
-            }
-            else
-            {
-                return GetRandom().Next(min, max);
-            }
+            return GetRandom().Next(min, max);
         }
 
-        public int GetRandomValue(Luck min, Luck max, int luckLevel = NEUTRAL_LUCK_LEVEL)
+        public bool CheckChance(Chance chance)
         {
-            return GetRandomValue(GetLuckValue(min, luckLevel), GetLuckValue(max, luckLevel));
+            return GetRandomValue(0, chance.Range) < GetAbsoluteLuckValue(chance.Value);
         }
 
-        public int GetRandomValue(int[] values, Probability firstValueProbability = null)
+        public int GetRandomValue(LuckRange range)
         {
-            if (firstValueProbability != null)
-            {
-                if (GetChance(firstValueProbability))
-                {
-                    return values[0];
-                }
-                else
-                {
-                    return values[GetRandomValue(1, values.Length)];
-                }
-            }
-            else
-            {
-                return values[GetRandomValue(0, values.Length)];
-            }
+            return GetRandomValue(GetAbsoluteLuckValue(range.LowerBound), GetAbsoluteLuckValue(range.UpperBound));
         }
 
-
-        public int GetRandomValue(WeightedValue[] values)
+        public T GetRandomValue<T>(T[] values)
         {
             if (values == null || values.Length == 0)
                 throw new ArgumentException("values is null or empty");
 
-            int total = values.Sum(wv => wv.weight);
+            return values[GetRandomValue(0, values.Length)];
+        }
+
+        public int GetRandomValue(WeightedInt[] values)
+        {
+            return GetRandomValue<int>(values);
+        }
+
+        public T GetRandomValue<T>(WeightedValue<T>[] values)
+        {
+            if (values == null || values.Length == 0)
+                throw new ArgumentException("values is null or empty");
+
+            int total = values.Sum(wv => GetAbsoluteLuckValue(wv.Weight));
             int n = GetRandomValue(0, total);
 
             int sum = 0;
             for (int i = 0; i < values.Length; i++)
             {
-                sum += values[i].weight;
+                sum += GetAbsoluteLuckValue(values[i].Weight);
                 if (n < sum)
                 {
-                    return values[i].value;
+                    return values[i].Value;
                 }
             }
 

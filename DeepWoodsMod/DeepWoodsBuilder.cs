@@ -212,35 +212,13 @@ namespace DeepWoodsMod
             switch (grassType)
             {
                 case GrassType.BLACK:
-                    return 1094;
-
+                    return GrassTiles.BLACK;
                 case GrassType.DARK:
-                    return this.random.GetRandomValue(new WeightedValue[] {
-                        new WeightedValue(380, 80),
-                        new WeightedValue(156, 20)
-                    });
-
+                    return this.random.GetRandomValue(GrassTiles.DARK);
                 case GrassType.BRIGHT:
-                    return this.random.GetRandomValue(new WeightedValue[] {
-                        new WeightedValue(175, 100),
-                        new WeightedValue(275, 100),
-                        new WeightedValue(402, 100),
-                        new WeightedValue(400, 15),
-                        new WeightedValue(401, 15),
-                        new WeightedValue(150, 15),
-                        new WeightedValue(254, 5),
-                        new WeightedValue(255, 5),
-                        new WeightedValue(256, 5)
-                    });
-
+                    return this.random.GetRandomValue(GrassTiles.BRIGHT);
                 case GrassType.NORMAL:
-                    return this.random.GetRandomValue(new WeightedValue[] {
-                        new WeightedValue(351, 100),
-                        new WeightedValue(300, 10),
-                        new WeightedValue(304, 10),
-                        new WeightedValue(305, 10),
-                        new WeightedValue(329, 1)
-                    });
+                    return this.random.GetRandomValue(GrassTiles.NORMAL);
             }
 
             throw new ArgumentException("Unknown GrassType: " + grassType);
@@ -361,7 +339,7 @@ namespace DeepWoodsMod
             bool lastStepWasBumpOut = false;
             for (int x = 0; x < numTiles; x++)
             {
-                if (y > 0 && (x >= (numTiles - Math.Abs(y)) || (!lastStepWasBumpOut && this.random.GetChance(CHANCE_FOR_FOREST_ROW_BUMP))))
+                if (y > 0 && (x >= (numTiles - Math.Abs(y)) || (!lastStepWasBumpOut && this.random.CheckChance(CHANCE_FOR_FOREST_ROW_BUMP))))
                 {
                     // Bump back!
                     PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, placing, x, y - 1);
@@ -384,7 +362,7 @@ namespace DeepWoodsMod
                     y--;
                     lastStepWasBumpOut = false;
                 }
-                else if (x < (numTiles - (2 + Math.Abs(y))) && y < FOREST_ROW_MAX_INWARDS_BUMP && this.random.GetChance(CHANCE_FOR_FOREST_ROW_BUMP))
+                else if (x < (numTiles - (2 + Math.Abs(y))) && y < FOREST_ROW_MAX_INWARDS_BUMP && this.random.CheckChance(CHANCE_FOR_FOREST_ROW_BUMP))
                 {
                     // Bump out!
                     y++;
@@ -418,7 +396,7 @@ namespace DeepWoodsMod
                         PlaceTile(backLayer, GetRandomGrassTileIndex(GrassType.BLACK), placing, x, y + 1, PlaceMode.OVERRIDE);
                         PlaceTile(backLayer, matrix.BLACK_GRASS_FRONT, placing, x, y + 2, PlaceMode.OVERRIDE);
                         PlaceTile(backLayer, matrix.DARK_GRASS_FRONT, placing, x, y + 3, PlaceMode.OVERRIDE);
-                        if (!lastStepWasBumpOut && x > 1 && x < numTiles - 2 && x % 2 == 0 && this.random.GetChance(CHANCE_FOR_FOREST_ROW_TREESTUMPS))
+                        if (!lastStepWasBumpOut && x > 1 && x < numTiles - 2 && x % 2 == 0 && this.random.CheckChance(Chance.FIFTY_FIFTY))
                         {
                             PlaceTile(buildingsLayer, FOREST_ROW_TREESTUMP_LEFT, placing, x - 1, y + 1);
                             PlaceTile(buildingsLayer, FOREST_ROW_TREESTUMP_RIGHT, placing, x, y + 1);
@@ -451,8 +429,8 @@ namespace DeepWoodsMod
             int height = MAX_CORNER_SIZE; //this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_CORNER_SIZE, MAX_CORNER_SIZE);
 
             float ratio = (float)height / (float)width;
-            int chance = (int)((100f / (ratio + 1f)) * ratio);
-            Probability probability = new Probability(chance, 100);
+            int chanceValue = (int)((100f / (ratio + 1f)) * ratio);
+            Chance chance = new Chance(chanceValue, 100);
 
             int endXPos = startXPos + ((width - 1) * xDir);
             int endYPos = startYPos + ((height - 1) * yDir);
@@ -464,7 +442,7 @@ namespace DeepWoodsMod
             {
                 int deltaX = Math.Abs(curXPos - startXPos);
                 int deltaY = Math.Abs(curYPos - endYPos);
-                if (deltaX > 1 && deltaY > 2 && this.random.GetChance(probability))
+                if (deltaX > 1 && deltaY > 2 && this.random.CheckChance(chance))
                 {
                     // go vertical
                     for (int y = startYPos; y != curYPos; y += yDir)
@@ -624,7 +602,7 @@ namespace DeepWoodsMod
             // Add one of 4 possible bright grass ends
             if (!deepWoods.isLichtung)
             {
-                switch (this.random.GetRandomValue(0,4))
+                switch (this.random.GetRandomValue(0, 4))
                 {
                     case 0:
                         PlaceTile(backLayer, matrix.BRIGHT_GRASS_RIGHT_CONVEX_CORNER, placing, -1, brightGrassPacesInwards);
@@ -714,9 +692,9 @@ namespace DeepWoodsMod
                     {
                         if (deepWoods.doesTileHaveProperty(x, y - 1, "Water", "Back") != null
                             && buildingsLayer.Tiles[x, y - 1] == null
-                            && this.random.GetChance(CHANCE_FOR_WATER_LILY))
+                            && this.random.CheckChance(CHANCE_FOR_WATER_LILY))
                         {
-                            if (this.random.GetChance(CHANCE_FOR_BLOSSOM_ON_WATER_LILY))
+                            if (this.random.CheckChance(CHANCE_FOR_BLOSSOM_ON_WATER_LILY))
                                 PlaceAnimatedTile(buildingsLayer, defaultOutdoorTileSheet, WATER_LILY_WITH_BLOSSOM, x, y - 1, PlaceMode.DONT_OVERRIDE, this.random.GetRandomValue(WATER_LILY_FRAMERATES));
                             else
                                 PlaceAnimatedTile(buildingsLayer, defaultOutdoorTileSheet, WATER_LILY, x, y - 1, PlaceMode.DONT_OVERRIDE, this.random.GetRandomValue(WATER_LILY_FRAMERATES));
@@ -901,8 +879,8 @@ namespace DeepWoodsMod
             while (Math.Abs(curLocation.X - stopLocation.X) > 1 && Math.Abs(curLocation.Y - stopLocation.Y) > 1)
             {
                 bool isVerticalBlocked = backLayer.Tiles[curLocation.X + xDirInwards, curLocation.Y + yDirInwards] != null;
-                bool goHorizontal = isSteep || isVerticalBlocked || this.random.GetChance(GetProbabilityForHorizontal(curLocation, stopLocation, xDir == 0));
-                bool goSteep = !isSteep && !isHorizontal && !goHorizontal && this.random.GetChance(Probability.FIFTY_FIFTY);
+                bool goHorizontal = isSteep || isVerticalBlocked || this.random.CheckChance(GetChanceForHorizontal(curLocation, stopLocation, xDir == 0));
+                bool goSteep = !isSteep && !isHorizontal && !goHorizontal && this.random.CheckChance(Chance.FIFTY_FIFTY);
 
                 PlaceTile(backLayer, ChoseLichtungCornerTile(matrix, isHorizontal, goHorizontal, isSteep, goSteep), curLocation.X, curLocation.Y, PlaceMode.OVERRIDE);
                 FillLichtungRow(curLocation, stopLocation, xDir, yDir);
@@ -997,12 +975,13 @@ namespace DeepWoodsMod
             }
         }
 
-        private Probability GetProbabilityForHorizontal(Location location1, Location location2, bool flipped)
+        private Chance GetChanceForHorizontal(Location location1, Location location2, bool flipped)
         {
+            // TODO: Is this inverted?
             int xDiff = Math.Abs(location1.X - location2.X);
             int yDiff = Math.Abs(location1.Y - location2.Y);
             int total = xDiff + yDiff;
-            return new Probability(flipped ? yDiff : xDiff, total);
+            return new Chance(flipped ? yDiff : xDiff, total);
         }
 
         private bool PlaceTile(Layer layer, int[] tileIndices, Placing placing, int steps, int stepsInward, PlaceMode placeMode = PlaceMode.DONT_OVERRIDE)
@@ -1082,7 +1061,7 @@ namespace DeepWoodsMod
 
         private int GetRandomForestFillerTileIndex()
         {
-            return this.random.GetRandomValue(FOREST_BACKGROUND, CHANCE_FOR_NOLEAVE_FOREST_FILLER);
+            return this.random.GetRandomValue(FOREST_BACKGROUND);
         }
 
         private void GenerateForestPatch(xTile.Dimensions.Rectangle rectangle)

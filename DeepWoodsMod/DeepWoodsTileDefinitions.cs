@@ -5,43 +5,78 @@ namespace DeepWoodsMod
 {
     class DeepWoodsTileDefinitions
     {
-        public const int DEBUG_PINK = 68;
-        public const int DEBUG_DARK = 115;
-        public const int DEBUG_YELLOW = 226;
-        public const int DEBUG_RED = 292;
+        public static readonly int DEBUG_PINK = 68;
+        public static readonly int DEBUG_DARK = 115;
+        public static readonly int DEBUG_YELLOW = 226;
+        public static readonly int DEBUG_RED = 292;
 
-        public const int PLAIN_FOREST_BACKGROUND = 946;
-        public static int[] FOREST_BACKGROUND = new int[] { PLAIN_FOREST_BACKGROUND, 971, 996 };
+        public static readonly int PLAIN_FOREST_BACKGROUND = 946;
 
-        public const int FOREST_ROW_TREESTUMP_LEFT = 1144;
-        public const int FOREST_ROW_TREESTUMP_RIGHT = 1145;
+        public static readonly WeightedInt[] FOREST_BACKGROUND = new WeightedInt[] {
+            new WeightedInt(PLAIN_FOREST_BACKGROUND, 80),
+            new WeightedInt(971, 10),
+            new WeightedInt(996, 10)
+        };
+
+        public static readonly int FOREST_ROW_TREESTUMP_LEFT = 1144;
+        public static readonly int FOREST_ROW_TREESTUMP_RIGHT = 1145;
 
         public static readonly int[] WATER_LILY = new int[] { 1293, 1294, 1295, 1296 };
         public static readonly int[] WATER_LILY_WITH_BLOSSOM = new int[] { 1318, 1319, 1320, 1321 };
         public static readonly int WATER_LILY_SHADOW = 1299;
         public static readonly int[] WATER_LILY_FRAMERATES = new int[] { 400, 450, 500, 550, 600 };
 
-        public static readonly WeightedValue[] WATER_TILES = new WeightedValue[] {
+        public static readonly WeightedInt[] WATER_TILES = new WeightedInt[] {
             // Normal
-            new WeightedValue(1246, 100),
-            new WeightedValue(1271, 100),
-            new WeightedValue(1274, 100),
+            new WeightedInt(1246, 100),
+            new WeightedInt(1271, 100),
+            new WeightedInt(1274, 100),
             // Stones
-            new WeightedValue(1247, 10),
-            new WeightedValue(1248, 10),
-            new WeightedValue(1249, 10),
-            new WeightedValue(1272, 10),
-            new WeightedValue(1273, 10),
-            new WeightedValue(1324, 10),
+            new WeightedInt(1247, 10),
+            new WeightedInt(1248, 10),
+            new WeightedInt(1249, 10),
+            new WeightedInt(1272, 10),
+            new WeightedInt(1273, 10),
+            new WeightedInt(1324, 10),
             // Shells
             // new WeightedValue(1297, 20),
             // Clam
             // new WeightedValue(1298, 20),
             // Plants
-            new WeightedValue(1322, 50),
-            new WeightedValue(1323, 50),
+            new WeightedInt(1322, 50),
+            new WeightedInt(1323, 50),
 
         };
+
+        public class GrassTiles
+        {
+            public static readonly int BLACK = 1094;
+
+            public static readonly WeightedInt[] DARK = new WeightedInt[] {
+                new WeightedInt(380, 80),
+                new WeightedInt(156, 20)
+            };
+
+            public static readonly WeightedInt[] BRIGHT = new WeightedInt[] {
+                new WeightedInt(175, 100),
+                new WeightedInt(275, 100),
+                new WeightedInt(402, 100),
+                new WeightedInt(400, 15),
+                new WeightedInt(401, 15),
+                new WeightedInt(150, 15),
+                new WeightedInt(254, 5),
+                new WeightedInt(255, 5),
+                new WeightedInt(256, 5)
+            };
+
+            public static readonly WeightedInt[] NORMAL = new WeightedInt[] {
+                new WeightedInt(351, 100),
+                new WeightedInt(300, 10),
+                new WeightedInt(304, 10),
+                new WeightedInt(305, 10),
+                new WeightedInt(329, 1)
+            };
+        }
 
         public class DeepWoodsLichtungTileMatrix
         {

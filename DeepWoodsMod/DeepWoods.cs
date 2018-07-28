@@ -356,11 +356,11 @@ namespace DeepWoodsMod
             this.uniqueMultiplayerID = Game1.MasterPlayer.UniqueMultiplayerID;
             if (seed != 0)
             {
-                this.random = new DeepWoodsRandom(seed);
+                this.random = new DeepWoodsRandom(this, seed);
             }
             else
             {
-                this.random = new DeepWoodsRandom(level, enterDir, parent?.GetSeed());
+                this.random = new DeepWoodsRandom(this, level, enterDir, parent?.GetSeed());
             }
             if (level == 1)
             {
@@ -580,7 +580,7 @@ namespace DeepWoodsMod
         private void CreateSpace()
         {
             // TODO: TEMPTEMPTEMP
-            this.isLichtung = true;// this.level >= MIN_LEVEL_FOR_LICHTUNG && this.parent != null && !this.parent.isLichtung && this.random.GetLuck(LUCK_FOR_LICHTUNG, this.GetLuckLevel());
+            this.isLichtung = true;// this.level >= MIN_LEVEL_FOR_LICHTUNG && this.parent != null && !this.parent.isLichtung && this.random.CheckChance(LUCK_FOR_LICHTUNG, this.GetLuckLevel());
 
             // Generate random size
             int mapWidth, mapHeight;

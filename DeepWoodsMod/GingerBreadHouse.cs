@@ -87,7 +87,7 @@ namespace DeepWoodsMod
 
                     t.getLastFarmerToUse().gainExperience(Farmer.foragingSkill, 25);
 
-                    SpawnFoodItem(t, (int)tileLocation.X, (int)tileLocation.Y);
+                    SpawnFoodItem(location as DeepWoods, t, (int)tileLocation.X, (int)tileLocation.Y);
 
                     this.nextSpawnFoodHealth.Value = this.health - GINGERBREAD_HOUSE_SPAWN_FOOD_HEALTH_STEP_SIZE;
                 }
@@ -102,7 +102,7 @@ namespace DeepWoodsMod
             {
                 for (int y = 0; y < this.height; y++)
                 {
-                    SpawnFoodItems(t, (int)(this.tile.X + x), (int)(this.tile.Y + y));
+                    SpawnFoodItems(location as DeepWoods, t, (int)(this.tile.X + x), (int)(this.tile.Y + y));
                     Game1.createRadialDebris(Game1.currentLocation, Debris.woodDebris, (int)(this.tile.X + x), (int)(this.tile.Y + y), Game1.random.Next(4, 9), false, -1, false, -1);
                 }
             }
@@ -110,12 +110,12 @@ namespace DeepWoodsMod
             return true;
         }
 
-        private int GetRandomFoodType()
+        private int GetRandomFoodType(DeepWoods deepWoods)
         {
-            DeepWoodsRandom random = new DeepWoodsRandom(Game1.random.Next());
+            DeepWoodsRandom random = new DeepWoodsRandom(deepWoods, (deepWoods?.GetSeed() ?? Game1.random.Next()) ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ (int)this.tile.X ^ (int)this.tile.Y);
             random.EnterMasterMode();
 
-            return random.GetRandomValue(new WeightedValue[] {
+            return random.GetRandomValue(new WeightedInt[] {
                 // ITEM NAME // SELL PRICE // WEIGHT
                 CreateWeightedValueForFootType(245), // Sugar               //  50 // 2000
                 CreateWeightedValueForFootType(246), // Wheat Flour         //  50 // 2000
@@ -134,12 +134,12 @@ namespace DeepWoodsMod
                 CreateWeightedValueForFootType(222), // Rhubarb Pie         // 400 //  250
                 CreateWeightedValueForFootType(221), // Pink Cake           // 480 //  208
                 // Non-food items with hardcoded weight (their price is too low, they would always spawn)
-                new WeightedValue(388, 3000),  // Wood // 2 // 3000 (50000)
-                new WeightedValue(92, 3000),   // Sap  // 2 // 3000 (50000)
+                new WeightedInt(388, 3000),  // Wood // 2 // 3000 (50000)
+                new WeightedInt(92, 3000),   // Sap  // 2 // 3000 (50000)
             });
         }
 
-        private WeightedValue CreateWeightedValueForFootType(int type)
+        private WeightedInt CreateWeightedValueForFootType(int type)
         {
             int price = 0;
             if (Game1.objectInformation.ContainsKey(type))
@@ -147,23 +147,23 @@ namespace DeepWoodsMod
                 price = Convert.ToInt32(Game1.objectInformation[type].Split('/')[StardewValley.Object.objectInfoPriceIndex]);
             }
             // We invert the price to get higher weights for cheaper items and vice versa.
-            return new WeightedValue(type, 100000 / price);
+            return new WeightedInt(type, 100000 / price);
         }
 
-        private void SpawnFoodItems(Tool t, int x, int y)
+        private void SpawnFoodItems(DeepWoods deepWoods, Tool t, int x, int y)
         {
             for (int i = 0, n = Game1.random.Next(1,4); i < n; i++)
             {
-                SpawnFoodItem(t, x, y);
+                SpawnFoodItem(deepWoods, t, x, y);
             }
         }
 
-        private void SpawnFoodItem(Tool t, int x, int y)
+        private void SpawnFoodItem(DeepWoods deepWoods, Tool t, int x, int y)
         {
             if (Game1.IsMultiplayer)
-                Game1.createMultipleObjectDebris(GetRandomFoodType(), x, y, 1, t.getLastFarmerToUse().UniqueMultiplayerID);
+                Game1.createMultipleObjectDebris(GetRandomFoodType(deepWoods), x, y, 1, t.getLastFarmerToUse().UniqueMultiplayerID);
             else
-                Game1.createMultipleObjectDebris(GetRandomFoodType(), x, y, 1);
+                Game1.createMultipleObjectDebris(GetRandomFoodType(deepWoods), x, y, 1);
         }
 
         private void PlayDestroyedSounds(GameLocation location)

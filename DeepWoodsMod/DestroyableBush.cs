@@ -15,13 +15,13 @@ namespace DeepWoodsMod
         public DestroyableBush()
             : base()
         {
-            minAxeLevel = MIN_AXE_LEVEL_FOR_BUSH;
+            minAxeLevel = DESTROYABLE_BUSH_MIN_AXE_LEVEL;
         }
 
         public DestroyableBush(Vector2 tileLocation, int size, GameLocation location)
             : base(tileLocation, size, location)
         {
-            minAxeLevel = MIN_AXE_LEVEL_FOR_BUSH;
+            minAxeLevel = DESTROYABLE_BUSH_MIN_AXE_LEVEL;
         }
 
         public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)

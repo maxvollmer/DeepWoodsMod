@@ -65,6 +65,7 @@
     <Compile Include="GingerBreadHouse.cs" />
     <Compile Include="HealingFountain.cs" />
     <Compile Include="IridiumTree.cs" />
+    <Compile Include="LichtungStuff.cs" />
     <Compile Include="LootFreeGrass.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

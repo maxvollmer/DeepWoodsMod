@@ -49,7 +49,7 @@ namespace DeepWoodsMod
             // We then take the maximum of either minMonsters or the result, making sure we always have at least minMonsters monsters.
             int numMonsters = Math.Max(minMonsters, this.random.GetRandomValue(0, maxMonsters / 2) + this.random.GetRandomValue(0, maxMonsters / 2));
 
-            if (deepWoods.GetCombatLevel() <= 1 || this.random.GetLuck(LUCK_FOR_HALF_MONSTERS, deepWoods.GetLuckLevel()))
+            if (deepWoods.GetCombatLevel() <= 1 || this.random.CheckChance(LUCK_FOR_HALF_MONSTERS))
             {
                 numMonsters /= 2;
             }
@@ -103,7 +103,7 @@ namespace DeepWoodsMod
                 monster = new GreenSlime(new Vector2(), GetSlimeLevel());
             }
 
-            if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_BUFFED_MONSTERS && !this.random.GetLuck(LUCK_FOR_UNBUFFED_MONSTERS, deepWoods.GetLuckLevel()))
+            if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_BUFFED_MONSTERS && !this.random.CheckChance(LUCK_FOR_UNBUFFED_MONSTERS))
             {
                 BuffMonster(monster);
             }
@@ -133,7 +133,7 @@ namespace DeepWoodsMod
 
         private bool CanHazMonster(MonsterDecider which)
         {
-            return deepWoods.GetLevel() >= which.minLevel && this.random.GetChance(which.probability);
+            return deepWoods.GetLevel() >= which.minLevel && this.random.CheckChance(which.probability);
         }
 
         private string GetRockCrabType()
@@ -147,7 +147,7 @@ namespace DeepWoodsMod
             {
                 return 121;
             }
-            else if (Game1.currentSeason == "winter" && this.random.GetChance(Probability.FIFTY_FIFTY))
+            else if (Game1.currentSeason == "winter" && this.random.CheckChance(Chance.FIFTY_FIFTY))
             {
                 return 79;
             }

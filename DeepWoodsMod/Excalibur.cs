@@ -5,6 +5,8 @@ namespace DeepWoodsMod
 {
     class Excalibur
     {
+        public static int EXCALIBUR_TILE_INDEX = 3;
+
         public static MeleeWeapon GetOne()
         {
             // 4: "Galaxy Sword/It's unlike anything you've ever seen./60/80/1/8/0/0/0/-1/-1/0/.02/3" #!String
