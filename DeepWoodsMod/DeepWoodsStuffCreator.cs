@@ -7,6 +7,7 @@ using System.Linq;
 using xTile.Dimensions;
 using static DeepWoodsMod.DeepWoodsRandom;
 using static DeepWoodsMod.DeepWoodsSettings;
+using static DeepWoodsMod.DeepWoodsGlobals;
 
 namespace DeepWoodsMod
 {
@@ -58,7 +59,7 @@ namespace DeepWoodsMod
             int mapWidth = this.spaceManager.GetMapWidth();
             int mapHeight = this.spaceManager.GetMapHeight();
 
-            if (deepWoods.GetLevel() > MIN_LEVEL_FOR_THORNY_BUSHES)
+            if (deepWoods.GetLevel() > Settings.Level.MinLevelForThornyBushes)
             {
                 // TODO: Add thorny bushes around entrance area.
                 // deepWoods.terrainFeatures[new Vector2(10, 10), new ThornyBush(new Vector2(10, 10), deepWoods));
@@ -70,7 +71,7 @@ namespace DeepWoodsMod
                 AddSomethingAwesomeForLichtung(new Vector2(deepWoods.lichtungCenter.X, deepWoods.lichtungCenter.Y));
             }
 
-            if (!deepWoods.isLichtung && deepWoods.GetLevel() >= MIN_LEVEL_FOR_GINGERBREAD_HOUSE && this.random.CheckChance(CHANCE_FOR_GINGERBREAD_HOUSE))
+            if (!deepWoods.isLichtung && deepWoods.GetLevel() >= Settings.Level.MinLevelForGingerbreadHouse && this.random.CheckChance(Settings.Luck.Terrain.ChanceForGingerbreadHouse))
             {
                 // Add a gingerbread house
                 deepWoods.resourceClumps.Add(new GingerBreadHouse(new Vector2(mapWidth / 2, mapHeight / 2)));
@@ -83,12 +84,12 @@ namespace DeepWoodsMod
             int maxEasterEggs = 0;
             if (IsEasterEggDay())
             {
-                maxEasterEggs = 1 + this.random.GetRandomValue(0, MAX_EASTER_EGGS_PER_WOOD);
-                if (this.random.CheckChance(LUCK_FOR_MAX_EASTER_EGGS_INCREASE))
+                maxEasterEggs = 1 + this.random.GetRandomValue(Settings.Luck.Terrain.MaxEasterEggsPerLevel);
+                if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForExtraEasterEgg))
                 {
                     maxEasterEggs++;
                 }
-                if (!this.random.CheckChance(LUCK_FOR_MAX_EASTER_EGGS_NOT_HALFED))
+                if (!this.random.CheckChance(Settings.Luck.Terrain.ChanceForEasterEggsDoubled))
                 {
                     maxEasterEggs = Math.Max(1, maxEasterEggs / 2);
                 }
@@ -114,11 +115,11 @@ namespace DeepWoodsMod
 
                 if (deepWoods.isLichtung)
                 {
-                    if (this.random.CheckChance(CHANCE_FOR_FLOWER_ON_LICHTUNG))
+                    if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForFlowerOnClearing))
                     {
                         deepWoods.terrainFeatures[location] = new Flower(GetRandomFlowerType(), location);
                     }
-                    else if (IsEasterEggDay() && numEasterEggs < maxEasterEggs && this.random.CheckChance(LUCK_FOR_EASTEREGG))
+                    else if (IsEasterEggDay() && numEasterEggs < maxEasterEggs && this.random.CheckChance(Settings.Luck.Terrain.ChanceForEasterEgg))
                     {
                         deepWoods.terrainFeatures[location] = new EasterEgg();
                         numEasterEggs++;
@@ -130,69 +131,80 @@ namespace DeepWoodsMod
                 }
                 else
                 {
-                    if (this.random.CheckChance(CHANCE_FOR_RESOURCECLUMP) && IsSpaceFree(location, new Size(2, 2)))
+                    if (deepWoods.GetLevel() >= Settings.Level.MinLevelForMeteorite && this.random.CheckChance(Settings.Luck.Terrain.ResourceClump.ChanceForMeteorite) && IsSpaceFree(location, new Size(2, 2)))
                     {
-                        ResourceClump resourceClump = new ResourceClump(GetRandomResourceClumpType(), 2, 2, location);
-                        deepWoods.resourceClumps.Add(resourceClump);
+                        deepWoods.resourceClumps.Add(new ResourceClump(ResourceClump.meteoriteIndex, 2, 2, location));
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_LARGE_BUSH) && IsSpaceFree(location, new Size(3, 1)))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ResourceClump.ChanceForBoulder) && IsSpaceFree(location, new Size(2, 2)))
+                    {
+                        deepWoods.resourceClumps.Add(new ResourceClump(this.random.CheckChance(Chance.FIFTY_FIFTY) ? ResourceClump.mineRock1Index : ResourceClump.mineRock2Index, 2, 2, location));
+                    }
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ResourceClump.ChanceForHollowLog) && IsSpaceFree(location, new Size(2, 2)))
+                    {
+                        deepWoods.resourceClumps.Add(new ResourceClump(ResourceClump.hollowLogIndex, 2, 2, location));
+                    }
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ResourceClump.ChanceForStump) && IsSpaceFree(location, new Size(2, 2)))
+                    {
+                        deepWoods.resourceClumps.Add(new ResourceClump(ResourceClump.stumpIndex, 2, 2, location));
+                    }
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForLargeBush) && IsSpaceFree(location, new Size(3, 1)))
                     {
                         deepWoods.largeTerrainFeatures.Add(new DestroyableBush(location, Bush.largeBush, deepWoods));
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_MEDIUM_BUSH) && IsSpaceFree(location, new Size(2, 1)))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForMediumBush) && IsSpaceFree(location, new Size(2, 1)))
                     {
                         deepWoods.largeTerrainFeatures.Add(new DestroyableBush(location, Bush.mediumBush, deepWoods));
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_SMALL_BUSH))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForSmallBush))
                     {
                         deepWoods.largeTerrainFeatures.Add(new DestroyableBush(location, Bush.smallBush, deepWoods));
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_GROWN_TREE) && IsRegionTreeFree(location, 1))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForGrownTree) && IsRegionTreeFree(location, 1))
                     {
                         deepWoods.terrainFeatures[location] = new Tree(GetRandomTreeType(), Tree.treeStage);
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_MEDIUM_TREE))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForMediumTree))
                     {
                         deepWoods.terrainFeatures[location] = new Tree(GetRandomTreeType(), Tree.bushStage);
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_SMALL_TREE))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForSmallTree))
                     {
                         deepWoods.terrainFeatures[location] = new Tree(GetRandomTreeType(), this.random.GetRandomValue(Tree.sproutStage, Tree.saplingStage));
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_GROWN_FRUIT_TREE) && IsRegionTreeFree(location, 2))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForGrownFruitTree) && IsRegionTreeFree(location, 2))
                     {
                         int numFruits = 0;
-                        if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_FRUITS)
+                        if (deepWoods.GetLevel() >= Settings.Level.MinLevelForFruits)
                         {
-                            numFruits = this.random.GetRandomValue(FRUIT_COUNT_CHANCES);
+                            numFruits = this.random.GetRandomValue(Settings.Luck.Terrain.FruitCount);
                         }
                         AddFruitTree(location, FruitTree.treeStage, numFruits);
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_SMALL_FRUIT_TREE))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForSmallFruitTree))
                     {
                         AddFruitTree(location, FruitTree.bushStage);
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_WEED))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForWeed))
                     {
                         deepWoods.objects[location] = new StardewValley.Object(location, GetRandomWeedType(), 1);
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_TWIG))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForTwig))
                     {
                         deepWoods.objects[location] = new StardewValley.Object(location, GetRandomTwigType(), 1);
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_STONE))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForStone))
                     {
                         deepWoods.objects[location] = new StardewValley.Object(location, GetRandomStoneType(), 1);
                     }
-                    else if (this.random.CheckChance(CHANCE_FOR_MUSHROOM))
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForMushroom))
                     {
                         deepWoods.objects[location] = new StardewValley.Object(location, GetRandomMushroomType(), 1) { IsSpawnedObject = true };
                     }
-                    else if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_FLOWERS && this.random.CheckChance(Game1.currentSeason == "winter" ? CHANCE_FOR_FLOWER_IN_WINTER : CHANCE_FOR_FLOWER))
+                    else if (deepWoods.GetLevel() >= Settings.Level.MinLevelForFlowers && this.random.CheckChance(Game1.currentSeason == "winter" ? Settings.Luck.Terrain.ChanceForFlowerInWinter : Settings.Luck.Terrain.ChanceForFlower))
                     {
                         deepWoods.terrainFeatures[location] =new Flower(GetRandomFlowerType(), location);
                     }
-                    else if (IsEasterEggDay() && numEasterEggs < maxEasterEggs && this.random.CheckChance(LUCK_FOR_EASTEREGG))
+                    else if (IsEasterEggDay() && numEasterEggs < maxEasterEggs && this.random.CheckChance(Settings.Luck.Terrain.ChanceForEasterEgg))
                     {
                         deepWoods.terrainFeatures[location] = new EasterEgg();
                         numEasterEggs++;
@@ -227,7 +239,7 @@ namespace DeepWoodsMod
 
         private void AddSomethingAwesomeForLichtung(Vector2 location)
         {
-            switch (this.random.GetRandomValue(LICHTUNG_STUFF))
+            switch (this.random.GetRandomValue(Settings.Luck.Clearings.Perks))
             {
                 case LichtungStuff.Lake:
                     this.deepWoodsBuilder.AddLakeToLichtung();
@@ -236,15 +248,15 @@ namespace DeepWoodsMod
                     // TODO!
                     break;
                 case LichtungStuff.Treasure:
-                    if (this.random.CheckChance(LUCK_FOR_LICHTUNG_TREASURE_NOT_TRASH))
+                    if (this.random.CheckChance(Settings.Luck.Clearings.ChanceForTrashOrTreasure))
                     {
                         deepWoods.objects[location] = new TreasureChest(location, CreateRandomTreasureChestItems());
-                        AddLichtungStuffPile(location, LICHTUNG_PILE_ITEM_IDS_FOR_TREASURE);
+                        AddLichtungStuffPile(location, Settings.Luck.Clearings.Treasure.PileItems);
                     }
                     else
                     {
                         deepWoods.objects[location] = new TreasureChest(location, CreateRandomTrashCanItems(), true);
-                        AddLichtungStuffPile(location, LICHTUNG_PILE_ITEM_IDS_FOR_TRASH);
+                        AddLichtungStuffPile(location, Settings.Luck.Clearings.Trash.PileItems);
                     }
                     break;
                 case LichtungStuff.GingerbreadHouse:
@@ -486,34 +498,34 @@ namespace DeepWoodsMod
         {
             List<Item> items = new List<Item>();
 
-            if (this.random.CheckChance(CHANCE_FOR_METALBARS_IN_TREASURE))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Treasure.ChanceForMetalBarsInChest))
             {
-                AddItem(items, this.random.GetRandomValue(334, 338 + 1), this.random.GetRandomValue(TREASURECHEST_METALBAR_STACK_SIZE));
+                AddItem(items, this.random.GetRandomValue(334, 338 + 1), this.random.GetRandomValue(Settings.Luck.Clearings.Treasure.MetalBarStackSize));
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_ELIXIRS_IN_TREASURE))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Treasure.ChanceForElixirsInChest))
             {
-                AddItem(items, this.random.GetRandomValue(new int[] { 772, 773 }), this.random.GetRandomValue(TREASURECHEST_ELIXIR_STACK_SIZE));
+                AddItem(items, this.random.GetRandomValue(new int[] { 772, 773 }), this.random.GetRandomValue(Settings.Luck.Clearings.Treasure.ElixirStackSize));
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_GOLDENMASK_IN_TREASURE))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Treasure.ChanceForArtefactInChest))
             {
                 AddItem(items, 124);
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_DWARF_SCROLL_IN_TREASURE))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Treasure.ChanceForDwarfScrollInChest))
             {
                 AddItem(items, this.random.GetRandomValue(96, 99 + 1));
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_RING_IN_TREASURE))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Treasure.ChanceForRingInChest))
             {
                 AddItem(items, this.random.GetRandomValue(516, 534 + 1));
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_PILE_ITEM_IN_TREASURE))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Treasure.ChanceForRandomPileItemInChest))
             {
-                AddItem(items, this.random.GetRandomValue(LICHTUNG_PILE_ITEM_IDS_FOR_TREASURE), this.random.GetRandomValue(TREASURECHEST_PILE_ITEM_STACK_SIZE));
+                AddItem(items, this.random.GetRandomValue(Settings.Luck.Clearings.Treasure.PileItems), this.random.GetRandomValue(Settings.Luck.Clearings.Treasure.PileItemStackSize));
             }
 
             // Shuffle items around
@@ -524,29 +536,29 @@ namespace DeepWoodsMod
         {
             List<Item> items = new List<Item>();
 
-            if (this.random.CheckChance(CHANCE_FOR_LEWIS_SHORTS_IN_TRASH))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Trash.ChanceForLewisShortsInGarbagebin))
             {
                 AddItem(items, 789);
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_BONE_IN_TRASH))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Trash.ChanceForBoneInGarbagebin))
             {
                 AddItem(items, this.random.GetRandomValue(579, 585 + 1));
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_ARTEFACT_IN_TRASH))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Trash.ChanceForArtefactInGarbagebin))
             {
                 AddItem(items, this.random.GetRandomValue(new int[] { 111, 112, 113, 115 }));
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_PUPPET_IN_TRASH))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Trash.ChanceForPuppetInGarbagebin))
             {
                 AddItem(items, this.random.GetRandomValue(new int[] { 103, 126, 127 }));
             }
 
-            if (this.random.CheckChance(CHANCE_FOR_PILE_ITEM_IN_TRASH))
+            if (this.random.CheckChance(Settings.Luck.Clearings.Trash.ChanceForRandomPileItemInGarbagebin))
             {
-                AddItem(items, this.random.GetRandomValue(LICHTUNG_PILE_ITEM_IDS_FOR_TRASH), this.random.GetRandomValue(TRASHCAN_PILE_ITEM_STACK_SIZE));
+                AddItem(items, this.random.GetRandomValue(Settings.Luck.Clearings.Trash.PileItems), this.random.GetRandomValue(Settings.Luck.Clearings.Trash.PileItemStackSize));
             }
 
             // Shuffle items around
@@ -562,11 +574,11 @@ namespace DeepWoodsMod
         {
             if (Game1.currentSeason == "winter")
             {
-                return this.random.GetRandomValue(WINTER_FLOWERS);
+                return this.random.GetRandomValue(Settings.Luck.Terrain.WinterFlowers);
             }
             else
             {
-                return this.random.GetRandomValue(FLOWERS);
+                return this.random.GetRandomValue(Settings.Luck.Terrain.Flowers);
             }
         }
 
@@ -648,32 +660,6 @@ namespace DeepWoodsMod
             int[] fruitTreeTypes = fruitTrees.Keys.ToArray();
             Array.Sort(fruitTreeTypes);
             return this.random.GetRandomValue(fruitTreeTypes);
-        }
-
-        private int GetRandomResourceClumpType()
-        {
-            if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_METEORITE && this.random.CheckChance(CHANCE_FOR_METEORITE))
-            {
-                return ResourceClump.meteoriteIndex;
-            }
-            else if (this.random.CheckChance(CHANCE_FOR_BOULDER))
-            {
-                return this.random.CheckChance(Chance.FIFTY_FIFTY) ? ResourceClump.mineRock1Index : ResourceClump.mineRock2Index;
-            }
-            else if (this.random.CheckChance(CHANCE_FOR_HOLLOWLOG))
-            {
-                return ResourceClump.hollowLogIndex;
-            }
-            else
-            {
-                return ResourceClump.stumpIndex;
-            }
-            /*
-            return ResourceClump.mineRock1Index;
-            return ResourceClump.mineRock2Index;
-            return ResourceClump.mineRock3Index;
-            return ResourceClump.mineRock4Index;
-            */
         }
     }
 }

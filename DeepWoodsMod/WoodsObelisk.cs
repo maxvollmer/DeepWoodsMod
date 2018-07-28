@@ -11,6 +11,8 @@ namespace DeepWoodsMod
 {
     class WoodsObelisk
     {
+        public static readonly string WOODS_OBELISK_BUILDING_NAME = "Woods Obelisk";
+
         private static void ObeliskWarpForRealOverride()
         {
             Game1.activeClickableMenu = new WoodsObeliskMenu();
@@ -18,6 +20,9 @@ namespace DeepWoodsMod
 
         public static void InjectWoodsObeliskIntoGame()
         {
+            if (DeepWoodsState.DeepWoodsLevelReached < Settings.Level.MinLevelForWoodsObelisk)
+                return;
+
             foreach (var a in Game1.delayedActions)
             {
                 if (a.behavior == a.doGlobalFade && a.afterFadeBehavior != null
@@ -37,12 +42,12 @@ namespace DeepWoodsMod
                     BluePrint woodsObeliskBluePrint = new BluePrint("Earth Obelisk")
                     {
                         name = WOODS_OBELISK_BUILDING_NAME,
-                        displayName = WOODS_OBELISK_DISPLAY_NAME,
-                        description = WOODS_OBELISK_DESCRIPTION,
-                        moneyRequired = WOODS_OBELISK_MONEY_REQUIRED
+                        displayName = I18N.WoodsObeliskDisplayName,
+                        description = I18N.WoodsObeliskDescription,
+                        moneyRequired = Settings.Objects.WoodsObelisk.MoneyRequired
                     };
                     woodsObeliskBluePrint.itemsRequired.Clear();
-                    foreach (var item in WOODS_OBELISK_ITEMS_REQUIRED)
+                    foreach (var item in Settings.Objects.WoodsObelisk.ItemsRequired)
                     {
                         woodsObeliskBluePrint.itemsRequired.Add(item.Key, item.Value);
                     }

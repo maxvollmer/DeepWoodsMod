@@ -8,7 +8,7 @@ using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
-    class DeepWoodsSpaceManager
+    public class DeepWoodsSpaceManager
     {
         private int mapWidth;
         private int mapHeight;
@@ -32,16 +32,16 @@ namespace DeepWoodsMod
 
         private bool IntersectsWorld(xTile.Dimensions.Rectangle rectangle)
         {
-            if (rectangle.X < FOREST_PATCH_MIN_GAP_TO_MAPBORDER)
+            if (rectangle.X < Settings.Map.ForestPatchMinGapToMapBorder)
                 return true;
 
-            if (rectangle.Y < FOREST_PATCH_MIN_GAP_TO_MAPBORDER)
+            if (rectangle.Y < Settings.Map.ForestPatchMinGapToMapBorder)
                 return true;
 
-            if ((this.mapWidth - (rectangle.X + rectangle.Width)) < FOREST_PATCH_MIN_GAP_TO_MAPBORDER)
+            if ((this.mapWidth - (rectangle.X + rectangle.Width)) < Settings.Map.ForestPatchMinGapToMapBorder)
                 return true;
 
-            if ((this.mapHeight - (rectangle.Y + rectangle.Height)) < FOREST_PATCH_MIN_GAP_TO_MAPBORDER)
+            if ((this.mapHeight - (rectangle.Y + rectangle.Height)) < Settings.Map.ForestPatchMinGapToMapBorder)
                 return true;
 
             return false;
@@ -66,25 +66,25 @@ namespace DeepWoodsMod
 
         public bool TryGetFreeRectangleForForestPatch(Location location, int wishWidth, int wishHeight, out xTile.Dimensions.Rectangle rectangle)
         {
-            int minWidth = MIN_FOREST_PATCH_DIAMETER;
-            int minHeight = MIN_FOREST_PATCH_DIAMETER;
+            int minWidth = Settings.Map.MinSizeForForestPatch;
+            int minHeight = Settings.Map.MinSizeForForestPatch;
 
             rectangle = new xTile.Dimensions.Rectangle(location.X - wishWidth / 2, location.Y - wishHeight / 2, wishWidth, wishHeight);
 
             while (IntersectsAny(rectangle))
             {
                 int reachedEndCount = 0; // i have a knot in my brain, this should be cleaner
-                if (rectangle.Width >= minWidth + FOREST_PATCH_SHRINK_STEP_SIZE)
+                if (rectangle.Width > minWidth)
                 {
-                    rectangle.Width -= FOREST_PATCH_SHRINK_STEP_SIZE;
+                    rectangle.Width--;
                 }
                 else
                 {
                     reachedEndCount++; // i have a knot in my brain, this should be cleaner
                 }
-                if (rectangle.Height >= minHeight + FOREST_PATCH_SHRINK_STEP_SIZE)
+                if (rectangle.Height > minHeight)
                 {
-                    rectangle.Height -= FOREST_PATCH_SHRINK_STEP_SIZE;
+                    rectangle.Height--;
                 }
                 else
                 {
@@ -112,7 +112,7 @@ namespace DeepWoodsMod
             int x, y;
             if (enterDir == EnterDirection.FROM_BOTTOM || enterDir == EnterDirection.FROM_TOP)
             {
-                x = random.GetRandomValue(MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION, this.mapWidth - MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION);
+                x = random.GetRandomValue(Settings.Map.MinCornerDistanceForEnterLocation, this.mapWidth - Settings.Map.MinCornerDistanceForEnterLocation);
                 if (enterDir == EnterDirection.FROM_BOTTOM)
                 {
                     y = this.mapHeight - 1;
@@ -124,7 +124,7 @@ namespace DeepWoodsMod
             }
             else
             {
-                y = random.GetRandomValue(MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION, this.mapHeight - MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION);
+                y = random.GetRandomValue(Settings.Map.MinCornerDistanceForEnterLocation, this.mapHeight - Settings.Map.MinCornerDistanceForEnterLocation);
                 if (enterDir == EnterDirection.FROM_RIGHT)
                 {
                     x = this.mapWidth - 1;

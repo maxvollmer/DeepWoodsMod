@@ -4,7 +4,7 @@ using xTile.Dimensions;
 
 namespace DeepWoodsMod
 {
-    class DeepWoodsEnterExit
+    public class DeepWoodsEnterExit
     {
         public class DeepWoodsExit
         {

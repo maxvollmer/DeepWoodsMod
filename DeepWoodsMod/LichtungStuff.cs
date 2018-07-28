@@ -1,7 +1,7 @@
 ﻿
 namespace DeepWoodsMod
 {
-    enum LichtungStuff
+    public enum LichtungStuff
     {
         Nothing,
         MushroomTrees,

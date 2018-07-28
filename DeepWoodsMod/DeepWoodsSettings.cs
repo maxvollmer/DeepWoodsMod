@@ -3,186 +3,245 @@ using StardewModdingAPI;
 using System.Collections.Generic;
 using xTile.Dimensions;
 using static DeepWoodsMod.DeepWoodsRandom;
+using static DeepWoodsMod.DeepWoodsGlobals;
+using Newtonsoft.Json;
+using StardewValley.Tools;
 
 namespace DeepWoodsMod
 {
-    class WoodsSettings
+    class MapSettings
     {
-        public bool ExampleBoolean { get; set; } = true;
-        public float ExampleFloat { get; set; } = 0.5f;
-    }
+        public int MaxMapWidth { get; set; } = 64;
+        public int MaxMapHeight { get; set; } = 64;
+        public int MaxMapWidthForClearing { get; set; } = 32;
 
-    class OtherSettings
-    {
-        public bool ExampleBoolean2 { get; set; } = true;
-        public float ExampleFloat2 { get; set; } = 0.5f;
-    }
+        public int MaxBumpSizeForForestBorder { get; set; } = 2;
 
-    class DeepWoodsSettings
-    {
-        public WoodsSettings WoodsSettings { get; set; } = new WoodsSettings();
-        public OtherSettings OtherSettings { get; set; } = new OtherSettings();
+        public int MinTilesForCorner { get; set; } = 3;
+        public int MaxTilesForCorner { get; set; } = 8;
 
-        public static DeepWoodsSettings Settings { get; set; } = new DeepWoodsSettings();
+        public int ExitRadius { get; set; } = 2;
+        public int ExitLength { get; set; } = 5;
 
-        public static void Load()
+        public int MinSizeForForestPatch { get; set; } = 12;
+        public int MaxSizeForForestPatch { get; set; } = 24;
+
+        [JsonIgnore]
+        public int ForestPatchMinGapToMapBorder
         {
-            Settings = ModEntry.GetHelper().ReadConfig<DeepWoodsSettings>() ?? new DeepWoodsSettings();
-            ModEntry.Log("bla: " + Settings.WoodsSettings.ExampleFloat);
-        }
-
-        public static void Save()
-        {
-            // ModEntry.GetHelper().WriteJsonFile($"{Constants.CurrentSavePath}/test.json", testConfig);
-        }
-
-
-        public readonly static HashSet<long> playersWhoGotStardropFromUnicorn = new HashSet<long>();
-
-
-        // Other stuff
-        public readonly static string UNIQUE_NAME_FOR_EASTER_EGG_ITEMS = "DeepWoodsModEasterEggItemIHopeThisNameIsUniqueEnoughToNotMessOtherModsUpw5365r6zgdhrt6u";
-
-        public readonly static byte NETWORK_MESSAGE_DEEPWOODS_WARP = 99; // Let's hope no other mod uses this value for a custom message :S
-
-
-        // DeepWoods
-        public readonly static string DEFAULT_OUTDOOR_TILESHEET_ID = "DefaultOutdoor";
-        public readonly static string LAKE_TILESHEET_ID = "WaterBorderTiles";
-
-        public readonly static int TIME_BEFORE_DELETION_ALLOWED_IF_OBELISK_SPAWNED = 100;
-
-        public readonly static int MIN_LEVEL_FOR_LICHTUNG = 10;
-        public readonly static Chance LUCK_FOR_LICHTUNG = new Chance(new LuckValue(10, 50));
-
-        public readonly static int CRITTER_MULTIPLIER = 5;
-
-        public readonly static Location DEEPWOODS_ENTER_LOCATION = new Location(MIN_MAP_WIDTH / 2, 0);
-        public readonly static Location WOODS_WARP_LOCATION = new Location(26, 31);
-
-
-        // DeepWoodsBuilder
-        public readonly static Chance CHANCE_FOR_BIG_FORESTPATCH_IN_CENTER = new Chance(25);
-        public readonly static Chance CHANCE_FOR_FORESTPATCH_IN_GRID = new Chance(50);
-
-        public readonly static Chance CHANCE_FOR_WATER_LILY = new Chance(8);
-        public readonly static Chance CHANCE_FOR_BLOSSOM_ON_WATER_LILY = new Chance(30);
-
-        public readonly static int FOREST_ROW_MAX_INWARDS_BUMP = 2;
-        public readonly static Chance CHANCE_FOR_FOREST_ROW_BUMP = new Chance(50);
-
-
-        // DeepWoodsMonsters
-        public struct MonsterDecider
-        {
-            public readonly int minLevel;
-            public readonly Chance probability;
-            public MonsterDecider(int minLevel, int probability)
+            get
             {
-                this.minLevel = minLevel;
-                this.probability = new Chance(probability);
+                return MaxBumpSizeForForestBorder * 2 + 2;
             }
         }
 
-        public readonly static int NUM_MONSTER_SPAWN_TRIES = 6;
+        [JsonIgnore]
+        public int ForestPatchMinGapToEachOther
+        {
+            get
+            {
+                return MaxBumpSizeForForestBorder * 2;
+            }
+        }
 
-        public readonly static Chance LUCK_FOR_HALF_MONSTERS = new Chance(new LuckValue(0, 50));
-        public readonly static Chance LUCK_FOR_UNBUFFED_MONSTERS = new Chance(new LuckValue(25, 75));
+        [JsonIgnore]
+        public int ForestPatchCenterMinDistanceToMapBorder
+        {
+            get
+            {
+                return ForestPatchMinGapToMapBorder + MinSizeForForestPatch / 2;
+            }
+        }
 
-        public readonly static int MIN_LEVEL_FOR_BUFFED_MONSTERS = 10;
+        [JsonIgnore]
+        public int ForestPatchCenterMinDistanceToEachOther
+        {
+            get
+            {
+                return ForestPatchMinGapToEachOther + MinSizeForForestPatch / 2;
+            }
+        }
 
-        public readonly static MonsterDecider BAT = new MonsterDecider(1, 10);
-        public readonly static MonsterDecider BIGSLIME = new MonsterDecider(2, 10);
-        public readonly static MonsterDecider GRUB = new MonsterDecider(2, 10);
-        public readonly static MonsterDecider FLY = new MonsterDecider(2, 10);
-        public readonly static MonsterDecider BRUTE = new MonsterDecider(5, 10);
-        public readonly static MonsterDecider GOLEM = new MonsterDecider(5, 10);
-        public readonly static MonsterDecider ROCK_CRAB = new MonsterDecider(10, 10);
-        public readonly static MonsterDecider GHOST = new MonsterDecider(10, 10);
-        public readonly static MonsterDecider PURPLE_SLIME = new MonsterDecider(10, 10);
+        [JsonIgnore]
+        public int MinCornerDistanceForEnterLocation
+        {
+            get
+            {
+                return MaxTilesForCorner + ExitRadius + 2;   // => 12
+            }
+        }
 
+        [JsonIgnore]
+        public int MinMapWidth
+        {
+            get
+            {
+                return MinCornerDistanceForEnterLocation * 2 + 4;   // => 28
+            }
+        }
 
-        // DeepWoodsSpaceManager
-        public readonly static int MIN_CORNER_SIZE = 3;
-        public readonly static int MAX_CORNER_SIZE = 8;
+        [JsonIgnore]
+        public int MinMapHeight
+        {
+            get
+            {
+                return MinCornerDistanceForEnterLocation * 2 + 4;  // => 28
+            }
+        }
 
-        /// <summary>Amount of tiles exits expand in each direction</summary>
-        public readonly static int DEEPWOODS_EXIT_RADIUS = 2;
+        [JsonIgnore]
+        public int MinimumTilesForForestPatch
+        {
+            get
+            {
+                return MinSizeForForestPatch * MinSizeForForestPatch;
+            }
+        }
 
-        public readonly static int MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION = MAX_CORNER_SIZE + DEEPWOODS_EXIT_RADIUS + 2;   // => 12
+        [JsonIgnore]
+        public Location RootLevelEnterLocation
+        {
+            get
+            {
+                return new Location(MinMapWidth / 2, 0);
+            }
+        }
+    }
 
-        public readonly static int MIN_MAP_WIDTH = MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION * 2 + 4;   // => 28
-        public readonly static int MAX_MAP_WIDTH = 64;
-        public readonly static int MIN_MAP_HEIGHT = MIN_CORNER_DISTANCE_FOR_ENTER_LOCATION * 2 + 4;  // => 28
-        public readonly static int MAX_MAP_HEIGHT = 64;
+    class LevelSettings
+    {
+        public int MinLevelForFlowers { get; set; } = 3;
+        public int MinLevelForFruits { get; set; } = 5;
+        public int MinLevelForThornyBushes { get; set; } = 10;
+        public int MinLevelForBuffedMonsters { get; set; } = 15;
+        public int MinLevelForWoodsObelisk { get; set; } = 20;
+        public int MinLevelForMeteorite { get; set; } = 25;
+        public int MinLevelForClearing { get; set; } = 30;
+        public int MinLevelForGingerbreadHouse { get; set; } = 50;
+    }
 
-        public readonly static int MAX_MAP_SIZE_FOR_LICHTUNG = 32;
+    public class ExcaliburSettings
+    {
+        public int MinDamage { get; set; } = 120;
+        public int MaxDamage { get; set; } = 180;
+        public float Knockback { get; set; } = 1.5f;
+        public int Speed { get; set; } = 10;
+        public int Precision { get; set; } = 5;
+        public int Defense { get; set; } = 5;
+        public int AreaOfEffect { get; set; } = 5;
+        public float CriticalChance { get; set; } = .05f;
+        public float CriticalMultiplier { get; set; } = 5;
+    }
 
-        public readonly static int MIN_FOREST_PATCH_DIAMETER = 12;
-        public readonly static int MAX_FOREST_PATCH_DIAMETER = 24;
-        public readonly static int FOREST_PATCH_MIN_GAP_TO_MAPBORDER = 6;
-        public readonly static int FOREST_PATCH_MIN_GAP_TO_EACHOTHER = 4;
-        public readonly static int FOREST_PATCH_CENTER_MIN_DISTANCE_TO_MAPBORDER = FOREST_PATCH_MIN_GAP_TO_MAPBORDER + MIN_FOREST_PATCH_DIAMETER / 2;
-        public readonly static int FOREST_PATCH_CENTER_MIN_DISTANCE_TO_EACHOTHER = FOREST_PATCH_MIN_GAP_TO_EACHOTHER + MIN_FOREST_PATCH_DIAMETER / 2;
-        public readonly static int MINIMUM_TILES_FOR_FORESTPATCH = MIN_FOREST_PATCH_DIAMETER * MIN_FOREST_PATCH_DIAMETER;
-        public readonly static int FOREST_PATCH_SHRINK_STEP_SIZE = 2;
+    public class GingerBreadHouseSettings
+    {
+        public int MinimumAxeLevel { get; set; } = Axe.gold;
+        public int Health { get; set; } = 200;
+        public int DamageIntervalForFoodDrop { get; set; } = 20;
+    }
 
-        public readonly static int MINIMUM_TILES_FOR_MONSTER = 36;
-        public readonly static int MINIMUM_TILES_FOR_TERRAIN_FEATURE = 4;
-        public readonly static int MINIMUM_TILES_FOR_BAUBLE = 16;
-        public readonly static int MINIMUM_TILES_FOR_LEAVES = 16;
+    public class IridiumTreeSettings
+    {
+        public int MinimumAxeLevel { get; set; } = Axe.iridium;
+        public int Health { get; set; } = 200;
+        public int DamageIntervalForOreDrop { get; set; } = 20;
+    }
 
-        public readonly static int LICHTUNG_ENTRANCE_DEPTH = 5;
-        public readonly static int NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH = 16;
-        public readonly static int NUM_TILES_PER_LIGHTSOURCE_IN_LICHTUNG = 16;
+    public class WoodsObeliskSettings
+    {
+        public int MoneyRequired { get; set; } = 10000000;
+        public Dictionary<int, int> ItemsRequired { get; set; } = new Dictionary<int, int>()
+        {
+            { 388, 999},    // Wood
+            {  92, 999},    // Sap
+            { 337, 20}      // Iridium Bar
+        };
+    }
 
+    public class UnicornSettings
+    {
+        public int FarmerScareDistance { get; set; } = 8;
+        public int FarmerScareSpeed { get; set; } = 3;
+        public int FleeSpeed { get; set; } = 12;
+    }
 
+    public class BushSettings
+    {
+        public int MinAxeLevel { get; set; } = Axe.steel;
+        public int ThornyBushMinAxeLevel { get; set; } = Axe.iridium;
+        public int ThornyBushDamagePerLevel { get; set; } = 5;
+    }
 
-        // DeepWoodsStuffCreator
-        public readonly static int MIN_LEVEL_FOR_METEORITE = 20;
-        public readonly static int MIN_LEVEL_FOR_FLOWERS = 10;
-        public readonly static int MIN_LEVEL_FOR_FRUITS = 10;
-        public readonly static int MIN_LEVEL_FOR_GINGERBREAD_HOUSE = 20;
-        public readonly static int MIN_LEVEL_FOR_THORNY_BUSHES = 10;
+    public class ObjectsSettings
+    {
+        public ExcaliburSettings Excalibur { get; set; } = new ExcaliburSettings();
+        public GingerBreadHouseSettings GingerBreadHouse { get; set; } = new GingerBreadHouseSettings();
+        public IridiumTreeSettings IridiumTree { get; set; } = new IridiumTreeSettings();
+        public WoodsObeliskSettings WoodsObelisk { get; set; } = new WoodsObeliskSettings();
+        public UnicornSettings Unicorn { get; set; } = new UnicornSettings();
+        public BushSettings Bush { get; set; } = new BushSettings();
+    }
 
-        public readonly static int MAX_EASTER_EGGS_PER_WOOD = 4;
+    public class ResourceClumpLuckSettings
+    {
+        public Chance ChanceForMeteorite { get; set; } = new Chance(1, 500);
+        public Chance ChanceForBoulder { get; set; } = new Chance(1);
+        public Chance ChanceForHollowLog { get; set; } = new Chance(2);
+        public Chance ChanceForStump { get; set; } = new Chance(3);
+    }
 
-        public readonly static Chance CHANCE_FOR_GINGERBREAD_HOUSE = new Chance(1);
-        public readonly static Chance CHANCE_FOR_RESOURCECLUMP = new Chance(5);
-        public readonly static Chance CHANCE_FOR_LARGE_BUSH = new Chance(10);
-        public readonly static Chance CHANCE_FOR_MEDIUM_BUSH = new Chance(5);
-        public readonly static Chance CHANCE_FOR_SMALL_BUSH = new Chance(5);
-        public readonly static Chance CHANCE_FOR_GROWN_TREE = new Chance(25);
-        public readonly static Chance CHANCE_FOR_MEDIUM_TREE = new Chance(10);
-        public readonly static Chance CHANCE_FOR_SMALL_TREE = new Chance(10);
-        public readonly static Chance CHANCE_FOR_GROWN_FRUIT_TREE = new Chance(1);
-        public readonly static Chance CHANCE_FOR_SMALL_FRUIT_TREE = new Chance(5);
-        public readonly static Chance CHANCE_FOR_WEED = new Chance(20);
-        public readonly static Chance CHANCE_FOR_TWIG = new Chance(10);
-        public readonly static Chance CHANCE_FOR_STONE = new Chance(10);
-        public readonly static Chance CHANCE_FOR_MUSHROOM = new Chance(10);
-        public readonly static Chance CHANCE_FOR_FLOWER = new Chance(7);
-        public readonly static Chance CHANCE_FOR_FLOWER_IN_WINTER = new Chance(3);
+    public class TerrainLuckSettings
+    {
+        public Chance ChanceForGingerbreadHouse { get; set; } = new Chance(1);
+        public Chance ChanceForLargeBush { get; set; } = new Chance(10);
+        public Chance ChanceForMediumBush { get; set; } = new Chance(5);
+        public Chance ChanceForSmallBush { get; set; } = new Chance(5);
+        public Chance ChanceForGrownTree { get; set; } = new Chance(25);
+        public Chance ChanceForMediumTree { get; set; } = new Chance(10);
+        public Chance ChanceForSmallTree { get; set; } = new Chance(10);
+        public Chance ChanceForGrownFruitTree { get; set; } = new Chance(1);
+        public Chance ChanceForSmallFruitTree { get; set; } = new Chance(5);
+        public Chance ChanceForWeed { get; set; } = new Chance(20);
+        public Chance ChanceForTwig { get; set; } = new Chance(10);
+        public Chance ChanceForStone { get; set; } = new Chance(10);
+        public Chance ChanceForMushroom { get; set; } = new Chance(10);
+        public Chance ChanceForFlower { get; set; } = new Chance(7);
+        public Chance ChanceForFlowerInWinter { get; set; } = new Chance(3);
+        public Chance ChanceForFlowerOnClearing { get; set; } = new Chance(5);
+        public ResourceClumpLuckSettings ResourceClump { get; set; } = new ResourceClumpLuckSettings();
 
-        public readonly static Chance CHANCE_FOR_METEORITE = new Chance(1);
-        public readonly static Chance CHANCE_FOR_BOULDER = new Chance(10);
-        public readonly static Chance CHANCE_FOR_HOLLOWLOG = new Chance(30);
-
-        public readonly static WeightedInt[] FRUIT_COUNT_CHANCES = new WeightedInt[]{
+        public WeightedInt[] FruitCount { get; set; } = new WeightedInt[]{
             new WeightedInt(0, 60),
             new WeightedInt(1, 30),
             new WeightedInt(2, 20),
             new WeightedInt(3, 10),
         };
 
-        public readonly static Chance CHANCE_FOR_FLOWER_ON_LICHTUNG = new Chance(5);
+        public WeightedInt[] WinterFlowers { get; set; } = new WeightedInt[] {
+            new WeightedInt(429, 290),  // 597, // BlueJazz, spring (50g)
+            new WeightedInt(425, 50),   // 595, // FairyRose, fall (290g)
+        };
 
-        public readonly static Chance LUCK_FOR_EASTEREGG = new Chance(new LuckValue(5, 25), 1000);
-        public readonly static Chance LUCK_FOR_MAX_EASTER_EGGS_INCREASE = new Chance(new LuckValue(0, 25));
-        public readonly static Chance LUCK_FOR_MAX_EASTER_EGGS_NOT_HALFED = new Chance(new LuckValue(75, 100));
+        public WeightedInt[] Flowers { get; set; } = new WeightedInt[] {
+            new WeightedInt(427, 290), // 591, // Tulip, spring (30g)
+            new WeightedInt(429, 140), // 597, // BlueJazz, spring (50g)
+            new WeightedInt(455, 90),  // 593, // SummerSpangle, summer (90g)
+            new WeightedInt(453, 50),  // 376, // Poppy, summer (140g)
+            new WeightedInt(425, 30),  // 595, // FairyRose, fall (290g)
+        };
 
-        // Possibilities for stuff in a Lichtung
-        public readonly static WeightedValue<LichtungStuff>[] LICHTUNG_STUFF = new WeightedValue<LichtungStuff>[]{
+        public Chance ChanceForEasterEgg { get; set; } = new Chance(new LuckValue(5, 25), 1000);
+        public Chance ChanceForExtraEasterEgg { get; set; } = new Chance(new LuckValue(0, 25));
+        public Chance ChanceForEasterEggsDoubled { get; set; } = new Chance(new LuckValue(75, 100));
+
+        public LuckRange MaxEasterEggsPerLevel { get; set; } = new LuckRange(new LuckValue(0, 2), new LuckValue(2, 6));
+    }
+
+    public class ClearingLuckSettings
+    {
+        public Chance ChanceForClearing { get; set; } = new Chance(new LuckValue(1, 10));
+
+        public WeightedValue<LichtungStuff>[] Perks { get; set; } = new WeightedValue<LichtungStuff>[]{
             new WeightedValue<LichtungStuff>(LichtungStuff.Nothing, 1500),
             new WeightedValue<LichtungStuff>(LichtungStuff.Lake, 1500000),
             new WeightedValue<LichtungStuff>(LichtungStuff.HealingFountain, 1000),
@@ -193,7 +252,15 @@ namespace DeepWoodsMod
             new WeightedValue<LichtungStuff>(LichtungStuff.ExcaliburStone, 250)
         };
 
-        public readonly static WeightedInt[] LICHTUNG_PILE_ITEM_IDS_FOR_TREASURE = new WeightedInt[] {
+        public Chance ChanceForTrashOrTreasure { get; set; } = new Chance(new LuckValue(0, 100));
+
+        public TreasureLuckSettings Treasure { get; set; } = new TreasureLuckSettings();
+        public TrashLuckSettings Trash { get; set; } = new TrashLuckSettings();
+    }
+
+    public class TreasureLuckSettings
+    {
+        public WeightedInt[] PileItems { get; set; } = new WeightedInt[] {
             new WeightedInt(384, 2000),   // Gold ore
             new WeightedInt(386, 300),    // Iridium ore
             new WeightedInt(80, 75),      // Quartz (25g)
@@ -207,7 +274,21 @@ namespace DeepWoodsMod
             new WeightedInt(166, 1),      // Treasure Chest
         };
 
-        public readonly static WeightedInt[] LICHTUNG_PILE_ITEM_IDS_FOR_TRASH = new WeightedInt[] {
+        public Chance ChanceForMetalBarsInChest { get; set; } = new Chance(new LuckValue(10, 50));
+        public Chance ChanceForElixirsInChest { get; set; } = new Chance(new LuckValue(10, 30));
+        public Chance ChanceForArtefactInChest { get; set; } = new Chance(new LuckValue(0, 20));
+        public Chance ChanceForDwarfScrollInChest { get; set; } = new Chance(new LuckValue(0, 20));
+        public Chance ChanceForRingInChest { get; set; } = new Chance(new LuckValue(0, 20));
+        public Chance ChanceForRandomPileItemInChest { get; set; } = new Chance(new LuckValue(0, 10));
+
+        public LuckRange MetalBarStackSize { get; set; } = new LuckRange(new LuckValue(0, 100), new LuckValue(0, 100));
+        public LuckRange ElixirStackSize { get; set; } = new LuckRange(new LuckValue(0, 100), new LuckValue(0, 100));
+        public LuckRange PileItemStackSize { get; set; } = new LuckRange(new LuckValue(0, 100), new LuckValue(0, 100));
+    }
+
+    public class TrashLuckSettings
+    {
+        public WeightedInt[] PileItems { get; set; } = new WeightedInt[] {
             new WeightedInt(168, 2000),   // Trash
             new WeightedInt(172, 1000),   // Old Newspaper
             new WeightedInt(170, 1000),   // Glasses
@@ -218,96 +299,86 @@ namespace DeepWoodsMod
             // new WeightedInt(169, 2000),// Driftwood
         };
 
-        public readonly static Chance CHANCE_FOR_METALBARS_IN_TREASURE = new Chance(10);
-        public readonly static Chance CHANCE_FOR_ELIXIRS_IN_TREASURE = new Chance(10);
-        public readonly static Chance CHANCE_FOR_GOLDENMASK_IN_TREASURE = new Chance(10);
-        public readonly static Chance CHANCE_FOR_DWARF_SCROLL_IN_TREASURE = new Chance(10);
-        public readonly static Chance CHANCE_FOR_RING_IN_TREASURE = new Chance(10);
-        public readonly static Chance CHANCE_FOR_PILE_ITEM_IN_TREASURE = new Chance(10);
+        public Chance ChanceForLewisShortsInGarbagebin { get; set; } = new Chance(new LuckValue(0, 1, 1), 1000);
+        public Chance ChanceForBoneInGarbagebin { get; set; } = new Chance(new LuckValue(0, 10));
+        public Chance ChanceForArtefactInGarbagebin { get; set; } = new Chance(new LuckValue(0, 10));
+        public Chance ChanceForPuppetInGarbagebin { get; set; } = new Chance(new LuckValue(0, 10));
+        public Chance ChanceForRandomPileItemInGarbagebin { get; set; } = new Chance(new LuckValue(0, 10));
 
-        public readonly static LuckRange TREASURECHEST_METALBAR_STACK_SIZE = new LuckRange(new LuckValue(0, 100), new LuckValue(0, 100));
-        public readonly static LuckRange TREASURECHEST_ELIXIR_STACK_SIZE = new LuckRange(new LuckValue(0, 100), new LuckValue(0, 100));
-        public readonly static LuckRange TREASURECHEST_PILE_ITEM_STACK_SIZE = new LuckRange(new LuckValue(0, 100), new LuckValue(0, 100));
+        public LuckRange PileItemStackSize { get; set; } = new LuckRange(new LuckValue(0, 100), new LuckValue(0, 100));
+    }
 
-        public readonly static Chance CHANCE_FOR_LEWIS_SHORTS_IN_TRASH = new Chance(1, 1000);
-        public readonly static Chance CHANCE_FOR_BONE_IN_TRASH = new Chance(10);
-        public readonly static Chance CHANCE_FOR_ARTEFACT_IN_TRASH = new Chance(10);
-        public readonly static Chance CHANCE_FOR_PUPPET_IN_TRASH = new Chance(10);
-        public readonly static Chance CHANCE_FOR_PILE_ITEM_IN_TRASH = new Chance(10);
+    public class MonstersSettings
+    {
+        public Chance ChanceForHalfMonsterCount { get; set; } = new Chance(new LuckValue(0, 0, 50));
+        public Chance ChanceForUnbuffedMonster { get; set; } = new Chance(new LuckValue(0, 25, 75));
 
-        public readonly static LuckRange TRASHCAN_PILE_ITEM_STACK_SIZE = new LuckRange(new LuckValue(0, 100), new LuckValue(0, 100));
+        public DeepWoodsMonsters.MonsterDecider Bat { get; set; } = new DeepWoodsMonsters.MonsterDecider(1, 10);
+        public DeepWoodsMonsters.MonsterDecider BigSlime { get; set; } = new DeepWoodsMonsters.MonsterDecider(2, 10);
+        public DeepWoodsMonsters.MonsterDecider Grub { get; set; } = new DeepWoodsMonsters.MonsterDecider(2, 10);
+        public DeepWoodsMonsters.MonsterDecider Fly { get; set; } = new DeepWoodsMonsters.MonsterDecider(2, 10);
+        public DeepWoodsMonsters.MonsterDecider Brute { get; set; } = new DeepWoodsMonsters.MonsterDecider(5, 10);
+        public DeepWoodsMonsters.MonsterDecider Golem { get; set; } = new DeepWoodsMonsters.MonsterDecider(5, 10);
+        public DeepWoodsMonsters.MonsterDecider RockCrab { get; set; } = new DeepWoodsMonsters.MonsterDecider(10, 10);
+        public DeepWoodsMonsters.MonsterDecider Ghost { get; set; } = new DeepWoodsMonsters.MonsterDecider(10, 10);
+        public DeepWoodsMonsters.MonsterDecider PurpleSlime { get; set; } = new DeepWoodsMonsters.MonsterDecider(10, 10);
+    }
 
-        // This value will be used to determine if a Lichtung has a pile of trash instead of treasure
-        public readonly static Chance LUCK_FOR_LICHTUNG_TREASURE_NOT_TRASH = new Chance(new LuckValue(0, 100));
+    public class LuckSettings
+    {
+        public TerrainLuckSettings Terrain { get; set; } = new TerrainLuckSettings();
+        public ClearingLuckSettings Clearings { get; set; } = new ClearingLuckSettings();
+    }
 
-        public readonly static WeightedInt[] WINTER_FLOWERS = new WeightedInt[] {
-            new WeightedInt(429, 290),  // 597, // BlueJazz, spring (50g)
-            new WeightedInt(425, 50),   // 595, // FairyRose, fall (290g)
-        };
+    public class I18NData
+    {
+        public string ExcaliburDisplayName { get; set; } = "Excalibur";
+        public string ExcaliburDescription { get; set; } = "It feels hopeful to wield.";
+        public string WoodsObeliskDisplayName { get; set; } = "Woods Obelisk";
+        public string WoodsObeliskDescription { get; set; } = "Woods Obelisk Description";
+        public string EasterEggDisplayName { get; set; } = "Easter Egg";
+    }
 
-        public readonly static WeightedInt[] FLOWERS = new WeightedInt[] {
-            new WeightedInt(427, 290), // 591, // Tulip, spring (30g)
-            new WeightedInt(429, 140), // 597, // BlueJazz, spring (50g)
-            new WeightedInt(455, 90),  // 593, // SummerSpangle, summer (90g)
-            new WeightedInt(453, 50),  // 376, // Poppy, summer (140g)
-            new WeightedInt(425, 30),  // 595, // FairyRose, fall (290g)
-        };
+    class DeepWoodsStateData
+    {
+        public HashSet<long> PlayersWhoGotStardropFromUnicorn { get; set; } = new HashSet<long>();
+        public int DeepWoodsLevelReached { get; set; } = 0;
+    }
 
+    class DeepWoodsSettings
+    {
+        // Save stuff
+        public static DeepWoodsStateData DeepWoodsState { get; set; } = new DeepWoodsStateData();
 
+        // I18N
+        public static I18NData I18N { get; set; } = new I18NData();
 
-        // Excalibur
-        public class ExcaliburSettings
+        // Configurable settings
+        public static DeepWoodsSettings Settings { get; set; } = new DeepWoodsSettings();
+
+        // Settings subcategories
+        public LevelSettings Level { get; set; } = new LevelSettings();
+        public MapSettings Map { get; set; } = new MapSettings();
+        public ObjectsSettings Objects { get; set; } = new ObjectsSettings();
+        public LuckSettings Luck { get; set; } = new LuckSettings();
+        public MonstersSettings Monsters { get; set; } = new MonstersSettings();
+
+        public static void DoSave()
         {
-            public bool ExampleBoolean { get; set; } = true;
+            ModEntry.GetHelper().WriteJsonFile($"{Constants.CurrentSavePath}/{SAVE_FILE_NAME}.json", DeepWoodsState);
         }
-        public readonly static string EXCALIBUR_BASE_NAME = "Excalibur";
-        public readonly static string EXCALIBUR_DESCRIPTION = "It feels hopeful to wield.";
-        public readonly static string EXCALIBUR_DISPLAY_NAME = "Excalibur";
-        public readonly static int EXCALIBUR_MIN_DAMAGE = 120;
-        public readonly static int EXCALIBUR_MAX_DAMAGE = 180;
-        public readonly static float EXCALIBUR_KNOCKBACK = 1.5f;
-        public readonly static int EXCALIBUR_SPEED = 10;
-        public readonly static int EXCALIBUR_ADDED_PRECISION = 5;
-        public readonly static int EXCALIBUR_ADDED_DEFENSE = 5;
-        public readonly static int EXCALIBUR_ADDED_AREA_OF_EFFECT = 5;
-        public readonly static float EXCALIBUR_CRITICAL_CHANCE = .05f;
-        public readonly static float EXCALIBUR_CRITICAL_MULTIPLIER = 5;
 
+        public static void DoLoad()
+        {
+            DeepWoodsState = ModEntry.GetHelper().ReadJsonFile<DeepWoodsStateData>($"{Constants.CurrentSavePath}/{SAVE_FILE_NAME}.json") ?? new DeepWoodsStateData();
+            Settings = ModEntry.GetHelper().ReadConfig<DeepWoodsSettings>() ?? new DeepWoodsSettings();
+            I18N = ModEntry.GetHelper().ReadJsonFile<I18NData>("i18n.json") ?? new I18NData();
+        }
 
-        // GingerBreadHouse
-        public readonly static int GINGERBREAD_HOUSE_START_HEALTH = 200;
-        public readonly static int GINGERBREAD_HOUSE_SPAWN_FOOD_HEALTH_STEP_SIZE = 20;
-        public readonly static int GINGERBREAD_HOUSE_MINIMUM_AXE_LEVEL = 0; // 0 for debugging purposes for now
-
-
-        // IridiumTree
-        public readonly static int IRIDIUM_TREE_START_HEALTH = 200;
-        public readonly static int IRIDIUM_TREE_SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE = 20;
-        public readonly static int IRIDIUM_TREE_MINIMUM_AXE_LEVEL = 0; // 0 for debugging purposes for now
-
-
-        // Thorny bush
-        public readonly static int DESTROYABLE_BUSH_MIN_AXE_LEVEL = 0;    // TODO: 0 for development
-        public readonly static int THORNY_BUSH_MIN_AXE_LEVEL = 0;    // TODO: 0 for development
-        public readonly static int THORNY_BUSH_DAMAGE_PER_LEVEL = 5;
-
-
-        // Unicorn
-        public readonly static int UNICORN_SCARE_DISTANCE = 8;
-        public readonly static int UNICORN_SCARE_SPEED = 3;
-        public readonly static int UNICORN_FLEE_SPEED = 12;
-
-
-        // WoodsObelisk
-        public readonly static string WOODS_OBELISK_BUILDING_NAME = "Woods Obelisk";
-        public readonly static string WOODS_OBELISK_DISPLAY_NAME = "Woods Obelisk Displayname";
-        public readonly static string WOODS_OBELISK_DESCRIPTION = "Woods Obelisk Description";
-        public readonly static int WOODS_OBELISK_MONEY_REQUIRED = 10;
-        public readonly static Dictionary<int, int> WOODS_OBELISK_ITEMS_REQUIRED = new Dictionary<int, int>();
-
-
-
-
-        // StuffCreatore
+        public static void InitFromServer(object[] data)
+        {
+            DeepWoodsState = data[0] as DeepWoodsStateData ?? new DeepWoodsStateData();
+            Settings = data[1] as DeepWoodsSettings ?? new DeepWoodsSettings();
+        }
     }
 }

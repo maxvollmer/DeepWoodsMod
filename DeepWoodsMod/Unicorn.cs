@@ -41,10 +41,10 @@ namespace DeepWoodsMod
                 who.health = who.maxHealth;
                 who.Stamina = who.MaxStamina;
                 who.addedLuckLevel.Value = Math.Max(10, who.addedLuckLevel.Value);
-                if (!DeepWoodsSettings.playersWhoGotStardropFromUnicorn.Contains(who.uniqueMultiplayerID))
+                if (!DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Contains(who.uniqueMultiplayerID))
                 {
                     who.addItemByMenuIfNecessaryElseHoldUp(new StardewValley.Object(434, 1), null);
-                    DeepWoodsSettings.playersWhoGotStardropFromUnicorn.Add(who.uniqueMultiplayerID);
+                    DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Add(who.uniqueMultiplayerID);
                 }
                 else
                 {
@@ -68,9 +68,9 @@ namespace DeepWoodsMod
 
             foreach (Farmer farmer in this.currentLocation.farmers)
             {
-                if ((farmer.Position - this.Position).Length() < (UNICORN_SCARE_DISTANCE * 64))
+                if ((farmer.Position - this.Position).Length() < (Settings.Objects.Unicorn.FarmerScareDistance * 64))
                 {
-                    if (farmer.running || farmer.getMovementSpeed() >= UNICORN_SCARE_SPEED)
+                    if (farmer.running || farmer.getMovementSpeed() >= Settings.Objects.Unicorn.FarmerScareSpeed)
                     {
                         isScared.Value = true;
                         this.farmerPassesThrough = true;
@@ -129,8 +129,8 @@ namespace DeepWoodsMod
             }
 
             // Flee
-            this.position.X += fleeDirection.X * UNICORN_FLEE_SPEED;
-            this.position.Y += fleeDirection.Y * UNICORN_FLEE_SPEED;
+            this.position.X += fleeDirection.X * Settings.Objects.Unicorn.FleeSpeed;
+            this.position.Y += fleeDirection.Y * Settings.Objects.Unicorn.FleeSpeed;
         }
 
         public override void update(GameTime time, GameLocation location)

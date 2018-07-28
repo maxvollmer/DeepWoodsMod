@@ -26,8 +26,8 @@ namespace DeepWoodsMod
             : base(ResourceClump.meteoriteIndex, 2, 1, tile)
         {
             InitNetFields();
-            this.health.Value = IRIDIUM_TREE_START_HEALTH;
-            this.nextSpawnIridiumOreHealth.Value = IRIDIUM_TREE_START_HEALTH - IRIDIUM_TREE_SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE;
+            this.health.Value = Settings.Objects.IridiumTree.Health;
+            this.nextSpawnIridiumOreHealth.Value = Settings.Objects.IridiumTree.Health - Settings.Objects.IridiumTree.DamageIntervalForOreDrop;
         }
 
         private void InitNetFields()
@@ -66,7 +66,7 @@ namespace DeepWoodsMod
             if (!(t is Axe))
                 return false;
 
-            if (t.upgradeLevel < IRIDIUM_TREE_MINIMUM_AXE_LEVEL)
+            if (t.upgradeLevel < Settings.Objects.IridiumTree.MinimumAxeLevel)
             {
                 location.playSound("axe");
                 Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:ResourceClump.cs.13948"));
@@ -89,7 +89,7 @@ namespace DeepWoodsMod
 
                     SpawnIridiumOre(t, (int)tileLocation.X, (int)tileLocation.Y);
 
-                    this.nextSpawnIridiumOreHealth.Value = this.health - IRIDIUM_TREE_SPAWN_IRIDIUM_ORE_HEALTH_STEP_SIZE;
+                    this.nextSpawnIridiumOreHealth.Value = this.health - Settings.Objects.IridiumTree.DamageIntervalForOreDrop;
                 }
 
                 this.shakeTimer = 100f;

@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
+using static DeepWoodsMod.DeepWoodsGlobals;
 using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
@@ -17,7 +18,7 @@ namespace DeepWoodsMod
         public EasterEggItem()
             : base()
         {
-            this.displayName = "Easter Egg";
+            this.displayName = I18N.EasterEggDisplayName;
             this.name = UNIQUE_NAME_FOR_EASTER_EGG_ITEMS;
             this.Category = StardewValley.Object.EggCategory;
             this.ParentSheetIndex = PARENT_SHEET_INDEX;

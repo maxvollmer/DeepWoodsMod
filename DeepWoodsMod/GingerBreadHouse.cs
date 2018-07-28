@@ -27,8 +27,8 @@ namespace DeepWoodsMod
         {
             InitNetFields();
             this.parentSheetIndex = 0;
-            this.health.Value = GINGERBREAD_HOUSE_START_HEALTH;
-            this.nextSpawnFoodHealth.Value = GINGERBREAD_HOUSE_START_HEALTH - GINGERBREAD_HOUSE_SPAWN_FOOD_HEALTH_STEP_SIZE;
+            this.health.Value = Settings.Objects.GingerBreadHouse.Health;
+            this.nextSpawnFoodHealth.Value = Settings.Objects.GingerBreadHouse.Health - Settings.Objects.GingerBreadHouse.DamageIntervalForFoodDrop;
         }
 
         private void InitNetFields()
@@ -65,7 +65,7 @@ namespace DeepWoodsMod
             if (!(t is Axe))
                 return false;
 
-            if (t.upgradeLevel < GINGERBREAD_HOUSE_MINIMUM_AXE_LEVEL)
+            if (t.upgradeLevel < Settings.Objects.GingerBreadHouse.MinimumAxeLevel)
             {
                 location.playSound("axe");
                 Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:ResourceClump.cs.13948"));
@@ -89,7 +89,7 @@ namespace DeepWoodsMod
 
                     SpawnFoodItem(location as DeepWoods, t, (int)tileLocation.X, (int)tileLocation.Y);
 
-                    this.nextSpawnFoodHealth.Value = this.health - GINGERBREAD_HOUSE_SPAWN_FOOD_HEALTH_STEP_SIZE;
+                    this.nextSpawnFoodHealth.Value = this.health - Settings.Objects.GingerBreadHouse.DamageIntervalForFoodDrop;
                 }
 
                 this.shakeTimer = 100f;

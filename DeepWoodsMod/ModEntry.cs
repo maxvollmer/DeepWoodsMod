@@ -3,20 +3,23 @@ using System.Collections.Generic;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Locations;
 using xTile;
 using xTile.Layers;
 using xTile.ObjectModel;
 using xTile.Tiles;
 using static DeepWoodsMod.DeepWoodsSettings;
+using static DeepWoodsMod.DeepWoodsGlobals;
 
 
 namespace DeepWoodsMod
 {
     public class ModEntry : Mod, IAssetEditor, IAssetLoader
     {
-        private Dictionary<long, GameLocation> playerLocations = new Dictionary<long, GameLocation>();
-
         private static ModEntry mod = null;
+
+        private bool isDeepWoodsGameRunning = false;
+        private Dictionary<long, GameLocation> playerLocations = new Dictionary<long, GameLocation>();
 
         public static void Log(string message, LogLevel level = LogLevel.Debug)
         {
@@ -37,8 +40,6 @@ namespace DeepWoodsMod
         {
             ModEntry.mod = this;
             RegisterEvents();
-            DeepWoodsSettings.Load();
-            Game1MultiplayerAccessProvider.InterceptMultiplayer();
             Textures.LoadAll();
         }
 
@@ -52,62 +53,68 @@ namespace DeepWoodsMod
             GameEvents.UpdateTick += this.GameEvents_UpdateTick;
         }
 
-        private void LoadAndAddDeepWoods()
-        {
-            this.Monitor.Log("LoadAndAddDeepWoods()", LogLevel.Error);
-            DeepWoods.Load();
-            DeepWoods.Add();
-        }
-
         private void SaveEvents_BeforeSave(object sender, EventArgs args)
         {
-            this.Monitor.Log("SaveEvents_BeforeSave()", LogLevel.Error);
-            DeepWoodsSettings.Save();
-            DeepWoods.Save();
+            DeepWoodsSettings.DoSave();
             DeepWoods.Remove();
             EasterEggFunctions.RemoveAllEasterEggsFromGame();
         }
 
         private void SaveEvents_AfterSave(object sender, EventArgs args)
         {
-            this.Monitor.Log("SaveEvents_AfterSave()", LogLevel.Error);
             DeepWoods.Add();
         }
 
         private void SaveEvents_AfterLoad(object sender, EventArgs args)
         {
-            this.Monitor.Log("SaveEvents_AfterLoad()", LogLevel.Error);
+            if (Game1.IsMasterGame)
+            {
+                DeepWoodsSettings.DoLoad();
+                DeepWoods.Add();
+                isDeepWoodsGameRunning = true;
+            }
+            else
+            {
+                Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS_INIT, Game1.player, new object[] {  });
+            }
+        }
 
-            /*
-            // TODO: TEMPTEMPTEMP
-            Game1.currentSeason = "winter";
-            Game1.setGraphicsForSeason();
-            */
+        public void DeepWoodsInitServerAnswer(object[] data)
+        {
+            if (!Game1.IsMasterGame || isDeepWoodsGameRunning)
+                return;
 
-            LoadAndAddDeepWoods();
+            DeepWoodsSettings.InitFromServer(data);
+            DeepWoods.Add();
+            isDeepWoodsGameRunning = true;
         }
 
         private void TimeEvents_AfterDayStarted(object sender, EventArgs args)
         {
-            this.Monitor.Log("TimeEvents_AfterDayStarted()", LogLevel.Error);
+            if (!isDeepWoodsGameRunning)
+                return;
 
             DeepWoods.LocalDayUpdate(Game1.dayOfMonth);
             EasterEggFunctions.InterceptIncubatorEggs();
 
             // TODO: TEMPTEMPTEMP
-            Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", DEEPWOODS_ENTER_LOCATION.X, DEEPWOODS_ENTER_LOCATION.Y, false));
+            Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", Settings.Map.RootLevelEnterLocation.X, Settings.Map.RootLevelEnterLocation.Y, false));
             // Game1.player.warpFarmer(new Warp(0, 0, "WizardHouse", 9, 15, false));
         }
 
         private void TimeEvents_TimeOfDayChanged(object sender, EventArgs args)
         {
-            this.Monitor.Log("TimeEvents_TimeOfDayChanged()", LogLevel.Error);
+            if (!isDeepWoodsGameRunning)
+                return;
 
             DeepWoods.LocalTimeUpdate(Game1.timeOfDay);
         }
 
         private void GameEvents_UpdateTick(object sender, EventArgs args)
         {
+            if (!isDeepWoodsGameRunning)
+                return;
+
             Dictionary<long, GameLocation> newPlayerLocations = new Dictionary<long, GameLocation>();
             foreach (Farmer farmer in Game1.getOnlineFarmers())
             {
@@ -151,8 +158,13 @@ namespace DeepWoodsMod
 
         private void PlayerWarped(Farmer who, GameLocation prevLocation, GameLocation newLocation)
         {
-            this.Monitor.Log("PlayerWarped()", LogLevel.Error);
-            this.Monitor.Log("Farmer " + who.uniqueMultiplayerID + " warped from " + prevLocation + " to " + newLocation, LogLevel.Error);
+            if (!isDeepWoodsGameRunning)
+                return;
+
+            if (newLocation is Woods woods)
+            {
+                OpenPassageInSecretWoods(woods);
+            }
 
             DeepWoods.PlayerWarped(who, prevLocation as DeepWoods, newLocation as DeepWoods);
 
@@ -165,6 +177,12 @@ namespace DeepWoodsMod
         public bool CanEdit<T>(IAssetInfo asset)
         {
             return asset.AssetNameEquals("Maps/Woods");
+        }
+
+        private void OpenPassageInSecretWoods(Woods woods)
+        {
+            woods.map.GetLayer("Buildings").Tiles[29, 25] = null;
+            woods.map.GetLayer("Buildings").Tiles[29, 26] = null;
         }
 
         public void Edit<T>(IAssetData asset)
@@ -180,8 +198,9 @@ namespace DeepWoodsMod
             int borderTileIndex = buildingsLayer.Tiles[29, 26].TileIndex;
 
             // Delete some hidden forest border tiles to allow player walking into deep woods:
-            buildingsLayer.Tiles[29, 25] = null;
-            buildingsLayer.Tiles[29, 26] = null;
+            // Commented out, because we do that in OpenPassageInSecretWoods(Woods woods) now, because we don't want this open in multiplayer clients connected to a server without the DeepWoodsMod.
+            // buildingsLayer.Tiles[29, 25] = null;
+            // buildingsLayer.Tiles[29, 26] = null;
 
             // Add some new border tiles to prevent player from getting confused/lost/stuck inside the hole we created.
             // (Basically setup a new border so player can only go left/down into DeepWoods or right/up back.)
@@ -210,9 +229,9 @@ namespace DeepWoodsMod
         {
             string warps = "";
 
-            for (int i = -DEEPWOODS_EXIT_RADIUS; i <= DEEPWOODS_EXIT_RADIUS; i++)
+            for (int i = -Settings.Map.ExitRadius; i <= Settings.Map.ExitRadius; i++)
             {
-                warps += " " + (26 + i) + " 32 DeepWoods " + (DEEPWOODS_ENTER_LOCATION.X + i) + " 1";
+                warps += " " + (26 + i) + " 32 DeepWoods " + (Settings.Map.RootLevelEnterLocation.X + i) + " 1";
             }
 
             return warps.Trim();
@@ -220,18 +239,23 @@ namespace DeepWoodsMod
 
         public bool CanLoad<T>(IAssetInfo asset)
         {
-            return asset.AssetNameEquals("Buildings\\Woods Obelisk") || asset.AssetNameEquals("Content\\Buildings\\Woods Obelisk.xnb") || asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet");
+            return asset.AssetNameEquals($"Buildings\\{WoodsObelisk.WOODS_OBELISK_BUILDING_NAME}")
+                || asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet");
         }
 
         public T Load<T>(IAssetInfo asset)
         {
-            if (asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet"))
+            if (asset.AssetNameEquals($"Buildings\\{WoodsObelisk.WOODS_OBELISK_BUILDING_NAME}"))
+            {
+                return (T)(object)Textures.woodsObelisk;
+            }
+            else if (asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet"))
             {
                 return (T)(object)Textures.lakeTilesheet;
             }
             else
             {
-                return (T)(object)Textures.woodsObelisk;
+                throw new ArgumentException("Can't load " + asset.AssetName);
             }
         }
     }

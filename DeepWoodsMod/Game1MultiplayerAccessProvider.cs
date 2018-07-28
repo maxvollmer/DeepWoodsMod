@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using static DeepWoodsMod.DeepWoodsSettings;
+using static DeepWoodsMod.DeepWoodsGlobals;
 
 namespace DeepWoodsMod
 {
@@ -164,7 +164,7 @@ namespace DeepWoodsMod
             return Game1.multiplayer;
         }
 
-        public static void InterceptMultiplayer()
+        private static void InterceptMultiplayer()
         {
             Game1.multiplayer = new InterceptingMultiplayer(Game1.multiplayer);
         }

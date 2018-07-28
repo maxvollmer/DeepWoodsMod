@@ -12,13 +12,13 @@ namespace DeepWoodsMod
         public ThornyBush()
             : base()
         {
-            minAxeLevel = THORNY_BUSH_MIN_AXE_LEVEL;
+            minAxeLevel = Settings.Objects.Bush.ThornyBushMinAxeLevel;
         }
 
         public ThornyBush(Vector2 tileLocation, GameLocation location)
             : base(tileLocation, Bush.smallBush, location)
         {
-            minAxeLevel = THORNY_BUSH_MIN_AXE_LEVEL;
+            minAxeLevel = Settings.Objects.Bush.ThornyBushMinAxeLevel;
         }
 
         public override bool performUseAction(Vector2 tileLocation, GameLocation location)
@@ -44,7 +44,7 @@ namespace DeepWoodsMod
         private int GetDamage(DeepWoods deepWoods)
         {
             int level = deepWoods?.GetLevel() ?? 1;
-            return (1 + level / 10) * THORNY_BUSH_DAMAGE_PER_LEVEL;
+            return (1 + level / 10) * Settings.Objects.Bush.ThornyBushDamagePerLevel;
         }
 
         public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)

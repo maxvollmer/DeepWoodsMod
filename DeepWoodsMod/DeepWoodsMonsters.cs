@@ -4,11 +4,33 @@ using StardewValley.Monsters;
 using System;
 using static DeepWoodsMod.DeepWoodsRandom;
 using static DeepWoodsMod.DeepWoodsSettings;
+using static DeepWoodsMod.DeepWoodsGlobals;
 
 namespace DeepWoodsMod
 {
-    class DeepWoodsMonsters
+    public class DeepWoodsMonsters
     {
+        public class MonsterDecider
+        {
+            public int MinLevel { get; set; }
+            public Chance Chance { get; set; }
+
+            // For JSON serialization
+            public MonsterDecider() { }
+
+            public MonsterDecider(int minLevel, Chance chance)
+            {
+                MinLevel = minLevel;
+                Chance = chance;
+            }
+
+            public MonsterDecider(int minLevel, int chance)
+            {
+                MinLevel = minLevel;
+                Chance = new Chance(chance);
+            }
+        }
+
         private DeepWoods deepWoods;
         private DeepWoodsRandom random;
         private DeepWoodsSpaceManager spaceManager;
@@ -49,7 +71,7 @@ namespace DeepWoodsMod
             // We then take the maximum of either minMonsters or the result, making sure we always have at least minMonsters monsters.
             int numMonsters = Math.Max(minMonsters, this.random.GetRandomValue(0, maxMonsters / 2) + this.random.GetRandomValue(0, maxMonsters / 2));
 
-            if (deepWoods.GetCombatLevel() <= 1 || this.random.CheckChance(LUCK_FOR_HALF_MONSTERS))
+            if (deepWoods.GetCombatLevel() <= 1 || this.random.CheckChance(Settings.Monsters.ChanceForHalfMonsterCount))
             {
                 numMonsters /= 2;
             }
@@ -66,35 +88,35 @@ namespace DeepWoodsMod
         {
             Monster monster = null;
 
-            if (Game1.isDarkOut() && CanHazMonster(BAT))
+            if (Game1.isDarkOut() && CanHazMonster(Settings.Monsters.Bat))
             {
                 monster = new Bat(new Vector2());
             }
-            else if (Game1.isDarkOut() && CanHazMonster(GHOST))
+            else if (Game1.isDarkOut() && CanHazMonster(Settings.Monsters.Ghost))
             {
                 monster = new Ghost(new Vector2());
             }
-            else if (CanHazMonster(BIGSLIME))
+            else if (CanHazMonster(Settings.Monsters.BigSlime))
             {
                 monster = new BigSlime(new Vector2(), GetSlimeLevel());
             }
-            else if (CanHazMonster(GRUB))
+            else if (CanHazMonster(Settings.Monsters.Grub))
             {
                 monster = new Grub(new Vector2(), true);
             }
-            else if (CanHazMonster(FLY))
+            else if (CanHazMonster(Settings.Monsters.Fly))
             {
                 monster = new Fly(new Vector2(), true);
             }
-            else if (CanHazMonster(BRUTE))
+            else if (CanHazMonster(Settings.Monsters.Brute))
             {
                 monster = new ShadowBrute(new Vector2());
             }
-            else if (CanHazMonster(GOLEM))
+            else if (CanHazMonster(Settings.Monsters.Golem))
             {
                 monster = new RockGolem(new Vector2(), deepWoods.GetCombatLevel());
             }
-            else if (CanHazMonster(ROCK_CRAB))
+            else if (CanHazMonster(Settings.Monsters.RockCrab))
             {
                 monster = new RockCrab(new Vector2(), GetRockCrabType());
             }
@@ -103,7 +125,7 @@ namespace DeepWoodsMod
                 monster = new GreenSlime(new Vector2(), GetSlimeLevel());
             }
 
-            if (deepWoods.GetLevel() >= MIN_LEVEL_FOR_BUFFED_MONSTERS && !this.random.CheckChance(LUCK_FOR_UNBUFFED_MONSTERS))
+            if (deepWoods.GetLevel() >= Settings.Level.MinLevelForBuffedMonsters && !this.random.CheckChance(Settings.Monsters.ChanceForUnbuffedMonster))
             {
                 BuffMonster(monster);
             }
@@ -113,10 +135,10 @@ namespace DeepWoodsMod
 
         private void BuffMonster(Monster monster)
         {
-            int maxAddedSpeed = deepWoods.GetCombatLevel() / 3 + (deepWoods.GetLevel() - MIN_LEVEL_FOR_BUFFED_MONSTERS) / 10;
+            int maxAddedSpeed = deepWoods.GetCombatLevel() / 3 + (deepWoods.GetLevel() - Settings.Level.MinLevelForBuffedMonsters) / 10;
             int minAddedSpeed = maxAddedSpeed / 3;
 
-            float maxBuff = deepWoods.GetCombatLevel() * 0.5f + (deepWoods.GetLevel() - MIN_LEVEL_FOR_BUFFED_MONSTERS) * 0.1f;
+            float maxBuff = deepWoods.GetCombatLevel() * 0.5f + (deepWoods.GetLevel() - Settings.Level.MinLevelForBuffedMonsters) * 0.1f;
             float minBuff = maxBuff * 0.25f;
 
             monster.addedSpeed = Math.Max(monster.addedSpeed, monster.addedSpeed + Game1.random.Next(minAddedSpeed, maxAddedSpeed));
@@ -133,7 +155,7 @@ namespace DeepWoodsMod
 
         private bool CanHazMonster(MonsterDecider which)
         {
-            return deepWoods.GetLevel() >= which.minLevel && this.random.CheckChance(which.probability);
+            return deepWoods.GetLevel() >= which.MinLevel && this.random.CheckChance(which.Chance);
         }
 
         private string GetRockCrabType()
@@ -143,7 +165,7 @@ namespace DeepWoodsMod
 
         private int GetSlimeLevel()
         {
-            if (CanHazMonster(PURPLE_SLIME))
+            if (CanHazMonster(Settings.Monsters.PurpleSlime))
             {
                 return 121;
             }

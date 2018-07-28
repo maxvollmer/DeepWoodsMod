@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DeepWoodsMod
 {
-    class DeepWoodsRandom
+    public class DeepWoodsRandom
     {
         private const int MAGIC_SALT = 854574563;
 
@@ -16,9 +16,12 @@ namespace DeepWoodsMod
 
         public class LuckValue
         {
-            public int BadLuck { get; }
-            public int Neutral { get; }
-            public int GoodLuck { get; }
+            public int BadLuck { get; set; }
+            public int Neutral { get; set; }
+            public int GoodLuck { get; set; }
+
+            // For JSON serialization
+            public LuckValue() { }
 
             public LuckValue(int badLuck, int goodLuck)
             {
@@ -37,8 +40,11 @@ namespace DeepWoodsMod
 
         public class LuckRange
         {
-            public LuckValue LowerBound { get; }
-            public LuckValue UpperBound { get; }
+            public LuckValue LowerBound { get; set; }
+            public LuckValue UpperBound { get; set; }
+
+            // For JSON serialization
+            public LuckRange() { }
 
             public LuckRange(LuckValue lowerBound, LuckValue upperBound)
             {
@@ -49,8 +55,11 @@ namespace DeepWoodsMod
 
         public class WeightedValue<T>
         {
-            public T Value { get; }
-            public LuckValue Weight { get; }
+            public T Value { get; set; }
+            public LuckValue Weight { get; set; }
+
+            // For JSON serialization
+            public WeightedValue() { }
 
             public WeightedValue(T value, LuckValue weight)
             {
@@ -85,8 +94,11 @@ namespace DeepWoodsMod
 
             public readonly static Chance FIFTY_FIFTY = new Chance(50);
 
-            public LuckValue Value { get; }
-            public int Range { get; }
+            public LuckValue Value { get; set; }
+            public int Range { get; set; }
+
+            // For JSON serialization
+            public Chance() { }
 
             public Chance(LuckValue value, int range = PROCENT)
             {

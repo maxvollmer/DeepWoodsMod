@@ -9,6 +9,7 @@ using static DeepWoodsMod.DeepWoodsEnterExit;
 using static DeepWoodsMod.DeepWoodsRandom;
 using static DeepWoodsMod.DeepWoodsTileDefinitions;
 using static DeepWoodsMod.DeepWoodsSettings;
+using static DeepWoodsMod.DeepWoodsGlobals;
 
 namespace DeepWoodsMod
 {
@@ -166,7 +167,7 @@ namespace DeepWoodsMod
         private Layer alwaysFrontLayer;
 
 
-        private DeepWoodsBuilder(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location>  exitLocations)
+        private DeepWoodsBuilder(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location> exitLocations)
         {
             this.deepWoods = deepWoods;
             this.random = random;
@@ -318,8 +319,8 @@ namespace DeepWoodsMod
                 int numTilesFromStartToExit = placing.DistanceTo(exitPosition);
                 int numTilesFromExitToEnd = numTiles - numTilesFromStartToExit - 1;
                 
-                GenerateForestRow(placing, numTilesFromStartToExit - DEEPWOODS_EXIT_RADIUS, matrix);
-                GenerateForestRow(new Placing(placing.Replace(exitPosition), DEEPWOODS_EXIT_RADIUS + 1, 0), numTilesFromExitToEnd - DEEPWOODS_EXIT_RADIUS, matrix);
+                GenerateForestRow(placing, numTilesFromStartToExit - Settings.Map.ExitRadius, matrix);
+                GenerateForestRow(new Placing(placing.Replace(exitPosition), Settings.Map.ExitRadius + 1, 0), numTilesFromExitToEnd - Settings.Map.ExitRadius, matrix);
             }
             else
             {
@@ -339,7 +340,7 @@ namespace DeepWoodsMod
             bool lastStepWasBumpOut = false;
             for (int x = 0; x < numTiles; x++)
             {
-                if (y > 0 && (x >= (numTiles - Math.Abs(y)) || (!lastStepWasBumpOut && this.random.CheckChance(CHANCE_FOR_FOREST_ROW_BUMP))))
+                if (y > 0 && (x >= (numTiles - Math.Abs(y)) || (!lastStepWasBumpOut && this.random.CheckChance(Chance.FIFTY_FIFTY))))
                 {
                     // Bump back!
                     PlaceTile(buildingsLayer, PLAIN_FOREST_BACKGROUND, placing, x, y - 1);
@@ -362,7 +363,7 @@ namespace DeepWoodsMod
                     y--;
                     lastStepWasBumpOut = false;
                 }
-                else if (x < (numTiles - (2 + Math.Abs(y))) && y < FOREST_ROW_MAX_INWARDS_BUMP && this.random.CheckChance(CHANCE_FOR_FOREST_ROW_BUMP))
+                else if (x < (numTiles - (2 + Math.Abs(y))) && y < Settings.Map.MaxBumpSizeForForestBorder && this.random.CheckChance(Chance.FIFTY_FIFTY))
                 {
                     // Bump out!
                     y++;
@@ -425,8 +426,8 @@ namespace DeepWoodsMod
 
         private Size GenerateForestCorner(int startXPos, int startYPos, int xDir, int yDir, DeepWoodsCornerTileMatrix matrix)
         {
-            int width = MAX_CORNER_SIZE; // this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_CORNER_SIZE, MAX_CORNER_SIZE);
-            int height = MAX_CORNER_SIZE; //this.random.GetRandomValue(DeepWoodsSpaceManager.MIN_CORNER_SIZE, MAX_CORNER_SIZE);
+            int width = Settings.Map.MaxTilesForCorner; // this.random.GetRandomValue(DeepWoodsSpaceManager.Settings.Map.MinTilesForCorner, Settings.Map.MaxTilesForCorner);
+            int height = Settings.Map.MaxTilesForCorner; //this.random.GetRandomValue(DeepWoodsSpaceManager.Settings.Map.MinTilesForCorner, Settings.Map.MaxTilesForCorner);
 
             float ratio = (float)height / (float)width;
             int chanceValue = (int)((100f / (ratio + 1f)) * ratio);
@@ -549,36 +550,36 @@ namespace DeepWoodsMod
         private void GenerateExit(Placing placing, DeepWoodsRowTileMatrix matrix)
         {
             // Add forest pieces left and right
-            PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_FRONT, placing, -DEEPWOODS_EXIT_RADIUS, 0);
-            PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CONVEX_CORNER, placing, -DEEPWOODS_EXIT_RADIUS, 1);
-            PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_FRONT, placing, DEEPWOODS_EXIT_RADIUS, 0);
-            PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CONVEX_CORNER, placing, DEEPWOODS_EXIT_RADIUS, 1);
+            PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_FRONT, placing, -Settings.Map.ExitRadius, 0);
+            PlaceTile(alwaysFrontLayer, matrix.FOREST_LEFT_CONVEX_CORNER, placing, -Settings.Map.ExitRadius, 1);
+            PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_FRONT, placing, Settings.Map.ExitRadius, 0);
+            PlaceTile(alwaysFrontLayer, matrix.FOREST_RIGHT_CONVEX_CORNER, placing, Settings.Map.ExitRadius, 1);
 
             // Add forest "shadow" (dark grass) left and right
-            PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -DEEPWOODS_EXIT_RADIUS, 0);
-            PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -DEEPWOODS_EXIT_RADIUS, 1);
-            PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, DEEPWOODS_EXIT_RADIUS, 0);
-            PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, DEEPWOODS_EXIT_RADIUS, 1);
+            PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -Settings.Map.ExitRadius, 0);
+            PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -Settings.Map.ExitRadius, 1);
+            PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, Settings.Map.ExitRadius, 0);
+            PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, Settings.Map.ExitRadius, 1);
 
             if (matrix.HAS_BLACK_GRASS)
             {
                 // longer dark grass to fit row with black grass
-                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -DEEPWOODS_EXIT_RADIUS, 2);
-                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, -DEEPWOODS_EXIT_RADIUS, 3);
-                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, DEEPWOODS_EXIT_RADIUS, 2);
-                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, DEEPWOODS_EXIT_RADIUS, 3);
+                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT, placing, -Settings.Map.ExitRadius, 2);
+                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, -Settings.Map.ExitRadius, 3);
+                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT, placing, Settings.Map.ExitRadius, 2);
+                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, Settings.Map.ExitRadius, 3);
 
                 // Override black shadows from row with corner tiles
-                PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT, placing, -(DEEPWOODS_EXIT_RADIUS + 1), 1, PlaceMode.OVERRIDE);
-                PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT_CONVEX_CORNER, placing, -(DEEPWOODS_EXIT_RADIUS + 1), 2, PlaceMode.OVERRIDE);
-                PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT, placing, DEEPWOODS_EXIT_RADIUS + 1, 1, PlaceMode.OVERRIDE);
-                PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT_CONVEX_CORNER, placing, DEEPWOODS_EXIT_RADIUS + 1, 2, PlaceMode.OVERRIDE);
+                PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT, placing, -(Settings.Map.ExitRadius + 1), 1, PlaceMode.OVERRIDE);
+                PlaceTile(backLayer, matrix.BLACK_GRASS_LEFT_CONVEX_CORNER, placing, -(Settings.Map.ExitRadius + 1), 2, PlaceMode.OVERRIDE);
+                PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT, placing, Settings.Map.ExitRadius + 1, 1, PlaceMode.OVERRIDE);
+                PlaceTile(backLayer, matrix.BLACK_GRASS_RIGHT_CONVEX_CORNER, placing, Settings.Map.ExitRadius + 1, 2, PlaceMode.OVERRIDE);
             }
             else
             {
                 // simple dark grass corner to fit row shadow without black grass
-                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, -DEEPWOODS_EXIT_RADIUS, 2);
-                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, DEEPWOODS_EXIT_RADIUS, 2);
+                PlaceTile(backLayer, matrix.DARK_GRASS_LEFT_CONVEX_CORNER, placing, -Settings.Map.ExitRadius, 2);
+                PlaceTile(backLayer, matrix.DARK_GRASS_RIGHT_CONVEX_CORNER, placing, Settings.Map.ExitRadius, 2);
             }
 
             // Add bright grass entrance tiles
@@ -587,9 +588,9 @@ namespace DeepWoodsMod
             PlaceTile(backLayer, matrix.BRIGHT_GRASS_LEFT_CONCAVE_CORNER, placing, 1, 0);
 
             // If this level is a lichtung, GenerateLichtung() will generate bright grass growing out from each exit,
-            // so we need to generate LICHTUNG_ENTRANCE_DEPTH tiles here, that are "open ended".
+            // so we need to generate Settings.Map.ExitLength tiles here, that are "open ended".
             // In normal forest levels, we generate a random amount of tiles with variable end pieces.
-            int brightGrassPacesInwards = deepWoods.isLichtung ? LICHTUNG_ENTRANCE_DEPTH : this.random.GetRandomValue(2, 4);
+            int brightGrassPacesInwards = deepWoods.isLichtung ? Settings.Map.ExitLength : this.random.GetRandomValue(2, 4);
 
             // Add bright grass some paces inwards
             for (int i = 1; i < brightGrassPacesInwards; i++)
@@ -667,10 +668,10 @@ namespace DeepWoodsMod
 
             deepWoods.waterTiles = new bool[this.spaceManager.GetMapWidth(), this.spaceManager.GetMapHeight()];
 
-            int minX = leftPos.X + LICHTUNG_ENTRANCE_DEPTH;
-            int maxX = rightPos.X - LICHTUNG_ENTRANCE_DEPTH;
-            int minY = topPos.Y + LICHTUNG_ENTRANCE_DEPTH;
-            int maxY = bottomPos.Y - LICHTUNG_ENTRANCE_DEPTH;
+            int minX = leftPos.X + Settings.Map.ExitLength;
+            int maxX = rightPos.X - Settings.Map.ExitLength;
+            int minY = topPos.Y + Settings.Map.ExitLength;
+            int maxY = bottomPos.Y - Settings.Map.ExitLength;
 
             while (minX < maxX && buildingsLayer.Tiles[minX, leftPos.Y] == null)
                 minX++;
@@ -713,10 +714,19 @@ namespace DeepWoodsMod
 
         private void GenerateLichtungLakeCorner(Location startLocation, Location stopLocation, int xDir, int yDir, int xDirInwards, int yDirInwards, DeepWoodsLichtungTileMatrix matrix)
         {
-            startLocation.X += xDir * LICHTUNG_ENTRANCE_DEPTH;
-            startLocation.Y += yDir * LICHTUNG_ENTRANCE_DEPTH;
-            stopLocation.X -= xDirInwards * LICHTUNG_ENTRANCE_DEPTH;
-            stopLocation.Y -= yDirInwards * LICHTUNG_ENTRANCE_DEPTH;
+            startLocation.X += xDir * Settings.Map.ExitLength;
+            startLocation.Y += yDir * Settings.Map.ExitLength;
+            stopLocation.X -= xDirInwards * Settings.Map.ExitLength;
+            stopLocation.Y -= yDirInwards * Settings.Map.ExitLength;
+
+            if (startLocation.X == stopLocation.X || startLocation.Y == stopLocation.Y)
+                throw new ArgumentException($"Invalid arguments: startLocation and stopLocation must not be equal, nor lie in the same column or row! ({startLocation}, {stopLocation}, {xDir}, {yDir}, {xDirInwards}, {yDirInwards})");
+
+            if (stopLocation.X > startLocation.X && (xDir < 0 || xDirInwards < 0))
+                throw new ArgumentException($"Invalid arguments: stopLocation lies before startLocation in X direction! ({startLocation}, {stopLocation}, {xDir}, {yDir}, {xDirInwards}, {yDirInwards})");
+
+            if (stopLocation.Y > startLocation.Y && (yDir < 0 || yDirInwards < 0))
+                throw new ArgumentException($"Invalid arguments: stopLocation lies before startLocation in Y direction! ({startLocation}, {stopLocation}, {xDir}, {yDir}, {xDirInwards}, {yDirInwards})");
 
             while (!IsTileBrightGrass(stopLocation + new Location(xDir, yDir), true))
             {
@@ -823,13 +833,13 @@ namespace DeepWoodsMod
             GenerateLichtungEntranceTilesIfNecessary(ExitDirection.RIGHT, rightPos, -1, 0, 0, 1, DeepWoodsLichtungTileMatrix.RIGHT_TO_BOTTOM);
             GenerateLichtungEntranceTilesIfNecessary(ExitDirection.BOTTOM, bottomPos, 0, -1, -1, 0, DeepWoodsLichtungTileMatrix.BOTTOM_TO_LEFT);
 
-            int minX = LICHTUNG_ENTRANCE_DEPTH;
-            int minY = LICHTUNG_ENTRANCE_DEPTH;
-            int maxX = this.spaceManager.GetMapWidth() - LICHTUNG_ENTRANCE_DEPTH;
-            int maxY = this.spaceManager.GetMapHeight() - LICHTUNG_ENTRANCE_DEPTH;
+            int minX = Settings.Map.ExitLength;
+            int minY = Settings.Map.ExitLength;
+            int maxX = this.spaceManager.GetMapWidth() - Settings.Map.ExitLength;
+            int maxY = this.spaceManager.GetMapHeight() - Settings.Map.ExitLength;
 
             deepWoods.lightSources.Add(new Vector2(this.spaceManager.GetMapWidth() / 2, this.spaceManager.GetMapHeight() / 2));
-            int numAdditionalLights = ((maxX - minX) * (maxY - minY)) / NUM_TILES_PER_LIGHTSOURCE_IN_LICHTUNG;
+            int numAdditionalLights = ((maxX - minX) * (maxY - minY)) / NUM_TILES_PER_LIGHTSOURCE;
             for (int i = 0; i < numAdditionalLights; i++)
             {
                 int x = this.random.GetRandomValue(minX, maxX);
@@ -850,8 +860,8 @@ namespace DeepWoodsMod
             if (this.exitLocations.ContainsKey(exitDir))
                 return;
 
-            pos.X += xDir * LICHTUNG_ENTRANCE_DEPTH;
-            pos.Y += yDir * LICHTUNG_ENTRANCE_DEPTH;
+            pos.X += xDir * Settings.Map.ExitLength;
+            pos.Y += yDir * Settings.Map.ExitLength;
 
             PlaceTile(backLayer, HasGroundTile(pos.X + 2 * xDirInwards, pos.Y + 2 * yDirInwards) ? matrix.VERTICAL : matrix.CONVEX_CORNER, pos.X + xDirInwards, pos.Y + yDirInwards, PlaceMode.OVERRIDE);
             PlaceTile(backLayer, matrix.VERTICAL, pos.X, pos.Y, PlaceMode.OVERRIDE);
@@ -865,10 +875,19 @@ namespace DeepWoodsMod
 
         private void GenerateLichtungCorner(Location startLocation, Location stopLocation, int xDir, int yDir, int xDirInwards, int yDirInwards, DeepWoodsLichtungTileMatrix matrix)
         {
-            startLocation.X += xDir * LICHTUNG_ENTRANCE_DEPTH;
-            startLocation.Y += yDir * LICHTUNG_ENTRANCE_DEPTH;
-            stopLocation.X -= xDirInwards * LICHTUNG_ENTRANCE_DEPTH;
-            stopLocation.Y -= yDirInwards * LICHTUNG_ENTRANCE_DEPTH;
+            startLocation.X += xDir * Settings.Map.ExitLength;
+            startLocation.Y += yDir * Settings.Map.ExitLength;
+            stopLocation.X -= xDirInwards * Settings.Map.ExitLength;
+            stopLocation.Y -= yDirInwards * Settings.Map.ExitLength;
+
+            if (startLocation.X == stopLocation.X || startLocation.Y == stopLocation.Y)
+                throw new ArgumentException($"Invalid arguments: startLocation and stopLocation must not be equal, nor lie in the same column or row! ({startLocation}, {stopLocation}, {xDir}, {yDir}, {xDirInwards}, {yDirInwards})");
+
+            if (stopLocation.X > startLocation.X == (xDir < 0 || xDirInwards < 0))
+                throw new ArgumentException($"Invalid arguments: stopLocation lies before startLocation in X direction! ({startLocation}, {stopLocation}, {xDir}, {yDir}, {xDirInwards}, {yDirInwards})");
+
+            if (stopLocation.Y > startLocation.Y == (yDir < 0 || yDirInwards < 0))
+                throw new ArgumentException($"Invalid arguments: stopLocation lies before startLocation in Y direction! ({startLocation}, {stopLocation}, {xDir}, {yDir}, {xDirInwards}, {yDirInwards})");
 
             FillLichtungRow(startLocation - new Location(xDirInwards, yDirInwards), stopLocation - new Location(xDirInwards, yDirInwards), xDir, yDir);
 
@@ -1066,7 +1085,7 @@ namespace DeepWoodsMod
 
         private void GenerateForestPatch(xTile.Dimensions.Rectangle rectangle)
         {
-            int offset = FOREST_ROW_MAX_INWARDS_BUMP + 1;
+            int offset = Settings.Map.MaxBumpSizeForForestBorder + 1;
 
             GenerateForestRow(
                 new Placing(new Location(rectangle.X + offset + 1, rectangle.Y + offset), PlacingDirection.DOWNWARDS, PlacingDirection.LEFTWARDS),
@@ -1118,7 +1137,7 @@ namespace DeepWoodsMod
                 }
             }
 
-            int maxLightSources = Math.Max(1, numFillTiles / NUM_TILES_PER_LIGHTSOURCE_IN_FOREST_PATCH);
+            int maxLightSources = Math.Max(1, numFillTiles / NUM_TILES_PER_LIGHTSOURCE);
             int numLightSources = 1 + this.random.GetRandomValue(0, maxLightSources);
             for (int i = 0; i < numLightSources; i++)
             {
@@ -1128,8 +1147,8 @@ namespace DeepWoodsMod
 
         private void TryGenerateForestPatch(Location location)
         {
-            int wishWidth = this.random.GetRandomValue(MIN_FOREST_PATCH_DIAMETER, MAX_FOREST_PATCH_DIAMETER);
-            int wishHeight = this.random.GetRandomValue(MIN_FOREST_PATCH_DIAMETER, MAX_FOREST_PATCH_DIAMETER);
+            int wishWidth = this.random.GetRandomValue(Settings.Map.MinSizeForForestPatch, Settings.Map.MaxSizeForForestPatch);
+            int wishHeight = this.random.GetRandomValue(Settings.Map.MinSizeForForestPatch, Settings.Map.MaxSizeForForestPatch);
 
             xTile.Dimensions.Rectangle rectangle;
             if (this.spaceManager.TryGetFreeRectangleForForestPatch(location, wishWidth, wishHeight, out rectangle))
@@ -1145,10 +1164,10 @@ namespace DeepWoodsMod
 
             int numForestPatches;
 
-            if (mapWidth > FOREST_PATCH_CENTER_MIN_DISTANCE_TO_MAPBORDER * 2 && mapHeight > FOREST_PATCH_CENTER_MIN_DISTANCE_TO_MAPBORDER * 2)
+            if (mapWidth > Settings.Map.ForestPatchCenterMinDistanceToMapBorder * 2 && mapHeight > Settings.Map.ForestPatchCenterMinDistanceToMapBorder * 2)
             {
                 // Calculate maximum theoretical amount of forest patches for the current map.
-                int maxForestPatches = (mapWidth * mapHeight) / MINIMUM_TILES_FOR_FORESTPATCH;
+                int maxForestPatches = (mapWidth * mapHeight) / Settings.Map.MinimumTilesForForestPatch;
 
                 // Get a random value from 0 to maxForestPatches, using a "two dice" method,
                 // where the center numbers are more likely than the edges.
@@ -1165,8 +1184,8 @@ namespace DeepWoodsMod
             // Some of these may not generate anything due to overlaps, that's by design.
             for (int i = 0; i < numForestPatches; i++)
             {
-                int x = this.random.GetRandomValue(FOREST_PATCH_CENTER_MIN_DISTANCE_TO_MAPBORDER, mapWidth - FOREST_PATCH_CENTER_MIN_DISTANCE_TO_MAPBORDER);
-                int y = this.random.GetRandomValue(FOREST_PATCH_CENTER_MIN_DISTANCE_TO_MAPBORDER, mapHeight - FOREST_PATCH_CENTER_MIN_DISTANCE_TO_MAPBORDER);
+                int x = this.random.GetRandomValue(Settings.Map.ForestPatchCenterMinDistanceToMapBorder, mapWidth - Settings.Map.ForestPatchCenterMinDistanceToMapBorder);
+                int y = this.random.GetRandomValue(Settings.Map.ForestPatchCenterMinDistanceToMapBorder, mapHeight - Settings.Map.ForestPatchCenterMinDistanceToMapBorder);
                 TryGenerateForestPatch(new Location(x, y));
             }
         }
