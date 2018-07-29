@@ -139,7 +139,7 @@ namespace DeepWoodsMod
                     if (Game1.IsMasterGame)
                     {
                         // Client requests settings and state, send it:
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS_WARP, Game1.MasterPlayer, new object[] {
+                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS_INIT, Game1.MasterPlayer, new object[] {
                             JsonConvert.SerializeObject(Settings),
                             JsonConvert.SerializeObject(DeepWoodsState)
                         });
