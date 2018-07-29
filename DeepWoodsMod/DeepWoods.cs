@@ -447,7 +447,7 @@ namespace DeepWoodsMod
             }
             this.parent = parent;
             this.level = level;
-            DeepWoodsState.LowestLevelReached = Math.Max(DeepWoodsState.LowestLevelReached, this.level);
+            DeepWoodsState.LowestLevelReached = Math.Max(DeepWoodsState.LowestLevelReached, this.level - 1);
             this.playerCount = 0;
             this.enterDir = enterDir;
             this.spawnTime = Game1.timeOfDay;
