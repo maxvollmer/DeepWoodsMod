@@ -121,10 +121,6 @@ namespace DeepWoodsMod
 
             DeepWoods.LocalDayUpdate(Game1.dayOfMonth);
             EasterEggFunctions.InterceptIncubatorEggs();
-
-            // TODO: TEMPTEMPTEMP
-            Game1.player.warpFarmer(new Warp(0, 0, "DeepWoods", Settings.Map.RootLevelEnterLocation.X, Settings.Map.RootLevelEnterLocation.Y, false));
-            // Game1.player.warpFarmer(new Warp(0, 0, "WizardHouse", 9, 15, false));
         }
 
         private void TimeEvents_TimeOfDayChanged(object sender, EventArgs args)
@@ -205,7 +201,7 @@ namespace DeepWoodsMod
 
         public bool CanEdit<T>(IAssetInfo asset)
         {
-            return asset.AssetNameEquals("Maps/Woods") || asset.AssetNameEquals("Content/mail");
+            return asset.AssetNameEquals("Maps/Woods") || asset.AssetNameEquals("Data/mail");
         }
 
         private void OpenPassageInSecretWoods(Woods woods)
@@ -261,8 +257,7 @@ namespace DeepWoodsMod
             }
 
             // Add warps to DeepWoods reachable through deleted border:
-            PropertyValue warpPropertyValue;
-            map.Properties.TryGetValue("Warp", out warpPropertyValue);
+            map.Properties.TryGetValue("Warp", out PropertyValue warpPropertyValue);
             string warpPropertyString;
             if (warpPropertyValue != null)
             {
