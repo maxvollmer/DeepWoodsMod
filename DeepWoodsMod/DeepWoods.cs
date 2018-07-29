@@ -540,7 +540,10 @@ namespace DeepWoodsMod
 
         private void RandomizeExits()
         {
-            this.warps.Clear();
+            if (Game1.IsMasterGame)
+            {
+                this.warps.Clear();
+            }
 
             if (this.level > 1 && !this.exits.ContainsKey(CastEnterDirToExitDir(this.enterDir)))
             {
