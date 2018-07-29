@@ -88,12 +88,6 @@ namespace DeepWoodsMod
             }
         }
 
-        public static int GetLowestLevelReached()
-        {
-            // TODO!
-            return 100;
-        }
-
         public static void Remove()
         {
             foreach (DeepWoods deepWood in DeepWoods.allDeepWoods)
@@ -569,8 +563,7 @@ namespace DeepWoodsMod
 
         private void CreateSpace()
         {
-            // TODO: TEMPTEMPTEMP
-            this.isLichtung = true;// this.level >= Settings.Level.MinLevelForClearing && this.parent != null && !this.parent.isLichtung && this.random.CheckChance(Settings.Luck.Clearings.ChanceForClearing, this.GetLuckLevel());
+            this.isLichtung = this.level >= Settings.Level.MinLevelForClearing && this.parent != null && !this.parent.isLichtung && this.random.CheckChance(Settings.Luck.Clearings.ChanceForClearing);
 
             // Generate random size
             int mapWidth, mapHeight;

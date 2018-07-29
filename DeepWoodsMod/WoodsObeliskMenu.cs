@@ -4,13 +4,11 @@ using StardewValley;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
-    class WoodsObeliskMenu : StardewValley.Menus.IClickableMenu
+    class WoodsObeliskMenu : IClickableMenu
     {
         public List<ClickableComponent> levelButtons = new List<ClickableComponent>();
 
@@ -19,7 +17,7 @@ namespace DeepWoodsMod
         {
             exitFunction = OnExit;
 
-            int num1 = DeepWoods.GetLowestLevelReached() / 10;
+            int num1 = DeepWoodsState.LowestLevelReached / 10;
             this.width = num1 > 50 ? 484 + IClickableMenu.borderWidth * 2 : Math.Min(220 + IClickableMenu.borderWidth * 2, num1 * 44 + IClickableMenu.borderWidth * 2);
             this.height = Math.Max(64 + IClickableMenu.borderWidth * 3, num1 * 44 / (this.width - IClickableMenu.borderWidth) * 44 + 64 + IClickableMenu.borderWidth * 3);
             this.xPositionOnScreen = Game1.viewport.Width / 2 - this.width / 2;

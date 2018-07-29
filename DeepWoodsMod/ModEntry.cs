@@ -79,14 +79,13 @@ namespace DeepWoodsMod
             }
         }
 
-        public void DeepWoodsInitServerAnswer(object[] data)
+        public static void DeepWoodsInitServerAnswerReceived()
         {
-            if (!Game1.IsMasterGame || isDeepWoodsGameRunning)
+            if (!Game1.IsMasterGame || mod.isDeepWoodsGameRunning)
                 return;
 
-            DeepWoodsSettings.InitFromServer(data);
             DeepWoods.Add();
-            isDeepWoodsGameRunning = true;
+            mod.isDeepWoodsGameRunning = true;
         }
 
         private void TimeEvents_AfterDayStarted(object sender, EventArgs args)

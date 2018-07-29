@@ -4,6 +4,7 @@ using StardewValley.Buildings;
 using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Objects;
+using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
@@ -115,9 +116,7 @@ namespace DeepWoodsMod
                         animalHouse.currentEvent = new Event("none/-1000 -1000/farmer 2 9 0/pause 750/end");
                     }
 
-                    string str = "A new... wait a minute, a rabbit hatched?!";// TODO: Add to strings for l18n Game1.content.LoadString("Strings\\Locations:AnimalHouse_Incubator_Hatch_DuckEgg");
-
-                    Game1.drawDialogueNoTyping(str);
+                    Game1.drawDialogueNoTyping(I18N.EasterEggHatchedMessage);
                     Game1.afterDialogues = new Game1.afterFadeFunction(() => {
                         Game1.activeClickableMenu = new NamingMenu(new NamingMenu.doneNamingBehavior((string name) => {
                             AddNewHatchedRabbit(who, animalHouse, name);

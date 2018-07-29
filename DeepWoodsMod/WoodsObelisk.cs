@@ -20,7 +20,7 @@ namespace DeepWoodsMod
 
         public static void InjectWoodsObeliskIntoGame()
         {
-            if (DeepWoodsState.DeepWoodsLevelReached < Settings.Level.MinLevelForWoodsObelisk)
+            if (DeepWoodsState.LowestLevelReached < Settings.Level.MinLevelForWoodsObelisk)
                 return;
 
             foreach (var a in Game1.delayedActions)

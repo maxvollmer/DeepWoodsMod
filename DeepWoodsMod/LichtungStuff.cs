@@ -1,16 +1,16 @@
 ﻿
 namespace DeepWoodsMod
 {
-    public enum LichtungStuff
+    public class LichtungStuff
     {
-        Nothing,
-        MushroomTrees,
-        Lake,
-        HealingFountain,
-        GingerbreadHouse,
-        Treasure,
-        IridiumTree,
-        Unicorn,
-        ExcaliburStone,
+        public const string Nothing = "Nothing";
+        public const string MushroomTrees = "MushroomTrees";
+        public const string Lake = "Lake";
+        public const string HealingFountain = "HealingFountain";
+        public const string GingerbreadHouse = "GingerbreadHouse";
+        public const string Treasure = "Treasure";
+        public const string IridiumTree = "IridiumTree";
+        public const string Unicorn = "Unicorn";
+        public const string ExcaliburStone = "ExcaliburStone";
     }
 }

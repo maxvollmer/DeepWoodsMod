@@ -6,6 +6,7 @@ using static DeepWoodsMod.DeepWoodsRandom;
 using static DeepWoodsMod.DeepWoodsGlobals;
 using Newtonsoft.Json;
 using StardewValley.Tools;
+using StardewValley;
 
 namespace DeepWoodsMod
 {
@@ -241,15 +242,16 @@ namespace DeepWoodsMod
     {
         public Chance ChanceForClearing { get; set; } = new Chance(new LuckValue(1, 10));
 
-        public WeightedValue<LichtungStuff>[] Perks { get; set; } = new WeightedValue<LichtungStuff>[]{
-            new WeightedValue<LichtungStuff>(LichtungStuff.Nothing, 1500),
-            new WeightedValue<LichtungStuff>(LichtungStuff.Lake, 1500000),
-            new WeightedValue<LichtungStuff>(LichtungStuff.HealingFountain, 1000),
-            new WeightedValue<LichtungStuff>(LichtungStuff.GingerbreadHouse, 1000),
-            new WeightedValue<LichtungStuff>(LichtungStuff.Treasure, 500),
-            new WeightedValue<LichtungStuff>(LichtungStuff.IridiumTree, 500),
-            new WeightedValue<LichtungStuff>(LichtungStuff.Unicorn, 250),
-            new WeightedValue<LichtungStuff>(LichtungStuff.ExcaliburStone, 250)
+        public WeightedValue<string>[] Perks { get; set; } = new WeightedValue<string>[]{
+            new WeightedValue<string>(LichtungStuff.Nothing, 1500),
+            new WeightedValue<string>(LichtungStuff.Lake, 1250),
+            new WeightedValue<string>(LichtungStuff.MushroomTrees, 1000),
+            new WeightedValue<string>(LichtungStuff.HealingFountain, 1000),
+            new WeightedValue<string>(LichtungStuff.GingerbreadHouse, 1000),
+            new WeightedValue<string>(LichtungStuff.IridiumTree, 500),
+            new WeightedValue<string>(LichtungStuff.Unicorn, 500),
+            new WeightedValue<string>(LichtungStuff.Treasure, 250),
+            new WeightedValue<string>(LichtungStuff.ExcaliburStone, 250)
         };
 
         public Chance ChanceForTrashOrTreasure { get; set; } = new Chance(new LuckValue(0, 100));
@@ -337,21 +339,22 @@ namespace DeepWoodsMod
         public string WoodsObeliskDisplayName { get; set; } = "Woods Obelisk";
         public string WoodsObeliskDescription { get; set; } = "Woods Obelisk Description";
         public string EasterEggDisplayName { get; set; } = "Easter Egg";
+        public string EasterEggHatchedMessage { get; set; } = "A new... wait a minute, a rabbit hatched?!";
     }
 
     class DeepWoodsStateData
     {
         public HashSet<long> PlayersWhoGotStardropFromUnicorn { get; set; } = new HashSet<long>();
-        public int DeepWoodsLevelReached { get; set; } = 0;
+        public int LowestLevelReached { get; set; } = 0;
     }
 
     class DeepWoodsSettings
     {
+        // I18N
+        public static I18NData I18N { get; set; } = ModEntry.GetHelper().ReadJsonFile<I18NData>("i18n.json") ?? new I18NData();
+
         // Save stuff
         public static DeepWoodsStateData DeepWoodsState { get; set; } = new DeepWoodsStateData();
-
-        // I18N
-        public static I18NData I18N { get; set; } = new I18NData();
 
         // Configurable settings
         public static DeepWoodsSettings Settings { get; set; } = new DeepWoodsSettings();
@@ -365,20 +368,19 @@ namespace DeepWoodsMod
 
         public static void DoSave()
         {
+            if (!Game1.IsMasterGame)
+                return;
+
             ModEntry.GetHelper().WriteJsonFile($"{Constants.CurrentSavePath}/{SAVE_FILE_NAME}.json", DeepWoodsState);
         }
 
         public static void DoLoad()
         {
+            if (!Game1.IsMasterGame)
+                return;
+
             DeepWoodsState = ModEntry.GetHelper().ReadJsonFile<DeepWoodsStateData>($"{Constants.CurrentSavePath}/{SAVE_FILE_NAME}.json") ?? new DeepWoodsStateData();
             Settings = ModEntry.GetHelper().ReadConfig<DeepWoodsSettings>() ?? new DeepWoodsSettings();
-            I18N = ModEntry.GetHelper().ReadJsonFile<I18NData>("i18n.json") ?? new I18NData();
-        }
-
-        public static void InitFromServer(object[] data)
-        {
-            DeepWoodsState = data[0] as DeepWoodsStateData ?? new DeepWoodsStateData();
-            Settings = data[1] as DeepWoodsSettings ?? new DeepWoodsSettings();
         }
     }
 }

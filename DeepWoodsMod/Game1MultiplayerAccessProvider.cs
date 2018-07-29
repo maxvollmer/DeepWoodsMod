@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
+using Newtonsoft.Json;
 
 namespace DeepWoodsMod
 {
@@ -111,24 +113,46 @@ namespace DeepWoodsMod
 
             private struct DeepWoodsWarpMessageData
             {
-                public string name;
-                public int level;
-                public int seed;
+                public string Name { get; set; }
+                public int Level { get; set; }
+                public int Seed { get; set; }
             }
 
             private DeepWoodsWarpMessageData ReadDeepWoodsWarpMessage(BinaryReader reader)
             {
                 return new DeepWoodsWarpMessageData()
                 {
-                    name = reader.ReadString(),
-                    level = reader.ReadInt32(),
-                    seed = reader.ReadInt32()
+                    Name = reader.ReadString(),
+                    Level = reader.ReadInt32(),
+                    Seed = reader.ReadInt32()
                 };
             }
 
             private void InterceptProcessIncomingMessage(IncomingMessage msg)
             {
-                if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
+                if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS_INIT)
+                {
+                    Farmer who = Game1.getFarmer(msg.FarmerID);
+                    if (who == null)
+                        return;
+
+                    if (Game1.IsMasterGame)
+                    {
+                        // Client requests settings and state, send it:
+                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS_WARP, Game1.MasterPlayer, new object[] {
+                            JsonConvert.SerializeObject(Settings),
+                            JsonConvert.SerializeObject(DeepWoodsState)
+                        });
+                    }
+                    else
+                    {
+                        // Server sent us settings and state!
+                        Settings = JsonConvert.DeserializeObject<DeepWoodsSettings>(msg.Reader.ReadString());
+                        DeepWoodsState = JsonConvert.DeserializeObject<DeepWoodsStateData>(msg.Reader.ReadString());
+                        ModEntry.DeepWoodsInitServerAnswerReceived();
+                    }
+                }
+                else if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
                 {
                     Farmer who = Game1.getFarmer(msg.FarmerID);
                     if (who == null)
@@ -138,14 +162,14 @@ namespace DeepWoodsMod
                     if (Game1.IsMasterGame)
                     {
                         // Client requests that we load and activate a specific DeepWoods level they want to warp into.
-                        DeepWoods.AddDeepWoodsFromObelisk(data.name, data.level, data.seed);
+                        DeepWoods.AddDeepWoodsFromObelisk(data.Name, data.Level, data.Seed);
                         // Send message to client telling them we have the level ready.
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS_WARP, Game1.MasterPlayer, new object[] { data.name, data.level, data.seed });
+                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS_WARP, Game1.MasterPlayer, new object[] { data.Name, data.Level, data.Seed });
                     }
                     else
                     {
                         // Server informs us that we can warp now!
-                        DeepWoods.WarpFarmerIntoDeepWoods(Game1.getLocationFromName(data.name) as DeepWoods);
+                        DeepWoods.WarpFarmerIntoDeepWoods(Game1.getLocationFromName(data.Name) as DeepWoods);
                     }
                 }
                 else
