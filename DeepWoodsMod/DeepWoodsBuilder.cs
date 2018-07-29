@@ -1024,7 +1024,6 @@ namespace DeepWoodsMod
         {
             if (x < 0 || y < 0 || x >= this.spaceManager.GetMapWidth() || y >= this.spaceManager.GetMapHeight())
             {
-                // ModEntry.Log("Tile out of range: " +  x + ", " + y, StardewModdingAPI.LogLevel.Debug);
                 return false;
             }
 
@@ -1046,7 +1045,6 @@ namespace DeepWoodsMod
         {
             if (x < 0 || y < 0 || x >= this.spaceManager.GetMapWidth() || y >= this.spaceManager.GetMapHeight())
             {
-                // ModEntry.Log("Tile out of range: " +  x + ", " + y, StardewModdingAPI.LogLevel.Debug);
                 return false;
             }
 
@@ -1064,7 +1062,6 @@ namespace DeepWoodsMod
         {
             if (x < 0 || y < 0 || x >= this.spaceManager.GetMapWidth() || y >= this.spaceManager.GetMapHeight())
             {
-                // ModEntry.Log("Tile out of range: " +  x + ", " + y, StardewModdingAPI.LogLevel.Debug);
                 return false;
             }
 

@@ -63,8 +63,6 @@ namespace DeepWoodsMod
                     }
                 }
             }
-
-            ModEntry.Log("Removed " + eggsRemovedFromLocations + " eggs from locations and " + eggsRemovedFromFarmers + " eggs from farmers.");
         }
 
         public static void RestoreAllEasterEggsInGame()

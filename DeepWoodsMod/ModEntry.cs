@@ -251,7 +251,6 @@ namespace DeepWoodsMod
             {
                 warpPropertyString = GetWoodsToDeepWoodsWarps();
             }
-            Log("warpPropertyString: " + warpPropertyString);
             map.Properties["Warp"] = new PropertyValue(warpPropertyString);
         }
 
