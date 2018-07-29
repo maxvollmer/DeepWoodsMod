@@ -133,7 +133,7 @@ namespace DeepWoodsMod
                 if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS_INIT)
                 {
                     Farmer who = Game1.getFarmer(msg.FarmerID);
-                    if (who == null)
+                    if (who == null || who == Game1.player)
                         return;
 
                     if (Game1.IsMasterGame)
@@ -155,7 +155,7 @@ namespace DeepWoodsMod
                 else if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
                 {
                     Farmer who = Game1.getFarmer(msg.FarmerID);
-                    if (who == null)
+                    if (who == null || who == Game1.player)
                         return;
 
                     DeepWoodsWarpMessageData data = ReadDeepWoodsWarpMessage(msg.Reader);
