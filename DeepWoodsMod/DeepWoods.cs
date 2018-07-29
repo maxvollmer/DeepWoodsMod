@@ -222,8 +222,9 @@ namespace DeepWoodsMod
                 && to != null
                 && from.parent == null
                 && to.parent == from
-                && ExitDirToEnterDir(CastEnterDirToExitDir(from.enterDir)) == to.enterDir
-                && lostMessageDisplayedToday == false)
+                && !lostMessageDisplayedToday
+                && !to.spawnedFromObelisk
+                && ExitDirToEnterDir(CastEnterDirToExitDir(from.enterDir)) == to.enterDir)
             {
                 Game1.addHUDMessage(new HUDMessage(I18N.LostMessage) { noIcon = true });
                 lostMessageDisplayedToday = true;
@@ -452,7 +453,7 @@ namespace DeepWoodsMod
             this.enterDir = enterDir;
             this.spawnTime = Game1.timeOfDay;
             this.abandonedByParentTime = 2600;
-            this.spawnedFromObelisk = false;
+            this.spawnedFromObelisk = parent?.spawnedFromObelisk ?? false;
             this.hasMonstersAdded = false;
             this.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = false;
 
