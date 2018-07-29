@@ -23,14 +23,14 @@ namespace DeepWoodsMod
             this.Category = StardewValley.Object.EggCategory;
             this.ParentSheetIndex = PARENT_SHEET_INDEX;
             this.eggTileIndex = 67;
-            this.texture = Game1.content.Load<Texture2D>("Maps\\Festivals");
+            this.texture = Textures.festivals;
         }
 
         public override int Stack
         {
             get
             {
-                return Math.Max(0, (int)((NetFieldBase<int, NetInt>)this.stack));
+                return Math.Max(0, this.stack);
             }
             set
             {

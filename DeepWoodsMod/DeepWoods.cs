@@ -1128,12 +1128,27 @@ namespace DeepWoodsMod
 
         public override StardewValley.Object getFish(float millisecondsAfterNibble, int bait, int waterDepth, Farmer who, double baitPotency, string locationName = null)
         {
-            if ((locationName != null && locationName != this.Name) || Game1.random.NextDouble() < 0.5) // Don't use this.random here!
+            if ((locationName != null && locationName != this.Name) || !CanHazAwesomeFish())
             {
                 return base.getFish(millisecondsAfterNibble, bait, waterDepth, who, baitPotency, locationName);
             }
-            StardewValley.Object @fish = new StardewValley.Object(800, 1, false, -1, 0);
-            return fish;
+            return new StardewValley.Object(GetRandomAwesomeFish(), 1, false, -1, 0);
+        }
+
+        private bool CanHazAwesomeFish()
+        {
+            this.random.EnterMasterMode();
+            bool result = this.random.CheckChance(Settings.Luck.Fishies.ChanceForAwesomeFish);
+            this.random.LeaveMasterMode();
+            return result;
+        }
+
+        private int GetRandomAwesomeFish()
+        {
+            this.random.EnterMasterMode();
+            int result = this.random.GetRandomValue(Settings.Luck.Fishies.AwesomeFishies);
+            this.random.LeaveMasterMode();
+            return result;
         }
 
         public int GetCombatLevel()

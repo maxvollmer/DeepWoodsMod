@@ -268,13 +268,13 @@ namespace DeepWoodsMod
 
         public bool CanLoad<T>(IAssetInfo asset)
         {
-            return asset.AssetNameEquals($"Buildings\\{WoodsObelisk.WOODS_OBELISK_BUILDING_NAME}")
+            return asset.AssetNameEquals($"Buildings\\{WOODS_OBELISK_BUILDING_NAME}")
                 || asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet");
         }
 
         public T Load<T>(IAssetInfo asset)
         {
-            if (asset.AssetNameEquals($"Buildings\\{WoodsObelisk.WOODS_OBELISK_BUILDING_NAME}"))
+            if (asset.AssetNameEquals($"Buildings\\{WOODS_OBELISK_BUILDING_NAME}"))
             {
                 return (T)(object)Textures.woodsObelisk;
             }

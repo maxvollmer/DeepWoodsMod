@@ -1,27 +1,51 @@
 ﻿using Microsoft.Xna.Framework;
+using Netcode;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using static DeepWoodsMod.DeepWoodsSettings;
+using static DeepWoodsMod.DeepWoodsGlobals;
 
 namespace DeepWoodsMod
 {
     class EasterEggFunctions
     {
-        private static int RemoveAllEggsFromLocation(GameLocation location)
+        private enum ProcessMethod
+        {
+            Remove,
+            Restore
+        }
+
+        private static void ProcessEggsInItems(NetObjectList<Item> items, ProcessMethod method)
+        {
+            for (int index = items.Count - 1; index >= 0; --index)
+            {
+                if (method == ProcessMethod.Remove && items[index] is EasterEggItem easterEggItem)
+                {
+                    items[index] = new StardewValley.Object(EASTER_EGG_REPLACEMENT_ITEM, easterEggItem.Stack) { name = UNIQUE_NAME_FOR_EASTER_EGG_ITEMS };
+                }
+                else if (method == ProcessMethod.Restore
+                    && items[index] is StardewValley.Object @object
+                    && @object.parentSheetIndex == EASTER_EGG_REPLACEMENT_ITEM
+                    && @object.name == UNIQUE_NAME_FOR_EASTER_EGG_ITEMS)
+                {
+                    items[index] = new EasterEggItem() { Stack = @object.Stack };
+                }
+            }
+        }
+
+        private static void ProcessEggsInLocation(GameLocation location, ProcessMethod method)
         {
             if (location == null)
-                return 0;
-
-            int eggsRemoved = 0;
+                return;
 
             if (location is BuildableGameLocation buildableGameLocation)
             {
                 foreach (Building building in buildableGameLocation.buildings)
                 {
-                    eggsRemoved += RemoveAllEggsFromLocation(building.indoors.Value);
+                    ProcessEggsInLocation(building.indoors.Value, method);
                 }
             }
 
@@ -29,46 +53,37 @@ namespace DeepWoodsMod
             {
                 if (@object is Chest chest)
                 {
-                    for (int index = chest.items.Count - 1; index >= 0; --index)
-                    {
-                        if (chest.items[index] is EasterEggItem)
-                        {
-                            eggsRemoved += chest.items[index].Stack;
-                            chest.items.RemoveAt(index);
-                        }
-                    }
+                    ProcessEggsInItems(chest.items, method);
                 }
             }
-
-            return eggsRemoved;
         }
 
         public static void RemoveAllEasterEggsFromGame()
         {
-            int eggsRemovedFromLocations = 0;
             foreach (GameLocation location in Game1.locations)
             {
-                eggsRemovedFromLocations += RemoveAllEggsFromLocation(location);
+                ProcessEggsInLocation(location, ProcessMethod.Remove);
             }
 
-            int eggsRemovedFromFarmers = 0;
             foreach (Farmer farmer in Game1.getOnlineFarmers())
             {
-                for (int index = farmer.items.Count - 1; index >= 0; --index)
-                {
-                    if (farmer.items[index] is EasterEggItem)
-                    {
-                        eggsRemovedFromFarmers += farmer.items[index].Stack;
-                        farmer.items.RemoveAt(index);
-                    }
-                }
+                ProcessEggsInItems(farmer.items, ProcessMethod.Remove);
             }
         }
 
         public static void RestoreAllEasterEggsInGame()
         {
-            // TODO!
+            foreach (GameLocation location in Game1.locations)
+            {
+                ProcessEggsInLocation(location, ProcessMethod.Restore);
+            }
+
+            foreach (Farmer farmer in Game1.getOnlineFarmers())
+            {
+                ProcessEggsInItems(farmer.items, ProcessMethod.Restore);
+            }
         }
+
 
         public static void InterceptIncubatorEggs()
         {

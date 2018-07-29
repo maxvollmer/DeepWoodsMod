@@ -7,6 +7,9 @@ namespace DeepWoodsMod
 {
     class DeepWoodsGlobals
     {
+        public readonly static string WOODS_OBELISK_BUILDING_NAME = "Woods Obelisk";
+        public readonly static string EARTH_OBELISK_BUILDING_NAME = "Earth Obelisk";
+
         public readonly static string SAVE_FILE_NAME = "DeepWoodsModSave";
         public readonly static string DEFAULT_OUTDOOR_TILESHEET_ID = "DefaultOutdoor";
         public readonly static string LAKE_TILESHEET_ID = "WaterBorderTiles";
@@ -24,6 +27,8 @@ namespace DeepWoodsMod
 
         public readonly static Color DAY_LIGHT = new Color(150, 120, 50, 255);
         public readonly static Color NIGHT_LIGHT = new Color(255, 255, 50, 255);
+
+        public readonly static int EASTER_EGG_REPLACEMENT_ITEM = 343;
 
         // SMAPI will handle custom network messages in a future version, until then let's hope no other mod uses this value for custom messages :S 
         public readonly static byte NETWORK_MESSAGE_DEEPWOODS = 99;

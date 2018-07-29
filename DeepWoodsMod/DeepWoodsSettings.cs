@@ -326,10 +326,61 @@ namespace DeepWoodsMod
         public DeepWoodsMonsters.MonsterDecider PurpleSlime { get; set; } = new DeepWoodsMonsters.MonsterDecider(10, 10);
     }
 
+    public class FishiesLuckSettings
+    {
+        /*
+        163: Legend: 5000
+        159: Crimsonfish: 1500
+        682: Mutant Carp: 1000
+        775: Glacierfish: 1000
+        160: Angler: 900
+        162: Lava Eel: 700
+        161: Ice Pip: 500
+        800: Blobfish: 500
+        158: Stonefish: 300
+        155: Super Cucumber: 250
+        799: Spook Fish: 220
+        128: Pufferfish: 200
+        143: Catfish: 200
+        698: Sturgeon: 200
+        699: Tiger Trout: 150
+        149: Octopus: 150
+        165: Scorpion Carp: 150
+        795: Void Salmon: 150
+        796: Slimejack: 100
+        798: Midnight Squid: 100
+        */
+
+        public Chance ChanceForAwesomeFish { get; set; } = new Chance(new LuckValue(0, 0, 25));
+        public WeightedInt[] AwesomeFishies { get; set; } = new WeightedInt[] {
+            new WeightedInt(163, 10),   // 163: Legend: 5000
+            new WeightedInt(159, 33),   // 159: Crimsonfish: 1500
+            new WeightedInt(682, 50),   // 682: Mutant Carp: 1000
+            new WeightedInt(775, 50),   // 775: Glacierfish: 1000
+            new WeightedInt(160, 55),   // 160: Angler: 900
+            new WeightedInt(162, 71),   // 162: Lava Eel: 700
+            new WeightedInt(161, 100),   // 161: Ice Pip: 500
+            new WeightedInt(800, 100),   // 800: Blobfish: 500
+            new WeightedInt(158, 166),   // 158: Stonefish: 300
+            new WeightedInt(155, 200),   // 155: Super Cucumber: 250
+            new WeightedInt(799, 227),   // 799: Spook Fish: 220
+            new WeightedInt(128, 250),   // 128: Pufferfish: 200
+            new WeightedInt(143, 250),   // 143: Catfish: 200
+            new WeightedInt(698, 250),   // 698: Sturgeon: 200
+            new WeightedInt(699, 333),   // 699: Tiger Trout: 150
+            new WeightedInt(149, 333),   // 149: Octopus: 150
+            new WeightedInt(165, 333),   // 165: Scorpion Carp: 150
+            new WeightedInt(795, 333),   // 795: Void Salmon: 150
+            new WeightedInt(796, 500),   // 796: Slimejack: 100
+            new WeightedInt(798, 500),   // 798: Midnight Squid: 100
+        };
+    }
+
     public class LuckSettings
     {
         public TerrainLuckSettings Terrain { get; set; } = new TerrainLuckSettings();
         public ClearingLuckSettings Clearings { get; set; } = new ClearingLuckSettings();
+        public FishiesLuckSettings Fishies { get; set; } = new FishiesLuckSettings();
     }
 
     public class I18NData
@@ -348,6 +399,7 @@ namespace DeepWoodsMod
         private int lowestLevelReached = 0;
 
         public HashSet<long> PlayersWhoGotStardropFromUnicorn { get; set; } = new HashSet<long>();
+        public HashSet<Location> WoodsObeliskLocations { get; set; } = new HashSet<Location>();
 
         public int LowestLevelReached
         {

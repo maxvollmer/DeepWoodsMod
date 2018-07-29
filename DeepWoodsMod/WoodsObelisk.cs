@@ -2,17 +2,18 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Buildings;
+using StardewValley.Locations;
 using StardewValley.Menus;
 using System.Collections.Generic;
 using System.Reflection;
 using static DeepWoodsMod.DeepWoodsSettings;
+using static DeepWoodsMod.DeepWoodsGlobals;
+using xTile.Dimensions;
 
 namespace DeepWoodsMod
 {
     class WoodsObelisk
     {
-        public static readonly string WOODS_OBELISK_BUILDING_NAME = "Woods Obelisk";
-
         private static void ObeliskWarpForRealOverride()
         {
             Game1.activeClickableMenu = new WoodsObeliskMenu();
@@ -79,14 +80,60 @@ namespace DeepWoodsMod
             return GetBluePrints(carpenterMenu).Exists(bluePrint => bluePrint.name == WOODS_OBELISK_BUILDING_NAME);
         }
 
+
+
+        private enum ProcessMethod
+        {
+            Remove,
+            Restore
+        }
+
+        private static void ProcessAllInLocation(GameLocation location, ProcessMethod method)
+        {
+            if (location is BuildableGameLocation buildableGameLocation)
+            {
+                foreach (Building building in buildableGameLocation.buildings)
+                {
+                    ProcessAllInLocation(building.indoors.Value, method);
+                    if (method == ProcessMethod.Remove && building.buildingType == WOODS_OBELISK_BUILDING_NAME)
+                    {
+                        building.buildingType.Value = EARTH_OBELISK_BUILDING_NAME;
+                        DeepWoodsState.WoodsObeliskLocations.Add(new Location(building.tileX, building.tileY));
+                    }
+                    else if (method == ProcessMethod.Restore && building.buildingType == EARTH_OBELISK_BUILDING_NAME)
+                    {
+                        if (DeepWoodsState.WoodsObeliskLocations.Contains(new Location(building.tileX, building.tileY)))
+                        {
+                            building.buildingType.Value = WOODS_OBELISK_BUILDING_NAME;
+                            building.resetTexture();
+                        }
+                    }
+                }
+            }
+        }
+
         public static void RemoveAllFromGame()
         {
-            // TODO
+            if (!Game1.IsMasterGame)
+                return;
+
+            DeepWoodsState.WoodsObeliskLocations.Clear();
+
+            foreach (GameLocation location in Game1.locations)
+            {
+                ProcessAllInLocation(location, ProcessMethod.Remove);
+            }
         }
 
         public static void RestoreAllInGame()
         {
-            // TODO
+            if (!Game1.IsMasterGame)
+                return;
+
+            foreach (GameLocation location in Game1.locations)
+            {
+                ProcessAllInLocation(location, ProcessMethod.Restore);
+            }
         }
     }
 }
