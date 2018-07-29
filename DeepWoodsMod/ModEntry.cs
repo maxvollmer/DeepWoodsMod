@@ -59,11 +59,14 @@ namespace DeepWoodsMod
             DeepWoodsSettings.DoSave();
             DeepWoods.Remove();
             EasterEggFunctions.RemoveAllEasterEggsFromGame();
+            WoodsObelisk.RemoveAllFromGame();
         }
 
         private void SaveEvents_AfterSave(object sender, EventArgs args)
         {
             DeepWoods.Add();
+            EasterEggFunctions.RestoreAllEasterEggsInGame();
+            WoodsObelisk.RestoreAllInGame();
         }
 
         private void SaveEvents_AfterLoad(object sender, EventArgs args)
@@ -72,6 +75,8 @@ namespace DeepWoodsMod
             {
                 DeepWoodsSettings.DoLoad();
                 DeepWoods.Add();
+                EasterEggFunctions.RestoreAllEasterEggsInGame();
+                WoodsObelisk.RestoreAllInGame();
                 isDeepWoodsGameRunning = true;
             }
             else
@@ -86,6 +91,8 @@ namespace DeepWoodsMod
                 return;
 
             DeepWoods.Add();
+            EasterEggFunctions.RestoreAllEasterEggsInGame();
+            // WoodsObelisk.RestoreAllInGame(); <- Not needed, server already sends correct building
             mod.isDeepWoodsGameRunning = true;
         }
 

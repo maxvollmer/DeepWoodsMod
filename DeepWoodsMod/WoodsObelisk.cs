@@ -78,5 +78,15 @@ namespace DeepWoodsMod
         {
             return GetBluePrints(carpenterMenu).Exists(bluePrint => bluePrint.name == WOODS_OBELISK_BUILDING_NAME);
         }
+
+        public static void RemoveAllFromGame()
+        {
+            // TODO
+        }
+
+        public static void RestoreAllInGame()
+        {
+            // TODO
+        }
     }
 }
