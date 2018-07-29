@@ -47,7 +47,6 @@ namespace DeepWoodsMod
 
         public static void AddDeepWoodsFromObelisk(string name, int level, int seed)
         {
-            ModEntry.Log("AddDeepWoodsFromObelisk: " + name + ", " + level + ", " + seed);
             DeepWoods deepWoods = new DeepWoods(name, level, seed);
             Game1.locations.Add(deepWoods);
             allDeepWoods.Add(deepWoods);
@@ -151,8 +150,6 @@ namespace DeepWoodsMod
 
                 // Then check which DeepWoods can be removed
                 allDeepWoods.RemoveWhere(deepWoods => deepWoods.TryRemove());
-
-                ModEntry.Log("allDeepWoods.Count: " + allDeepWoods.Count);
             }
         }
 
@@ -281,6 +278,7 @@ namespace DeepWoodsMod
             Game1.locations.Add(networkDeepWoods);
         }
 
+        private object exitValueLock = new object();
 
         private DeepWoodsRandom random;
         private DeepWoods parent;
@@ -297,6 +295,7 @@ namespace DeepWoodsMod
         public bool isLichtung;
         public Location lichtungCenter;
         private int spawnTime;
+        private int abandonedByParentTime;
         private bool spawnedFromObelisk;
 
         public NetObjectList<ResourceClump> resourceClumps = new NetObjectList<ResourceClump>();
@@ -311,7 +310,6 @@ namespace DeepWoodsMod
         public DeepWoods()
             : base()
         {
-            ModEntry.Log("DeepWoods() over network: " + this.name.Value);
             this.wasConstructedOverNetwork = true;
         }
 
@@ -360,6 +358,7 @@ namespace DeepWoodsMod
             this.playerCount = 0;
             this.enterDir = enterDir;
             this.spawnTime = Game1.timeOfDay;
+            this.abandonedByParentTime = 2600;
             this.spawnedFromObelisk = false;
 
             InitializeBaseFields();
@@ -372,15 +371,15 @@ namespace DeepWoodsMod
             DeepWoodsMonsters.AddMonsters(this, this.random, this.spaceManager);
             DeepWoods.allDeepWoods.Add(this);
 
-            if (parent == null && level > 1)
+            if (parent == null && level > 1 && !this.exits.ContainsKey(CastEnterDirToExitDir(this.enterDir)))
             {
-                NotifyAbandonedByParent();
-                ModEntry.Log("Abandoned level spawned, this: " + this.Name + ", level: " + this.level + ", enterDir: " + this.enterDir);
+                this.exits.Add(CastEnterDirToExitDir(this.enterDir), new DeepWoodsExit(this.enterLocation));
             }
 
             if (parent != null)
             {
-                ModEntry.Log("Child spawned, this: " + this.Name + ", level: " + this.level + ", parent: " + this.parent.Name + ", enterDir: " + this.enterDir);
+                // TODO: Remove this
+                ModEntry.Log("Child spawned, time: " + Game1.timeOfDay + " this: " + this.Name + ", level: " + this.level + ", parent: " + this.parent.Name + ", enterDir: " + this.enterDir);
             }
         }
 
@@ -415,37 +414,52 @@ namespace DeepWoodsMod
             if (this.playerCount <= 0)
                 return;
 
-            bool addedExit = false;
-
-            foreach (var exit in this.exits)
+            lock (exitValueLock)
             {
-                if (exit.Value.deepWoods == null)
+                bool addedExit = false;
+
+                foreach (var exit in this.exits)
                 {
-                    exit.Value.deepWoods = new DeepWoods(this, this.level+1, ExitDirToEnterDir(exit.Key));
-                    Game1.locations.Add(exit.Value.deepWoods);
-                    addedExit = true;
+                    if (exit.Value.deepWoods == null)
+                    {
+                        DeepWoods child = new DeepWoods(this, this.level + 1, ExitDirToEnterDir(exit.Key));
+                        if (Game1.getLocationFromName(child.Name) is DeepWoods existingChild)
+                        {
+                            exit.Value.deepWoods = existingChild;
+                        }
+                        else
+                        {
+                            Game1.locations.Add(child);
+                            exit.Value.deepWoods = child;
+                        }
+                        addedExit = true;
+                    }
                 }
-            }
 
-            if (addedExit)
-            {
-                Game1.locations.Remove(this);
-                AddWarps();
-                Game1.locations.Add(this);
+                if (addedExit)
+                {
+                    // Game1.locations.Remove(this);
+                    AddWarps();
+                    // Game1.locations.Add(this);
+                }
             }
         }
 
         private void RandomizeExits()
         {
-            foreach (var exit in this.exits)
+            lock (exitValueLock)
             {
-                if (exit.Value.deepWoods != null)
+                if (this.parent != null && this.level > 1 && !this.exits.ContainsKey(CastEnterDirToExitDir(this.enterDir)))
                 {
-                    exit.Value.deepWoods.NotifyAbandonedByParent();
+                    this.abandonedByParentTime = Game1.timeOfDay;
+                    this.parent = null;
+                    this.exits.Add(CastEnterDirToExitDir(this.enterDir), new DeepWoodsExit(this.enterLocation));
                 }
-                exit.Value.deepWoods = null;
+                foreach (var exit in this.exits)
+                {
+                    exit.Value.deepWoods = null;
+                }
             }
-
             ValidateAndIfNecessaryCreateExitChildren();
         }
 
@@ -457,7 +471,7 @@ namespace DeepWoodsMod
             if (HasPlayerIncludingChildren())
                 return false;
 
-            if ((this.parent?.playerCount ?? 0) > 0)
+            if ((this.parent?.playerCount ?? 0) > 0 && Game1.timeOfDay <= (this.abandonedByParentTime + TIME_BEFORE_DELETION_ALLOWED_IF_OBELISK_SPAWNED))
                 return false;
 
             if (this.spawnedFromObelisk && Game1.timeOfDay <= (this.spawnTime + TIME_BEFORE_DELETION_ALLOWED_IF_OBELISK_SPAWNED))
@@ -508,14 +522,6 @@ namespace DeepWoodsMod
             this.exits[exitDir].deepWoods = null;
         }
 
-        private void NotifyAbandonedByParent()
-        {
-            this.parent = null;
-            ExitDirection exitDir = CastEnterDirToExitDir(this.enterDir);
-            this.exits.Add(exitDir, new DeepWoodsExit(this.enterLocation));
-            ValidateAndIfNecessaryCreateExitChildren();
-        }
-
         private void DetermineExits()
         {
             this.exits.Clear();
@@ -537,7 +543,6 @@ namespace DeepWoodsMod
 
         private Location GetExitLocation(ExitDirection exitDir)
         {
-            ModEntry.Log("GetExitLocation(), this: " + this.Name + ", exitDir: " + exitDir);
             return this.exits[exitDir].location;
         }
 
@@ -643,7 +648,6 @@ namespace DeepWoodsMod
 
         private Location GetParentWarpLocation()
         {
-            ModEntry.Log("GetParentWarpLocation(), this: " + this.Name + ", level: " + this.level + ", parent: " + this.parent?.Name + ", this.enterDir: " + this.enterDir);
             if (level == 1)
             {
                 return WOODS_WARP_LOCATION;
@@ -661,7 +665,6 @@ namespace DeepWoodsMod
 
         private void AddExitWarps(ExitDirection exitDir, Location location, string targetLocationName, Location targetLocation)
         {
-            ModEntry.Log("AddExitWarps: " + exitDir + ", location: " + location + ", to: " + targetLocationName + ", targetLocation: " + targetLocation);
             switch (exitDir)
             {
                 case ExitDirection.TOP:
@@ -891,8 +894,6 @@ namespace DeepWoodsMod
 
         protected override void resetSharedState()
         {
-            ModEntry.Log("DeepWoods.resetSharedState(): " + this.name.Value);
-
             if (this.wasConstructedOverNetwork)
             {
                 DeepWoods.InitializeMeAndReplaceLocalInstanceWithMe(this);
@@ -904,8 +905,6 @@ namespace DeepWoodsMod
 
         protected override void resetLocalState()
         {
-            ModEntry.Log("DeepWoods.resetLocalState(): " + this.name.Value);
-
             if (this.wasConstructedOverNetwork)
             {
                 DeepWoods.InitializeMeAndReplaceLocalInstanceWithMe(this);

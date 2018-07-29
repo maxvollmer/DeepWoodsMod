@@ -23,9 +23,9 @@ namespace DeepWoodsMod
 
         // SMAPI will handle custom network messages in a future version, until then let's hope no other mod uses this value for custom messages :S 
         public readonly static byte NETWORK_MESSAGE_DEEPWOODS = 99;
-        public readonly static byte NETWORK_MESSAGE_DEEPWOODS_INIT = 0;
-        public readonly static byte NETWORK_MESSAGE_DEEPWOODS_WARP = 1;
-        public readonly static byte NETWORK_MESSAGE_DEEPWOODS_LEVEL = 2;
-        public readonly static byte NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN = 3;
+        public readonly static int NETWORK_MESSAGE_DEEPWOODS_INIT = 0;
+        public readonly static int NETWORK_MESSAGE_DEEPWOODS_WARP = 1;
+        public readonly static int NETWORK_MESSAGE_DEEPWOODS_LEVEL = 2;
+        public readonly static int NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN = 3;
     }
 }

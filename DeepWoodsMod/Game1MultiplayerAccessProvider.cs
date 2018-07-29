@@ -136,7 +136,7 @@ namespace DeepWoodsMod
                     if (who == null || who == Game1.player)
                         return;
 
-                    byte actualMessageType = msg.Reader.ReadByte();
+                    int actualMessageType = msg.Reader.ReadInt32();
 
                     if (actualMessageType == NETWORK_MESSAGE_DEEPWOODS_INIT)
                     {
@@ -204,7 +204,7 @@ namespace DeepWoodsMod
             return Game1.multiplayer;
         }
 
-        private static void InterceptMultiplayer()
+        public static void InterceptMultiplayer()
         {
             Game1.multiplayer = new InterceptingMultiplayer(Game1.multiplayer);
         }

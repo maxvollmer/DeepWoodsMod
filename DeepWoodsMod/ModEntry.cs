@@ -39,8 +39,9 @@ namespace DeepWoodsMod
         public override void Entry(IModHelper helper)
         {
             ModEntry.mod = this;
-            RegisterEvents();
+            Game1MultiplayerAccessProvider.InterceptMultiplayer();
             Textures.LoadAll();
+            RegisterEvents();
         }
 
         private void RegisterEvents()
@@ -81,7 +82,7 @@ namespace DeepWoodsMod
 
         public static void DeepWoodsInitServerAnswerReceived()
         {
-            if (!Game1.IsMasterGame || mod.isDeepWoodsGameRunning)
+            if (Game1.IsMasterGame || mod.isDeepWoodsGameRunning)
                 return;
 
             DeepWoods.Add();
@@ -180,6 +181,9 @@ namespace DeepWoodsMod
 
         private void OpenPassageInSecretWoods(Woods woods)
         {
+            if (!isDeepWoodsGameRunning)
+                return;
+
             woods.map.GetLayer("Buildings").Tiles[29, 25] = null;
             woods.map.GetLayer("Buildings").Tiles[29, 26] = null;
         }
