@@ -7,6 +7,7 @@ using static DeepWoodsMod.DeepWoodsGlobals;
 using Newtonsoft.Json;
 using StardewValley.Tools;
 using StardewValley;
+using System;
 
 namespace DeepWoodsMod
 {
@@ -391,7 +392,8 @@ namespace DeepWoodsMod
         public string WoodsObeliskDescription { get; set; } = "Woods Obelisk Description";
         public string EasterEggDisplayName { get; set; } = "Easter Egg";
         public string EasterEggHatchedMessage { get; set; } = "A new... wait a minute, a rabbit hatched?!";
-        public string LostMessage { get; set; } = "Uh-oh, it seems you got lost in the deep woods..."; 
+        public string LostMessage { get; set; } = "Uh-oh, it seems you got lost in the deep woods...";
+        public string WoodsObeliskWizardMailMessage { get; set; } = "I could sense your presence in the depths of the forest.^There is a strong and old magic burried within the tree roots and earth.^It is difficult, but with the right ingredients I should be able to manifest an obelisk that uses this magic to allow you access much deeper into the forest.^Come to my tower when you are ready.^   -M. Rasmodius, Wizard";
     }
 
     class DeepWoodsStateData
@@ -399,7 +401,7 @@ namespace DeepWoodsMod
         private int lowestLevelReached = 0;
 
         public HashSet<long> PlayersWhoGotStardropFromUnicorn { get; set; } = new HashSet<long>();
-        public HashSet<Location> WoodsObeliskLocations { get; set; } = new HashSet<Location>();
+        public HashSet<XY> WoodsObeliskLocations { get; set; } = new HashSet<XY>();
 
         public int LowestLevelReached
         {

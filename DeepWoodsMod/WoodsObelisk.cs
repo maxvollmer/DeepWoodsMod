@@ -9,6 +9,7 @@ using System.Reflection;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
 using xTile.Dimensions;
+using System;
 
 namespace DeepWoodsMod
 {
@@ -98,11 +99,11 @@ namespace DeepWoodsMod
                     if (method == ProcessMethod.Remove && building.buildingType == WOODS_OBELISK_BUILDING_NAME)
                     {
                         building.buildingType.Value = EARTH_OBELISK_BUILDING_NAME;
-                        DeepWoodsState.WoodsObeliskLocations.Add(new Location(building.tileX, building.tileY));
+                        DeepWoodsState.WoodsObeliskLocations.Add(new XY(building.tileX, building.tileY));
                     }
                     else if (method == ProcessMethod.Restore && building.buildingType == EARTH_OBELISK_BUILDING_NAME)
                     {
-                        if (DeepWoodsState.WoodsObeliskLocations.Contains(new Location(building.tileX, building.tileY)))
+                        if (DeepWoodsState.WoodsObeliskLocations.Contains(new XY(building.tileX, building.tileY)))
                         {
                             building.buildingType.Value = WOODS_OBELISK_BUILDING_NAME;
                             building.resetTexture();

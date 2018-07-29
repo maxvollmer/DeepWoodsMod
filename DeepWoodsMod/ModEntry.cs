@@ -11,6 +11,8 @@ using xTile.Tiles;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
 using System.Collections.Concurrent;
+using Newtonsoft.Json;
+using xTile.Dimensions;
 
 namespace DeepWoodsMod
 {
@@ -72,10 +74,10 @@ namespace DeepWoodsMod
 
         private void SaveEvents_BeforeSave(object sender, EventArgs args)
         {
-            DeepWoodsSettings.DoSave();
             DeepWoods.Remove();
             EasterEggFunctions.RemoveAllEasterEggsFromGame();
             WoodsObelisk.RemoveAllFromGame();
+            DeepWoodsSettings.DoSave();
         }
 
         private void SaveEvents_AfterSave(object sender, EventArgs args)
@@ -203,7 +205,7 @@ namespace DeepWoodsMod
 
         public bool CanEdit<T>(IAssetInfo asset)
         {
-            return asset.AssetNameEquals("Maps/Woods");
+            return asset.AssetNameEquals("Maps/Woods") || asset.AssetNameEquals("Content/mail");
         }
 
         private void OpenPassageInSecretWoods(Woods woods)
@@ -217,9 +219,28 @@ namespace DeepWoodsMod
 
         public void Edit<T>(IAssetData asset)
         {
-            // Get map from asset:
-            Map map = asset.GetData<Map>();
+            if (asset.AssetNameEquals("Maps/Woods"))
+            {
+                EditWoodsMap(asset.GetData<Map>());
+            }
+            else if (asset.AssetNameEquals("Data/mail"))
+            {
+                EditMail(asset.GetData<Dictionary<string, string>>());
+                Game1.content.Load<Dictionary<string, string>>("Data\\mail");
+            }
+            else
+            {
+                throw new ArgumentException("Can't edit " + asset.AssetName);
+            }
+        }
 
+        private void EditMail(Dictionary<string, string> mailData)
+        {
+            mailData.Add(WOODS_OBELISK_WIZARD_MAIL_ID, I18N.WoodsObeliskWizardMailMessage);
+        }
+
+        private void EditWoodsMap(Map map)
+        {
             // Get "Buildings" layer (used for map border and forest border):
             Layer buildingsLayer = map.GetLayer("Buildings");
 

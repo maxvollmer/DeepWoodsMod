@@ -216,6 +216,7 @@ namespace DeepWoodsMod
         {
             from?.RemovePlayer(who);
             to?.AddPlayer(who);
+
             if (who == Game1.player
                 && from != null
                 && to != null
@@ -226,6 +227,15 @@ namespace DeepWoodsMod
             {
                 Game1.addHUDMessage(new HUDMessage(I18N.LostMessage) { noIcon = true });
                 lostMessageDisplayedToday = true;
+            }
+
+            if (who == Game1.player
+                && to != null
+                && to.level >= Settings.Level.MinLevelForWoodsObelisk
+                && !Game1.player.hasOrWillReceiveMail(WOODS_OBELISK_WIZARD_MAIL_ID)
+                && (Game1.player.mailReceived.Contains("hasPickedUpMagicInk") || Game1.player.hasMagicInk))
+            {
+                Game1.addMailForTomorrow(WOODS_OBELISK_WIZARD_MAIL_ID);
             }
         }
 
@@ -464,10 +474,10 @@ namespace DeepWoodsMod
                 this.exits.TryAdd(CastEnterDirToExitDir(this.enterDir), new DeepWoodsExit(this.enterLocation));
             }
 
+            AddParentWarps();
+
             if (parent != null)
             {
-                AddParentWarps();
-
                 // TODO: Remove this
                 ModEntry.Log("Child spawned, time: " + Game1.timeOfDay + " this: " + this.Name + ", level: " + this.level + ", parent: " + this.parent.Name + ", enterDir: " + this.enterDir);
             }
@@ -825,16 +835,16 @@ namespace DeepWoodsMod
             if (!Game1.IsMasterGame)
                 return;
 
-            this.random.EnterMasterMode();
-
             if (this.level == 1 || this.parent != null)
             {
+                this.random.EnterMasterMode();
+
                 string parentLocationName = GetParentLocationName();
                 Location parentWarpLocation = GetParentWarpLocation();
                 AddExitWarps(CastEnterDirToExitDir(this.enterDir), this.enterLocation, parentLocationName, parentWarpLocation);
+
+                this.random.LeaveMasterMode();
             }
-            
-            this.random.LeaveMasterMode();
         }
 
         public override bool isCollidingPosition(Microsoft.Xna.Framework.Rectangle position, xTile.Dimensions.Rectangle viewport, bool isFarmer, int damagesFarmer, bool glider, Character character)

@@ -80,6 +80,7 @@
     <Compile Include="Unicorn.cs" />
     <Compile Include="WoodsObelisk.cs" />
     <Compile Include="WoodsObeliskMenu.cs" />
+    <Compile Include="XY.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="manifest.json" />
