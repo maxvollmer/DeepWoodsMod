@@ -76,6 +76,9 @@ namespace DeepWoodsMod
 
         public class WeightedInt : WeightedValue<int>
         {
+            // For JSON serialization
+            public WeightedInt() { }
+
             public WeightedInt(int value, LuckValue weight)
                 : base(value, weight)
             {
