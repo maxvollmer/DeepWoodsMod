@@ -75,7 +75,7 @@ namespace DeepWoodsMod
             }
             else
             {
-                Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS_INIT, Game1.player, new object[] {  });
+                Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.player, new object[] { NETWORK_MESSAGE_DEEPWOODS_INIT });
             }
         }
 

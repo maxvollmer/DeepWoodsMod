@@ -130,46 +130,62 @@ namespace DeepWoodsMod
 
             private void InterceptProcessIncomingMessage(IncomingMessage msg)
             {
-                if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS_INIT)
+                if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS)
                 {
                     Farmer who = Game1.getFarmer(msg.FarmerID);
                     if (who == null || who == Game1.player)
                         return;
 
-                    if (Game1.IsMasterGame)
-                    {
-                        // Client requests settings and state, send it:
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS_INIT, Game1.MasterPlayer, new object[] {
-                            JsonConvert.SerializeObject(Settings),
-                            JsonConvert.SerializeObject(DeepWoodsState)
-                        });
-                    }
-                    else
-                    {
-                        // Server sent us settings and state!
-                        Settings = JsonConvert.DeserializeObject<DeepWoodsSettings>(msg.Reader.ReadString());
-                        DeepWoodsState = JsonConvert.DeserializeObject<DeepWoodsStateData>(msg.Reader.ReadString());
-                        ModEntry.DeepWoodsInitServerAnswerReceived();
-                    }
-                }
-                else if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
-                {
-                    Farmer who = Game1.getFarmer(msg.FarmerID);
-                    if (who == null || who == Game1.player)
-                        return;
+                    byte actualMessageType = msg.Reader.ReadByte();
 
-                    DeepWoodsWarpMessageData data = ReadDeepWoodsWarpMessage(msg.Reader);
-                    if (Game1.IsMasterGame)
+                    if (actualMessageType == NETWORK_MESSAGE_DEEPWOODS_INIT)
                     {
-                        // Client requests that we load and activate a specific DeepWoods level they want to warp into.
-                        DeepWoods.AddDeepWoodsFromObelisk(data.Name, data.Level, data.Seed);
-                        // Send message to client telling them we have the level ready.
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS_WARP, Game1.MasterPlayer, new object[] { data.Name, data.Level, data.Seed });
+                        if (Game1.IsMasterGame)
+                        {
+                            // Client requests settings and state, send it:
+                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] {
+                                NETWORK_MESSAGE_DEEPWOODS_INIT,
+                                JsonConvert.SerializeObject(Settings),
+                                JsonConvert.SerializeObject(DeepWoodsState)
+                            });
+                        }
+                        else
+                        {
+                            // Server sent us settings and state!
+                            Settings = JsonConvert.DeserializeObject<DeepWoodsSettings>(msg.Reader.ReadString());
+                            DeepWoodsState = JsonConvert.DeserializeObject<DeepWoodsStateData>(msg.Reader.ReadString());
+                            ModEntry.DeepWoodsInitServerAnswerReceived();
+                        }
                     }
-                    else
+                    else if (actualMessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
                     {
-                        // Server informs us that we can warp now!
-                        DeepWoods.WarpFarmerIntoDeepWoods(Game1.getLocationFromName(data.Name) as DeepWoods);
+                        DeepWoodsWarpMessageData data = ReadDeepWoodsWarpMessage(msg.Reader);
+                        if (Game1.IsMasterGame)
+                        {
+                            // Client requests that we load and activate a specific DeepWoods level they want to warp into.
+                            DeepWoods.AddDeepWoodsFromObelisk(data.Name, data.Level, data.Seed);
+                            // Send message to client telling them we have the level ready.
+                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, data.Name, data.Level, data.Seed });
+                        }
+                        else
+                        {
+                            // Server informs us that we can warp now!
+                            DeepWoods.WarpFarmerIntoDeepWoods(Game1.getLocationFromName(data.Name) as DeepWoods);
+                        }
+                    }
+                    else if (actualMessageType == NETWORK_MESSAGE_DEEPWOODS_LEVEL)
+                    {
+                        if (!Game1.IsMasterGame && who == Game1.MasterPlayer)
+                        {
+                            DeepWoodsState.LowestLevelReached = msg.Reader.ReadInt32();
+                        }
+                    }
+                    else if (actualMessageType == NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN)
+                    {
+                        if (Game1.IsMasterGame)
+                        {
+                            DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Add(who.UniqueMultiplayerID);
+                        }
                     }
                 }
                 else

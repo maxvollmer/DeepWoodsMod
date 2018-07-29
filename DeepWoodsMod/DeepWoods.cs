@@ -60,7 +60,7 @@ namespace DeepWoodsMod
             allDeepWoods.Add(deepWoods);
             if (!Game1.IsMasterGame)
             {
-                Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS_WARP, Game1.player, new object[] { deepWoods.Name, deepWoods.level, deepWoods.GetSeed() });
+                Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.player, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, deepWoods.Name, deepWoods.level, deepWoods.GetSeed() });
             }
             else
             {
@@ -356,6 +356,7 @@ namespace DeepWoodsMod
             }
             this.parent = parent;
             this.level = level;
+            DeepWoodsState.LowestLevelReached = Math.Max(DeepWoodsState.LowestLevelReached, this.level);
             this.playerCount = 0;
             this.enterDir = enterDir;
             this.spawnTime = Game1.timeOfDay;
@@ -420,7 +421,6 @@ namespace DeepWoodsMod
             {
                 if (exit.Value.deepWoods == null)
                 {
-                    ModEntry.Log("Adding child, this: " + this.Name + ", exitDir: " + exit.Key);
                     exit.Value.deepWoods = new DeepWoods(this, this.level+1, ExitDirToEnterDir(exit.Key));
                     Game1.locations.Add(exit.Value.deepWoods);
                     addedExit = true;

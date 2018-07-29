@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using static DeepWoodsMod.DeepWoodsSettings;
+using static DeepWoodsMod.DeepWoodsGlobals;
 
 namespace DeepWoodsMod
 {
@@ -41,10 +42,14 @@ namespace DeepWoodsMod
                 who.health = who.maxHealth;
                 who.Stamina = who.MaxStamina;
                 who.addedLuckLevel.Value = Math.Max(10, who.addedLuckLevel.Value);
-                if (!DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Contains(who.uniqueMultiplayerID))
+                if (!DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Contains(who.UniqueMultiplayerID))
                 {
                     who.addItemByMenuIfNecessaryElseHoldUp(new StardewValley.Object(434, 1), null);
-                    DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Add(who.uniqueMultiplayerID);
+                    DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Add(who.UniqueMultiplayerID);
+                    if (!Game1.IsMasterGame)
+                    {
+                        Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS, who, new object[] { NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN });
+                    }
                 }
                 else
                 {

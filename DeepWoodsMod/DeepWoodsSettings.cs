@@ -344,8 +344,32 @@ namespace DeepWoodsMod
 
     class DeepWoodsStateData
     {
+        private int lowestLevelReached = 0;
+
         public HashSet<long> PlayersWhoGotStardropFromUnicorn { get; set; } = new HashSet<long>();
-        public int LowestLevelReached { get; set; } = 0;
+
+        public int LowestLevelReached
+        {
+            get
+            {
+                return lowestLevelReached;
+            }
+
+            set
+            {
+                if (value > lowestLevelReached && Game1.IsMasterGame)
+                {
+                    foreach (Farmer who in Game1.otherFarmers.Values)
+                    {
+                        if (who != Game1.player)
+                        {
+                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, who, new object[] { NETWORK_MESSAGE_DEEPWOODS_LEVEL, value });
+                        }
+                    }
+                }
+                lowestLevelReached = value;
+            }
+        }
     }
 
     class DeepWoodsSettings
