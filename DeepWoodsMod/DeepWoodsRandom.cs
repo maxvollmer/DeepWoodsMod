@@ -12,6 +12,7 @@ namespace DeepWoodsMod
         private readonly DeepWoods deepWoods;
         private readonly int seed;
         private readonly Random random;
+        private readonly Random masterRandom;
         private int masterModeCounter;
 
         public class LuckValue
@@ -121,6 +122,7 @@ namespace DeepWoodsMod
             this.deepWoods = deepWoods;
             this.seed = CalculateSeed(level, enterDir, salt);
             this.random = new Random(this.seed);
+            this.masterRandom = new Random(this.seed ^ Game1.random.Next());
             this.masterModeCounter = 0;
         }
 
@@ -129,6 +131,7 @@ namespace DeepWoodsMod
             this.deepWoods = deepWoods;
             this.seed = seed;
             this.random = new Random(this.seed);
+            this.masterRandom = new Random(this.seed ^ Game1.random.Next());
             this.masterModeCounter = 0;
         }
 
@@ -184,7 +187,7 @@ namespace DeepWoodsMod
         {
             if (this.IsInMasterMode())
             {
-                return Game1.random;
+                return this.masterRandom;
             }
             else
             {

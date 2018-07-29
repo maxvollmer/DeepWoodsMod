@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Locations;
@@ -160,8 +161,11 @@ namespace DeepWoodsMod
             }
         }
 
-        private static Color DAY_LIGHT = new Color(150, 120, 50, 255);
-        private static Color NIGHT_LIGHT = new Color(255, 255, 50, 255);
+        // This is called by every client every frame
+        public static void LocalTick()
+        {
+            WorkExitChildrenQueue();
+        }
 
         public static void FixLighting()
         {
@@ -208,6 +212,17 @@ namespace DeepWoodsMod
         {
             from?.RemovePlayer(who);
             to?.AddPlayer(who);
+            if (who == Game1.player
+                && from != null
+                && to != null
+                && from.parent == null
+                && to.parent == from
+                && ExitDirToEnterDir(CastEnterDirToExitDir(from.enterDir)) == to.enterDir
+                && to.lostMessageDisplayed == false)
+            {
+                Game1.addHUDMessage(new HUDMessage(I18N.LostMessage) { noIcon = true });
+                to.lostMessageDisplayed = true;
+            }
         }
 
         // Called when a new DeepWoods instance was constructed over network, after the server sent it to us.
@@ -288,6 +303,53 @@ namespace DeepWoodsMod
             Game1.locations.Add(networkDeepWoods);
         }
 
+        private class ExitChildData
+        {
+            public DeepWoods Parent { get; }
+            public ExitDirection ExitDir { get; }
+            public DeepWoods Child { get; }
+            public ExitChildData(DeepWoods parent, ExitDirection exitDir, DeepWoods child)
+            {
+                Parent = parent;
+                ExitDir = exitDir;
+                Child = child;
+            }
+        }
+        private static ConcurrentQueue<ExitChildData> queuedExitChildren = new ConcurrentQueue<ExitChildData>();
+
+        private static void WorkExitChildrenQueue()
+        {
+            byte dummy = 0;
+            ExitChildData exitChildData;
+            while (queuedExitChildren.TryDequeue(out exitChildData))
+            {
+                if (exitChildData.Parent.exits.ContainsKey(exitChildData.ExitDir))
+                {
+                    var exit = exitChildData.Parent.exits[exitChildData.ExitDir];
+                    if (exit.deepWoods == null)
+                    {
+                        if (Game1.getLocationFromName(exitChildData.Child.Name) is DeepWoods existingChild)
+                        {
+                            exit.deepWoods = existingChild;
+                            allDeepWoods.TryRemove(exitChildData.Child, out dummy);
+                        }
+                        else
+                        {
+                            exit.deepWoods = exitChildData.Child;
+                            Game1.locations.Add(exitChildData.Child);
+                            allDeepWoods.TryAdd(exitChildData.Child, 1);
+                        }
+                        if (Game1.IsMasterGame && !exit.deepWoods.hasMonstersAdded)
+                        {
+                            DeepWoodsMonsters.AddMonsters(exit.deepWoods, exit.deepWoods.random, exit.deepWoods.spaceManager);
+                        }
+                        exitChildData.Parent.AddExitWarps(exitChildData.ExitDir, exit.location, exit.deepWoods.Name, exit.deepWoods.enterLocation);
+                    }
+                }
+            }
+        }
+
+        private object warpMutex = new object();
         private DeepWoodsRandom random;
         private DeepWoods parent;
         private int level;
@@ -301,10 +363,13 @@ namespace DeepWoodsMod
         private long uniqueMultiplayerID;
         private bool wasConstructedOverNetwork;
         public bool isLichtung;
+        public bool hasMonstersAdded;
+        private bool lostMessageDisplayed = false;
         public Location lichtungCenter;
         private int spawnTime;
         private int abandonedByParentTime;
         private bool spawnedFromObelisk;
+        private bool validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization;
 
         public NetObjectList<ResourceClump> resourceClumps = new NetObjectList<ResourceClump>();
 
@@ -331,6 +396,10 @@ namespace DeepWoodsMod
             : base()
         {
             InternalInitialize(null, level, EnterDirection.FROM_TOP);
+            if (Game1.IsMasterGame)
+            {
+                DeepWoodsMonsters.AddMonsters(this, this.random, this.spaceManager);
+            }
             this.spawnedFromObelisk = true;
         }
 
@@ -338,6 +407,10 @@ namespace DeepWoodsMod
             : base()
         {
             InternalInitialize(null, level, EnterDirection.FROM_TOP, seed);
+            if (Game1.IsMasterGame)
+            {
+                DeepWoodsMonsters.AddMonsters(this, this.random, this.spaceManager);
+            }
             this.spawnedFromObelisk = true;
         }
 
@@ -368,6 +441,8 @@ namespace DeepWoodsMod
             this.spawnTime = Game1.timeOfDay;
             this.abandonedByParentTime = 2600;
             this.spawnedFromObelisk = false;
+            this.hasMonstersAdded = false;
+            this.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = false;
 
             InitializeBaseFields();
 
@@ -376,7 +451,10 @@ namespace DeepWoodsMod
             GenerateMap();
 
             DeepWoodsStuffCreator.AddStuff(this, this.random, this.spaceManager, this.deepWoodsBuilder);
-            DeepWoodsMonsters.AddMonsters(this, this.random, this.spaceManager);
+            if (Game1.IsMasterGame && level == 1)
+            {
+                DeepWoodsMonsters.AddMonsters(this, this.random, this.spaceManager);
+            }
             DeepWoods.allDeepWoods.TryAdd(this, 1);
 
             if (parent == null && level > 1 && !this.exits.ContainsKey(CastEnterDirToExitDir(this.enterDir)))
@@ -386,6 +464,8 @@ namespace DeepWoodsMod
 
             if (parent != null)
             {
+                AddParentWarps();
+
                 // TODO: Remove this
                 ModEntry.Log("Child spawned, time: " + Game1.timeOfDay + " this: " + this.Name + ", level: " + this.level + ", parent: " + this.parent.Name + ", enterDir: " + this.enterDir);
             }
@@ -414,7 +494,10 @@ namespace DeepWoodsMod
         private void AddPlayer(Farmer who)
         {
             this.playerCount++;
-            ValidateAndIfNecessaryCreateExitChildren();
+            if (this.playerCount == 1)
+            {
+                ValidateAndIfNecessaryCreateExitChildren();
+            }
         }
 
         private void ValidateAndIfNecessaryCreateExitChildren()
@@ -422,50 +505,55 @@ namespace DeepWoodsMod
             if (this.playerCount <= 0)
                 return;
 
-            bool addedExit = false;
+            if (this.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization)
+                return;
+
+            this.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = true;
+
+            if (this.level > 1 && this.parent == null && !this.exits.ContainsKey(CastEnterDirToExitDir(this.enterDir)))
+            {
+                this.abandonedByParentTime = Game1.timeOfDay;
+                this.exits.TryAdd(CastEnterDirToExitDir(this.enterDir), new DeepWoodsExit(this.enterLocation));
+            }
 
             foreach (var exit in this.exits)
             {
                 if (exit.Value.deepWoods == null)
                 {
-                    // TODO: Use Task, so level generation doesn't block the game
-                    /*
+                    // Use Task, so level generation doesn't block the game
                     Task.Run(() => {
+                        try
+                        {
+                            DeepWoods child = new DeepWoods(this, this.level + 1, ExitDirToEnterDir(exit.Key));
+                            queuedExitChildren.Enqueue(new ExitChildData(this, exit.Key, child));
+                        }
+                        catch (Exception e)
+                        {
+                            ModEntry.QueueErrorMessage("Child level spawn failed: " + e);
+                        }
                     });
-                    */
-
-                    DeepWoods child = new DeepWoods(this, this.level + 1, ExitDirToEnterDir(exit.Key));
-                    if (Game1.getLocationFromName(child.Name) is DeepWoods existingChild)
-                    {
-                        exit.Value.deepWoods = existingChild;
-                    }
-                    else
-                    {
-                        Game1.locations.Add(child);
-                        exit.Value.deepWoods = child;
-                    }
-                    addedExit = true;
                 }
-            }
-
-            if (addedExit)
-            {
-                AddWarps();
             }
         }
 
         private void RandomizeExits()
         {
-            if (this.parent != null && this.level > 1 && !this.exits.ContainsKey(CastEnterDirToExitDir(this.enterDir)))
+            this.warps.Clear();
+
+            if (this.level > 1 && !this.exits.ContainsKey(CastEnterDirToExitDir(this.enterDir)))
             {
                 this.abandonedByParentTime = Game1.timeOfDay;
                 this.parent = null;
                 this.exits.TryAdd(CastEnterDirToExitDir(this.enterDir), new DeepWoodsExit(this.enterLocation));
             }
+
             foreach (var exit in this.exits)
             {
                 exit.Value.deepWoods = null;
             }
+
+            this.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = false;
+
             if (this.playerCount > 0)
             {
                 ValidateAndIfNecessaryCreateExitChildren();
@@ -477,10 +565,6 @@ namespace DeepWoodsMod
             if (this.level == 1)
                 return false;
 
-            /*
-            if (HasPlayerIncludingChildren())
-                return false;
-            */
             if (this.playerCount > 0)
                 return false;
 
@@ -515,22 +599,6 @@ namespace DeepWoodsMod
             Game1.locations.Remove(this);
             return true;
         }
-
-        /*
-        private bool HasPlayerIncludingChildren()
-        {
-            if (this.playerCount > 0)
-                return true;
-
-            foreach (var exit in this.exits)
-            {
-                if (exit.Value.deepWoods?.HasPlayerIncludingChildren() ?? false)
-                    return true;
-            }
-
-            return false;
-        }
-        */
 
         private void NotifyExitChildRemoved(ExitDirection exitDir, DeepWoods child)
         {
@@ -675,11 +743,30 @@ namespace DeepWoodsMod
 
         private void AddWarp(int x, int y, string locationName, Location warpLocation)
         {
-            this.warps.Add(new Warp(x, y, locationName, warpLocation.X, warpLocation.Y, false));
+            if (!Game1.IsMasterGame)
+                return;
+
+            lock (warpMutex)
+            {
+                foreach (Warp warp in new List<Warp>(this.warps))
+                {
+                    if (warp.X == x && warp.Y == y)
+                    {
+                        this.warps.Remove(warp);
+                    }
+                }
+
+                this.warps.Add(new Warp(x, y, locationName, warpLocation.X, warpLocation.Y, false));
+            }
         }
 
         private void AddExitWarps(ExitDirection exitDir, Location location, string targetLocationName, Location targetLocation)
         {
+            if (!Game1.IsMasterGame)
+                return;
+
+            this.random.EnterMasterMode();
+
             switch (exitDir)
             {
                 case ExitDirection.TOP:
@@ -724,16 +811,16 @@ namespace DeepWoodsMod
                     }
                     break;
             }
+
+            this.random.LeaveMasterMode();
         }
 
-        private void AddWarps()
+        private void AddParentWarps()
         {
             if (!Game1.IsMasterGame)
                 return;
 
             this.random.EnterMasterMode();
-
-            this.warps.Clear();
 
             if (this.level == 1 || this.parent != null)
             {
@@ -741,15 +828,7 @@ namespace DeepWoodsMod
                 Location parentWarpLocation = GetParentWarpLocation();
                 AddExitWarps(CastEnterDirToExitDir(this.enterDir), this.enterLocation, parentLocationName, parentWarpLocation);
             }
-
-            foreach (var exit in this.exits)
-            {
-                if (exit.Value.deepWoods != null)
-                {
-                    AddExitWarps(exit.Key, exit.Value.location, exit.Value.deepWoods.Name, exit.Value.deepWoods.enterLocation);
-                }
-            }
-
+            
             this.random.LeaveMasterMode();
         }
 

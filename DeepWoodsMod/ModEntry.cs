@@ -10,7 +10,7 @@ using xTile.ObjectModel;
 using xTile.Tiles;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
-
+using System.Collections.Concurrent;
 
 namespace DeepWoodsMod
 {
@@ -21,9 +21,25 @@ namespace DeepWoodsMod
         private bool isDeepWoodsGameRunning = false;
         private Dictionary<long, GameLocation> playerLocations = new Dictionary<long, GameLocation>();
 
+        private static ConcurrentQueue<string> queuedErrorMessages = new ConcurrentQueue<string>();
+
+        private static void WorkErrorMessageQueue()
+        {
+            string msg;
+            while (queuedErrorMessages.TryDequeue(out msg))
+            {
+                Log(msg, LogLevel.Error);
+            }
+        }
+
         public static void Log(string message, LogLevel level = LogLevel.Debug)
         {
             ModEntry.mod?.Monitor?.Log(message, level);
+        }
+
+        public static void QueueErrorMessage(string message)
+        {
+            queuedErrorMessages.Enqueue(message);
         }
 
         public static IReflectionHelper GetReflection()
@@ -121,6 +137,10 @@ namespace DeepWoodsMod
         {
             if (!isDeepWoodsGameRunning)
                 return;
+
+            WorkErrorMessageQueue();
+
+            DeepWoods.LocalTick();
 
             Dictionary<long, GameLocation> newPlayerLocations = new Dictionary<long, GameLocation>();
             foreach (Farmer farmer in Game1.getOnlineFarmers())

@@ -55,6 +55,11 @@ namespace DeepWoodsMod
             if (deepWoods.isLichtung)
                 return;
 
+            if (deepWoods.hasMonstersAdded)
+                return;
+
+            deepWoods.hasMonstersAdded = true;
+
             random.EnterMasterMode();
 
             deepWoods.characters.Clear();

@@ -340,6 +340,7 @@ namespace DeepWoodsMod
         public string WoodsObeliskDescription { get; set; } = "Woods Obelisk Description";
         public string EasterEggDisplayName { get; set; } = "Easter Egg";
         public string EasterEggHatchedMessage { get; set; } = "A new... wait a minute, a rabbit hatched?!";
+        public string LostMessage { get; set; } = "Uh-oh, it seems you got lost in the deep woods..."; 
     }
 
     class DeepWoodsStateData

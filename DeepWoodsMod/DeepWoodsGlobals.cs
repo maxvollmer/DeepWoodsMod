@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Xna.Framework;
 using xTile.Dimensions;
 using static DeepWoodsMod.DeepWoodsRandom;
 
@@ -20,6 +21,9 @@ namespace DeepWoodsMod
         public readonly static Chance CHANCE_FOR_BLOSSOM_ON_WATER_LILY = new Chance(30);
         public readonly static int TIME_BEFORE_DELETION_ALLOWED_IF_OBELISK_SPAWNED = 100;
         public readonly static string UNIQUE_NAME_FOR_EASTER_EGG_ITEMS = "DeepWoodsModEasterEggItemIHopeThisNameIsUniqueEnoughToNotMessOtherModsUpw5365r6zgdhrt6u";
+
+        public readonly static Color DAY_LIGHT = new Color(150, 120, 50, 255);
+        public readonly static Color NIGHT_LIGHT = new Color(255, 255, 50, 255);
 
         // SMAPI will handle custom network messages in a future version, until then let's hope no other mod uses this value for custom messages :S 
         public readonly static byte NETWORK_MESSAGE_DEEPWOODS = 99;
