@@ -33,8 +33,9 @@ namespace DeepWoodsMod
                 }
             }
 
-            if (DeepWoodsState.LowestLevelReached >= Settings.Level.MinLevelForWoodsObelisk &&
-                Game1.activeClickableMenu is CarpenterMenu carpenterMenu)
+            if (DeepWoodsState.LowestLevelReached >= Settings.Level.MinLevelForWoodsObelisk
+                && Game1.player.mailReceived.Contains(WOODS_OBELISK_WIZARD_MAIL_ID)
+                && Game1.activeClickableMenu is CarpenterMenu carpenterMenu)
             {
                 if (IsMagical(carpenterMenu) && !HasBluePrint(carpenterMenu))
                 {
