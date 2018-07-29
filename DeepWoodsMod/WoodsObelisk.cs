@@ -20,9 +20,6 @@ namespace DeepWoodsMod
 
         public static void InjectWoodsObeliskIntoGame()
         {
-            if (DeepWoodsState.LowestLevelReached < Settings.Level.MinLevelForWoodsObelisk)
-                return;
-
             foreach (var a in Game1.delayedActions)
             {
                 if (a.behavior == a.doGlobalFade && a.afterFadeBehavior != null
@@ -34,7 +31,8 @@ namespace DeepWoodsMod
                 }
             }
 
-            if (Game1.activeClickableMenu is CarpenterMenu carpenterMenu)
+            if (DeepWoodsState.LowestLevelReached >= Settings.Level.MinLevelForWoodsObelisk &&
+                Game1.activeClickableMenu is CarpenterMenu carpenterMenu)
             {
                 if (IsMagical(carpenterMenu) && !HasBluePrint(carpenterMenu))
                 {

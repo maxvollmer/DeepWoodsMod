@@ -18,11 +18,12 @@ namespace DeepWoodsMod
             exitFunction = OnExit;
 
             int num1 = DeepWoodsState.LowestLevelReached / 10;
-            this.width = num1 > 50 ? 484 + IClickableMenu.borderWidth * 2 : Math.Min(220 + IClickableMenu.borderWidth * 2, num1 * 44 + IClickableMenu.borderWidth * 2);
+            this.width = num1 > 50 ? 484 + IClickableMenu.borderWidth * 2 : Math.Min(220 + IClickableMenu.borderWidth * 2, num1 * 44 + 64 + IClickableMenu.borderWidth * 2);
             this.height = Math.Max(64 + IClickableMenu.borderWidth * 3, num1 * 44 / (this.width - IClickableMenu.borderWidth) * 44 + 64 + IClickableMenu.borderWidth * 3);
             this.xPositionOnScreen = Game1.viewport.Width / 2 - this.width / 2;
             this.yPositionOnScreen = Game1.viewport.Height / 2 - this.height / 2;
-            Game1.playSound("crystal");
+            // Game1.playSound(Sounds.CRYSTAL);
+            Game1.playSound(Sounds.LEAFRUSTLE);
             int num2 = this.width / 44 - 1;
             int x1 = this.xPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearSideBorder * 3 / 4;
             int y = this.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.borderWidth / 3;
