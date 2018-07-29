@@ -25,6 +25,8 @@ namespace DeepWoodsMod
     {
         private static ConcurrentDictionary<DeepWoods, byte> allDeepWoods = new ConcurrentDictionary<DeepWoods, byte>();
         private static DeepWoods root;
+        private static ConcurrentQueue<ExitChildData> queuedExitChildren = new ConcurrentQueue<ExitChildData>();
+        private static bool lostMessageDisplayedToday = false;
 
         public static void WarpFarmerIntoDeepWoods(int level)
         {
@@ -134,6 +136,8 @@ namespace DeepWoodsMod
             Add();
 
             root.RandomizeExits();
+
+            lostMessageDisplayedToday = false;
         }
 
         // This is called by every client everytime the time of day changes (10 ingame minute intervals)
@@ -218,10 +222,10 @@ namespace DeepWoodsMod
                 && from.parent == null
                 && to.parent == from
                 && ExitDirToEnterDir(CastEnterDirToExitDir(from.enterDir)) == to.enterDir
-                && to.lostMessageDisplayed == false)
+                && lostMessageDisplayedToday == false)
             {
                 Game1.addHUDMessage(new HUDMessage(I18N.LostMessage) { noIcon = true });
-                to.lostMessageDisplayed = true;
+                lostMessageDisplayedToday = true;
             }
         }
 
@@ -315,7 +319,6 @@ namespace DeepWoodsMod
                 Child = child;
             }
         }
-        private static ConcurrentQueue<ExitChildData> queuedExitChildren = new ConcurrentQueue<ExitChildData>();
 
         private static void WorkExitChildrenQueue()
         {
@@ -364,7 +367,6 @@ namespace DeepWoodsMod
         private bool wasConstructedOverNetwork;
         public bool isLichtung;
         public bool hasMonstersAdded;
-        private bool lostMessageDisplayed = false;
         public Location lichtungCenter;
         private int spawnTime;
         private int abandonedByParentTime;
