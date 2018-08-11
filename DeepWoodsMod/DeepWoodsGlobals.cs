@@ -24,7 +24,7 @@ namespace DeepWoodsMod
         public readonly static int NUM_MONSTER_SPAWN_TRIES = 4;
         public readonly static Chance CHANCE_FOR_WATER_LILY = new Chance(8);
         public readonly static Chance CHANCE_FOR_BLOSSOM_ON_WATER_LILY = new Chance(30);
-        public readonly static int TIME_BEFORE_DELETION_ALLOWED_IF_OBELISK_SPAWNED = 100;
+        public readonly static int TIME_BEFORE_DELETION_ALLOWED = 100;
         public readonly static string UNIQUE_NAME_FOR_EASTER_EGG_ITEMS = "DeepWoodsModEasterEggItemIHopeThisNameIsUniqueEnoughToNotMessOtherModsUpw5365r6zgdhrt6u";
         public readonly static string WOODS_OBELISK_WIZARD_MAIL_ID = "DeepWoodsModWoodsObeliskMailFromWizarddawfafb735h";
 
@@ -39,5 +39,6 @@ namespace DeepWoodsMod
         public readonly static int NETWORK_MESSAGE_DEEPWOODS_WARP = 1;
         public readonly static int NETWORK_MESSAGE_DEEPWOODS_LEVEL = 2;
         public readonly static int NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN = 3;
+        public readonly static int NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE = 4; 
     }
 }

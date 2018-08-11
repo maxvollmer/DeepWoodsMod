@@ -93,6 +93,37 @@ namespace DeepWoodsMod
 
         public class Chance
         {
+            public class LevelModifier
+            {
+                public class Bound
+                {
+                    public int Level { get; set; }
+                    public int Modifier { get; set; }
+                }
+
+                public readonly static LevelModifier ZERO = new LevelModifier(0, 0, 0, 0);
+
+                public Bound Min { get; set; }
+                public Bound Max { get; set; }
+
+                // For JSON serialization
+                public LevelModifier() { }
+
+                public LevelModifier(int minLevel, int minLevelModifier, int maxLevel, int maxLevelModifier)
+                {
+                    Min = new Bound()
+                    {
+                        Level = minLevel,
+                        Modifier = minLevelModifier
+                    };
+                    Max = new Bound()
+                    {
+                        Level = maxLevel,
+                        Modifier = maxLevelModifier
+                    };
+                }
+            }
+
             public const int PROCENT = 100;
             public const int PROMILLE = 1000;
 
@@ -100,30 +131,24 @@ namespace DeepWoodsMod
 
             public LuckValue Value { get; set; }
             public int Range { get; set; }
+            public LevelModifier RangeLevelModifier { get; set; }
 
             // For JSON serialization
             public Chance() { }
 
-            public Chance(LuckValue value, int range = PROCENT)
+            public Chance(LuckValue value, int range = PROCENT, LevelModifier levelModifier = null)
             {
                 Value = value;
                 Range = range;
+                RangeLevelModifier = levelModifier ?? LevelModifier.ZERO;
             }
 
-            public Chance(int value, int range = PROCENT)
+            public Chance(int value, int range = PROCENT, LevelModifier levelModifier = null)
             {
                 Value = new LuckValue(value, value, value);
                 Range = range;
+                RangeLevelModifier = levelModifier ?? LevelModifier.ZERO;
             }
-        }
-
-        public DeepWoodsRandom(DeepWoods deepWoods, int level, DeepWoodsEnterExit.EnterDirection enterDir, int? salt)
-        {
-            this.deepWoods = deepWoods;
-            this.seed = CalculateSeed(level, enterDir, salt);
-            this.random = new Random(this.seed);
-            this.masterRandom = new Random(this.seed ^ Game1.random.Next());
-            this.masterModeCounter = 0;
         }
 
         public DeepWoodsRandom(DeepWoods deepWoods, int seed)
@@ -145,7 +170,7 @@ namespace DeepWoodsMod
             return this.seed;
         }
 
-        private int CalculateSeed(int level, DeepWoodsEnterExit.EnterDirection enterDir, int? salt)
+        public static int CalculateSeed(int level, DeepWoodsEnterExit.EnterDirection enterDir, int? salt)
         {
             if (level == 1)
             {
@@ -158,11 +183,11 @@ namespace DeepWoodsMod
                 // Calculate seed from multiplayer ID, DeepWoods level, enter direction and time since start.
                 // This makes sure the seed is the same for all players entering the same DeepWoods level during the same game hour,
                 // but still makes it unique for each game and pseudorandom enough for players to not be able to reasonably predict the woods.
-                return GetHashFromUniqueMultiplayerID() ^ UniformAnyInt(level) ^ UniformAnyInt((int)enterDir) ^ UniformAnyInt(HoursSinceStart()) ^ (salt.HasValue ? salt.Value : MAGIC_SALT);
+                return GetHashFromUniqueMultiplayerID() ^ UniformAnyInt(level) ^ UniformAnyInt((int)enterDir) ^ UniformAnyInt(MinutesSinceStart()) ^ ((salt.HasValue && salt.Value != 0) ? salt.Value : MAGIC_SALT);
             }
         }
 
-        private int UniformAnyInt(int x)
+        private static int UniformAnyInt(int x)
         {
             // From https://stackoverflow.com/a/12996028/9199167
             x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -171,16 +196,15 @@ namespace DeepWoodsMod
             return x;
         }
 
-        private int GetHashFromUniqueMultiplayerID()
+        private static int GetHashFromUniqueMultiplayerID()
         {
             ulong uniqueMultiplayerID = Game1.uniqueIDForThisGame; //Game1.MasterPlayer.UniqueMultiplayerID;
             return UniformAnyInt((int)((uniqueMultiplayerID >> 32) ^ uniqueMultiplayerID));
         }
 
-        private int HoursSinceStart()
+        private static int MinutesSinceStart()
         {
-            int hourOfDay = 1 + (Game1.timeOfDay - 600) / 100;
-            return hourOfDay + SDate.Now().DaysSinceStart * 20;
+            return Game1.timeOfDay + SDate.Now().DaysSinceStart * 10000;
         }
 
         private Random GetRandom()
@@ -220,6 +244,30 @@ namespace DeepWoodsMod
             }
         }
 
+        private int GetAbsoluteRange(int range, Chance.LevelModifier rangeLevelModifier)
+        {
+            if (deepWoods.level.Value >= rangeLevelModifier.Max.Level)
+            {
+                range += rangeLevelModifier.Max.Modifier;
+            }
+            else if (deepWoods.level.Value > rangeLevelModifier.Min.Level)
+            {
+                double totalDelta = rangeLevelModifier.Max.Level - rangeLevelModifier.Min.Level;
+                double delta = deepWoods.level.Value - rangeLevelModifier.Min.Level;
+                double maxFactor = delta / totalDelta;
+                double minFactor = 1.0 - maxFactor;
+                int modifier = (int)(rangeLevelModifier.Min.Modifier * minFactor + rangeLevelModifier.Max.Modifier * maxFactor);
+                range += Math.Min(rangeLevelModifier.Max.Modifier, Math.Max(rangeLevelModifier.Min.Modifier, modifier));
+            }
+            else if (deepWoods.level.Value == rangeLevelModifier.Min.Level)
+            {
+                range += rangeLevelModifier.Min.Modifier;
+            }
+            // else deepWoods.level.Value < rangeLevelModifier.Min.Level
+
+            return range;
+        }
+
         public int GetRandomValue()
         {
             return GetRandom().Next();
@@ -232,7 +280,7 @@ namespace DeepWoodsMod
 
         public bool CheckChance(Chance chance)
         {
-            return GetRandomValue(0, chance.Range) < GetAbsoluteLuckValue(chance.Value);
+            return GetRandomValue(0, GetAbsoluteRange(chance.Range, chance.RangeLevelModifier)) < GetAbsoluteLuckValue(chance.Value);
         }
 
         public int GetRandomValue(LuckRange range)

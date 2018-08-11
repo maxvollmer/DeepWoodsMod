@@ -11,14 +11,12 @@ using xTile.Tiles;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
 using System.Collections.Concurrent;
-using Newtonsoft.Json;
-using xTile.Dimensions;
 
 namespace DeepWoodsMod
 {
     public class ModEntry : Mod, IAssetEditor, IAssetLoader
     {
-        private static ModEntry mod = null;
+        private static ModEntry mod;
 
         private bool isDeepWoodsGameRunning = false;
         private Dictionary<long, GameLocation> playerLocations = new Dictionary<long, GameLocation>();
@@ -62,6 +60,11 @@ namespace DeepWoodsMod
             RegisterEvents();
         }
 
+        public override object GetApi()
+        {
+            return new DeepWoodsAPI();
+        }
+
         private void RegisterEvents()
         {
             SaveEvents.BeforeSave += this.SaveEvents_BeforeSave;
@@ -74,7 +77,7 @@ namespace DeepWoodsMod
 
         private void SaveEvents_BeforeSave(object sender, EventArgs args)
         {
-            DeepWoods.Remove();
+            DeepWoodsManager.Remove();
             EasterEggFunctions.RemoveAllEasterEggsFromGame();
             WoodsObelisk.RemoveAllFromGame();
             DeepWoodsSettings.DoSave();
@@ -82,7 +85,7 @@ namespace DeepWoodsMod
 
         private void SaveEvents_AfterSave(object sender, EventArgs args)
         {
-            DeepWoods.Add();
+            DeepWoodsManager.Restore();
             EasterEggFunctions.RestoreAllEasterEggsInGame();
             WoodsObelisk.RestoreAllInGame();
         }
@@ -92,23 +95,24 @@ namespace DeepWoodsMod
             if (Game1.IsMasterGame)
             {
                 DeepWoodsSettings.DoLoad();
-                DeepWoods.Add();
+                DeepWoodsManager.Add();
                 EasterEggFunctions.RestoreAllEasterEggsInGame();
                 WoodsObelisk.RestoreAllInGame();
                 isDeepWoodsGameRunning = true;
             }
             else
             {
+                DeepWoodsManager.Remove();
                 Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.player, new object[] { NETWORK_MESSAGE_DEEPWOODS_INIT });
             }
         }
 
-        public static void DeepWoodsInitServerAnswerReceived()
+        public static void DeepWoodsInitServerAnswerReceived(List<string> deepWoodsLevelNames)
         {
             if (Game1.IsMasterGame || mod.isDeepWoodsGameRunning)
                 return;
 
-            DeepWoods.Add();
+            DeepWoodsManager.AddAll(deepWoodsLevelNames);
             EasterEggFunctions.RestoreAllEasterEggsInGame();
             // WoodsObelisk.RestoreAllInGame(); <- Not needed, server already sends correct building
             mod.isDeepWoodsGameRunning = true;
@@ -119,7 +123,7 @@ namespace DeepWoodsMod
             if (!isDeepWoodsGameRunning)
                 return;
 
-            DeepWoods.LocalDayUpdate(Game1.dayOfMonth);
+            DeepWoodsManager.LocalDayUpdate(Game1.dayOfMonth);
             EasterEggFunctions.InterceptIncubatorEggs();
         }
 
@@ -128,7 +132,7 @@ namespace DeepWoodsMod
             if (!isDeepWoodsGameRunning)
                 return;
 
-            DeepWoods.LocalTimeUpdate(Game1.timeOfDay);
+            DeepWoodsManager.LocalTimeUpdate(Game1.timeOfDay);
         }
 
         private void GameEvents_UpdateTick(object sender, EventArgs args)
@@ -138,7 +142,7 @@ namespace DeepWoodsMod
 
             WorkErrorMessageQueue();
 
-            DeepWoods.LocalTick();
+            DeepWoodsManager.LocalTick();
 
             Dictionary<long, GameLocation> newPlayerLocations = new Dictionary<long, GameLocation>();
             foreach (Farmer farmer in Game1.getOnlineFarmers())
@@ -174,7 +178,7 @@ namespace DeepWoodsMod
             playerLocations = newPlayerLocations;
 
             // Fix lighting in Woods and DeepWoods
-            DeepWoods.FixLighting();
+            DeepWoodsManager.FixLighting();
 
             // Add woods obelisk to wizard shop if possible and necessary,
             // intercept Building.obeliskWarpForReal() calls.
@@ -191,7 +195,7 @@ namespace DeepWoodsMod
                 OpenPassageInSecretWoods(woods);
             }
 
-            DeepWoods.PlayerWarped(who, prevLocation as DeepWoods, newLocation as DeepWoods);
+            DeepWoodsManager.PlayerWarped(who, prevLocation as DeepWoods, newLocation as DeepWoods);
 
             if (newLocation is AnimalHouse animalHouse)
             {

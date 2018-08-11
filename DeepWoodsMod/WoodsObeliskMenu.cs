@@ -92,7 +92,7 @@ namespace DeepWoodsMod
                         Game1.playSound("smallSelect");
                         Game1.changeMusicTrack("none");
                         this.exitThisMenu(false);
-                        DeepWoods.WarpFarmerIntoDeepWoods(Convert.ToInt32(levelButton.name));
+                        DeepWoodsManager.WarpFarmerIntoDeepWoods(Convert.ToInt32(levelButton.name));
                     }
                 }
                 base.receiveLeftClick(x, y, true);

@@ -5,6 +5,8 @@ using System;
 using static DeepWoodsMod.DeepWoodsRandom;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DeepWoodsMod
 {
@@ -42,9 +44,9 @@ namespace DeepWoodsMod
             this.spaceManager = spaceManager;
         }
 
-        public static void AddMonsters(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager)
+        public static void AddMonsters(DeepWoods deepWoods, DeepWoodsRandom random)
         {
-            new DeepWoodsMonsters(deepWoods, random, spaceManager).AddMonsters();
+            new DeepWoodsMonsters(deepWoods, random, new DeepWoodsSpaceManager(deepWoods.mapWidth.Value, deepWoods.mapHeight.Value)).AddMonsters();
         }
 
         private void AddMonsters()
@@ -55,11 +57,6 @@ namespace DeepWoodsMod
             if (deepWoods.isLichtung)
                 return;
 
-            if (deepWoods.hasMonstersAdded)
-                return;
-
-            deepWoods.hasMonstersAdded = true;
-
             random.EnterMasterMode();
 
             deepWoods.characters.Clear();
@@ -69,7 +66,7 @@ namespace DeepWoodsMod
 
             // Calculate maximum theoretical amount of monsters for the current map.
             int maxMonsters = (mapWidth * mapHeight) / MINIMUM_TILES_FOR_MONSTER;
-            int minMonsters = Math.Min(deepWoods.GetLevel(), maxMonsters);
+            int minMonsters = Math.Min(deepWoods.level.Value, maxMonsters);
 
             // Get a random value from 0 to maxMonsters, using a "two dice" method, where the center numbers are more likely than the edges.
             // If, for example, maxMonsters is 100, it is much more likely to get something close to 50 than close to 100 or 0.
@@ -81,9 +78,24 @@ namespace DeepWoodsMod
                 numMonsters /= 2;
             }
 
-            for (int i = 0; i < numMonsters; i++)
+            List<int> allTilesInRandomOrder = Enumerable.Range(0, mapWidth * mapHeight).OrderBy(n => Game1.random.Next()).ToList();
+            int allTilesCount = allTilesInRandomOrder.Count();
+
+            Monster monster = null;
+            for (int i = 0, j = 0; i < numMonsters && j < allTilesCount; j++)
             {
-                deepWoods.AddMonsterAtRandomLocation(CreateRandomMonster());
+                int tileIndex = allTilesInRandomOrder[j];
+                int x = tileIndex % mapWidth;
+                int y = tileIndex / mapWidth;
+
+                if (monster == null) monster = CreateRandomMonster();
+                if (deepWoods.CanPlaceMonsterHere(x, y, monster))
+                {
+                    monster.Position = new Vector2(x * 64f, y * 64f) - new Vector2(0, monster.Sprite.SpriteHeight - 64);
+                    deepWoods.addCharacter(monster);
+                    monster = null;
+                    i++;
+                }
             }
 
             random.LeaveMasterMode();
@@ -130,7 +142,7 @@ namespace DeepWoodsMod
                 monster = new GreenSlime(new Vector2(), GetSlimeLevel());
             }
 
-            if (deepWoods.GetLevel() >= Settings.Level.MinLevelForBuffedMonsters && !this.random.CheckChance(Settings.Monsters.ChanceForUnbuffedMonster))
+            if (deepWoods.level.Value >= Settings.Level.MinLevelForBuffedMonsters && !this.random.CheckChance(Settings.Monsters.ChanceForUnbuffedMonster))
             {
                 BuffMonster(monster);
             }
@@ -140,10 +152,10 @@ namespace DeepWoodsMod
 
         private void BuffMonster(Monster monster)
         {
-            int maxAddedSpeed = deepWoods.GetCombatLevel() / 3 + (deepWoods.GetLevel() - Settings.Level.MinLevelForBuffedMonsters) / 10;
+            int maxAddedSpeed = deepWoods.GetCombatLevel() / 3 + (deepWoods.level.Value - Settings.Level.MinLevelForBuffedMonsters) / 10;
             int minAddedSpeed = maxAddedSpeed / 3;
 
-            float maxBuff = deepWoods.GetCombatLevel() * 0.5f + (deepWoods.GetLevel() - Settings.Level.MinLevelForBuffedMonsters) * 0.1f;
+            float maxBuff = deepWoods.GetCombatLevel() * 0.5f + (deepWoods.level.Value - Settings.Level.MinLevelForBuffedMonsters) * 0.1f;
             float minBuff = maxBuff * 0.25f;
 
             monster.addedSpeed = Math.Max(monster.addedSpeed, monster.addedSpeed + Game1.random.Next(minAddedSpeed, maxAddedSpeed));
@@ -160,7 +172,7 @@ namespace DeepWoodsMod
 
         private bool CanHazMonster(MonsterDecider which)
         {
-            return deepWoods.GetLevel() >= which.MinLevel && this.random.CheckChance(which.Chance);
+            return deepWoods.level.Value >= which.MinLevel && this.random.CheckChance(which.Chance);
         }
 
         private string GetRockCrabType()

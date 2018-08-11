@@ -47,10 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeepWoods.cs" />
+    <Compile Include="DeepWoodsAPI.cs" />
     <Compile Include="DeepWoodsBuilder.cs" />
     <Compile Include="DeepWoodsDebris.cs" />
     <Compile Include="DeepWoodsEnterExit.cs" />
     <Compile Include="DeepWoodsGlobals.cs" />
+    <Compile Include="DeepWoodsManager.cs" />
     <Compile Include="DeepWoodsMonsters.cs" />
     <Compile Include="DeepWoodsRandom.cs" />
     <Compile Include="DeepWoodsSettings.cs" />
@@ -68,6 +70,7 @@
     <Compile Include="Game1MultiplayerAccessProvider.cs" />
     <Compile Include="GingerBreadHouse.cs" />
     <Compile Include="HealingFountain.cs" />
+    <Compile Include="IDeepWoodsAPI.cs" />
     <Compile Include="IridiumTree.cs" />
     <Compile Include="LichtungStuff.cs" />
     <Compile Include="LootFreeGrass.cs" />

@@ -167,7 +167,7 @@ namespace DeepWoodsMod
         private Layer alwaysFrontLayer;
 
 
-        private DeepWoodsBuilder(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location> exitLocations)
+        public DeepWoodsBuilder(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location> exitLocations)
         {
             this.deepWoods = deepWoods;
             this.random = random;
@@ -182,9 +182,9 @@ namespace DeepWoodsMod
             this.alwaysFrontLayer = map.GetLayer("AlwaysFront");
         }
 
-        public static DeepWoodsBuilder Build(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager, Map map, Dictionary<ExitDirection, Location> exitLocations)
+        public static DeepWoodsBuilder Build(DeepWoods deepWoods, Map map, Dictionary<ExitDirection, Location> exitLocations)
         {
-            DeepWoodsBuilder deepWoodsBuilder = new DeepWoodsBuilder(deepWoods, random, spaceManager, map, exitLocations);
+            DeepWoodsBuilder deepWoodsBuilder = new DeepWoodsBuilder(deepWoods, new DeepWoodsRandom(deepWoods, deepWoods.Seed), new DeepWoodsSpaceManager(deepWoods.mapWidth.Value, deepWoods.mapHeight.Value), map, exitLocations);
             deepWoodsBuilder.Build();
             return deepWoodsBuilder;
         }
@@ -192,15 +192,16 @@ namespace DeepWoodsMod
         private void Build()
         {
             GenerateForestBorder();
-            if (deepWoods.isLichtung)
-            {
+
+            if (deepWoods.isLichtung.Value)
                 GenerateLichtung();
-            }
             else
-            {
                 GenerateForestPatches();
-            }
+
             GenerateGround();
+
+            if (deepWoods.lichtungHasLake.Value)
+                AddLakeToLichtung();
         }
 
         private int GetRandomWaterTileIndex()
@@ -847,7 +848,8 @@ namespace DeepWoodsMod
                 deepWoods.lightSources.Add(new Vector2(x, y));
             }
 
-            deepWoods.lichtungCenter = (leftPos + rightPos + topPos + bottomPos) / 4;
+            Location lichtungCenter = (leftPos + rightPos + topPos + bottomPos) / 4;
+            deepWoods.lichtungCenter.Value = new Point(lichtungCenter.X, lichtungCenter.Y);
         }
 
         private void GenerateLichtungEntranceTilesIfNecessary(ExitDirection exitDir, Location pos, int xDir, int yDir, int xDirInwards, int yDirInwards, DeepWoodsLichtungTileMatrix matrix)

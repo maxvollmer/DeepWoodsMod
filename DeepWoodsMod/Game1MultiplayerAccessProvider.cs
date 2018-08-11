@@ -113,18 +113,18 @@ namespace DeepWoodsMod
 
             private struct DeepWoodsWarpMessageData
             {
-                public string Name { get; set; }
                 public int Level { get; set; }
-                public int Seed { get; set; }
+                public string Name { get; set; }
+                public Vector2 EnterLocation { get; set; }
             }
 
             private DeepWoodsWarpMessageData ReadDeepWoodsWarpMessage(BinaryReader reader)
             {
                 return new DeepWoodsWarpMessageData()
                 {
-                    Name = reader.ReadString(),
                     Level = reader.ReadInt32(),
-                    Seed = reader.ReadInt32()
+                    Name = reader.ReadString(),
+                    EnterLocation = reader.ReadVector2()
                 };
             }
 
@@ -143,18 +143,35 @@ namespace DeepWoodsMod
                         if (Game1.IsMasterGame)
                         {
                             // Client requests settings and state, send it:
-                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] {
-                                NETWORK_MESSAGE_DEEPWOODS_INIT,
-                                JsonConvert.SerializeObject(Settings),
-                                JsonConvert.SerializeObject(DeepWoodsState)
-                            });
+                            List<string> deepWoodsLevelNames = new List<string>();
+                            foreach (var location in Game1.locations)
+                                if (location is DeepWoods deepWoods)
+                                    deepWoodsLevelNames.Add(deepWoods.Name);
+
+                            object[] data = new object[deepWoodsLevelNames.Count + 4];
+                            data[0] = NETWORK_MESSAGE_DEEPWOODS_INIT;
+                            data[1] = JsonConvert.SerializeObject(Settings);
+                            data[2] = JsonConvert.SerializeObject(DeepWoodsState);
+                            data[3] = (int)deepWoodsLevelNames.Count;
+                            for (int i = 0; i < deepWoodsLevelNames.Count; i++)
+                            {
+                                data[i + 4] = deepWoodsLevelNames[i];
+                            }
+
+                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, data);
                         }
                         else
                         {
                             // Server sent us settings and state!
                             Settings = JsonConvert.DeserializeObject<DeepWoodsSettings>(msg.Reader.ReadString());
                             DeepWoodsState = JsonConvert.DeserializeObject<DeepWoodsStateData>(msg.Reader.ReadString());
-                            ModEntry.DeepWoodsInitServerAnswerReceived();
+                            int numDeepWoodsLevelNames = msg.Reader.ReadInt32();
+                            List<string> deepWoodsLevelNames = new List<string>();
+                            for (int i = 0; i < numDeepWoodsLevelNames; i++)
+                            {
+                                deepWoodsLevelNames.Add(msg.Reader.ReadString());
+                            }
+                            ModEntry.DeepWoodsInitServerAnswerReceived(deepWoodsLevelNames);
                         }
                     }
                     else if (actualMessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
@@ -162,15 +179,18 @@ namespace DeepWoodsMod
                         DeepWoodsWarpMessageData data = ReadDeepWoodsWarpMessage(msg.Reader);
                         if (Game1.IsMasterGame)
                         {
+                            ModEntry.Log("Received NETWORK_MESSAGE_DEEPWOODS_WARP from client: " + data.Level);
                             // Client requests that we load and activate a specific DeepWoods level they want to warp into.
-                            DeepWoods.AddDeepWoodsFromObelisk(data.Name, data.Level, data.Seed);
+                            DeepWoods deepWoods = DeepWoodsManager.AddDeepWoodsFromObelisk(data.Level);
                             // Send message to client telling them we have the level ready.
-                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, data.Name, data.Level, data.Seed });
+                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, deepWoods.level.Value, deepWoods.Name, new Vector2(deepWoods.enterLocation.Value.X, deepWoods.enterLocation.Value.Y) });
                         }
                         else
                         {
                             // Server informs us that we can warp now!
-                            DeepWoods.WarpFarmerIntoDeepWoods(Game1.getLocationFromName(data.Name) as DeepWoods);
+                            ModEntry.Log("Received NETWORK_MESSAGE_DEEPWOODS_WARP from server: " + data.Name + ", " + data.EnterLocation);
+                            DeepWoodsManager.AddBlankDeepWoodsToGameLocations(data.Name);
+                            DeepWoodsManager.WarpFarmerIntoDeepWoodsFromServerObelisk(data.Name, data.EnterLocation);
                         }
                     }
                     else if (actualMessageType == NETWORK_MESSAGE_DEEPWOODS_LEVEL)
@@ -185,6 +205,22 @@ namespace DeepWoodsMod
                         if (Game1.IsMasterGame)
                         {
                             DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Add(who.UniqueMultiplayerID);
+                        }
+                    }
+                    else if (actualMessageType == NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE)
+                    {
+                        if (!Game1.IsMasterGame)
+                        {
+                            bool added = msg.Reader.ReadByte() != 0;
+                            string name = msg.Reader.ReadString();
+                            if (added)
+                            {
+                                DeepWoodsManager.AddBlankDeepWoodsToGameLocations(name);
+                            }
+                            else
+                            {
+                                DeepWoodsManager.RemoveDeepWoodsFromGameLocations(name);
+                            }
                         }
                     }
                 }

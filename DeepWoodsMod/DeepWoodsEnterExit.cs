@@ -1,4 +1,7 @@
 ﻿
+using Microsoft.Xna.Framework;
+using Netcode;
+using System;
 using System.Collections.Generic;
 using xTile.Dimensions;
 
@@ -6,14 +9,28 @@ namespace DeepWoodsMod
 {
     public class DeepWoodsEnterExit
     {
-        public class DeepWoodsExit
+        public class DeepWoodsExit : INetObject<NetFields>
         {
-            public Location location;
-            public DeepWoods deepWoods;
-            public DeepWoodsExit(Location location)
+            public NetFields NetFields { get; } = new NetFields();
+            public readonly NetInt exitDir = new NetInt(0);
+            public readonly NetPoint location = new NetPoint(Point.Zero);
+            public readonly NetString deepWoodsName = new NetString();
+            public ExitDirection ExitDir { get { return (ExitDirection)exitDir.Value; } }
+            public Location Location { get { return new Location(location.Value.X, location.Value.Y); } }
+            public DeepWoodsExit()
             {
-                this.location = location;
-                this.deepWoods = null;
+                this.InitNetFields();
+            }
+            public DeepWoodsExit(ExitDirection exitDir, Location location)
+            {
+                this.InitNetFields();
+                this.exitDir.Value = (int)exitDir;
+                this.location.Value = new Point(location.X, location.Y);
+                this.deepWoodsName.Value = null;
+            }
+            private void InitNetFields()
+            {
+                this.NetFields.AddFields(exitDir, location, deepWoodsName);
             }
         }
 
@@ -114,13 +131,16 @@ namespace DeepWoodsMod
             return possibleExitDirs;
         }
 
-        public static Dictionary<ExitDirection, Location> CreateExitDictionary(EnterDirection enterDir, Location enterLocation, Dictionary<ExitDirection, DeepWoodsExit> exits)
+        public static Dictionary<ExitDirection, Location> CreateExitDictionary(EnterDirection enterDir, Location enterLocation, IList<DeepWoodsExit> exits)
         {
             Dictionary<ExitDirection, Location> exitDictionary = new Dictionary<ExitDirection, Location>();
             exitDictionary.Add(CastEnterDirToExitDir(enterDir), enterLocation);
             foreach (var exit in exits)
             {
-                exitDictionary.Add(exit.Key, exit.Value.location);
+                if (!exitDictionary.ContainsKey(exit.ExitDir))
+                    exitDictionary.Add(exit.ExitDir, exit.Location);
+                else if (exitDictionary[exit.ExitDir] != exit.Location)
+                    throw new ApplicationException("Invalid state in CreateExitDictionary: got conflicting enter and exit locations!");
             }
             return exitDictionary;
         }

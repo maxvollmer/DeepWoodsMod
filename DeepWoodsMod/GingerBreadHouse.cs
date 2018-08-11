@@ -5,6 +5,9 @@ using StardewValley;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using static DeepWoodsMod.DeepWoodsRandom;
 using static DeepWoodsMod.DeepWoodsSettings;
 
@@ -112,7 +115,7 @@ namespace DeepWoodsMod
 
         private int GetRandomFoodType(DeepWoods deepWoods)
         {
-            DeepWoodsRandom random = new DeepWoodsRandom(deepWoods, (deepWoods?.GetSeed() ?? Game1.random.Next()) ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ (int)this.tile.X ^ (int)this.tile.Y);
+            DeepWoodsRandom random = new DeepWoodsRandom(deepWoods, (deepWoods?.Seed ?? Game1.random.Next()) ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ (int)this.tile.X ^ (int)this.tile.Y);
             random.EnterMasterMode();
 
             return random.GetRandomValue(new WeightedInt[] {

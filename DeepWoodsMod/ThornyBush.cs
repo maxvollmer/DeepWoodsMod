@@ -43,7 +43,7 @@ namespace DeepWoodsMod
 
         private int GetDamage(DeepWoods deepWoods)
         {
-            int level = deepWoods?.GetLevel() ?? 1;
+            int level = deepWoods?.level.Value ?? 1;
             return (1 + level / 10) * Settings.Objects.Bush.ThornyBushDamagePerLevel;
         }
 

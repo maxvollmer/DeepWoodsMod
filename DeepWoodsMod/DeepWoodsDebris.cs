@@ -14,8 +14,8 @@ namespace DeepWoodsMod
             Clear(deepWoods);
             if (!Game1.isRaining)
             {
-                int mapWidth = deepWoods.GetMapWidth();
-                int mapHeight = deepWoods.GetMapHeight();
+                int mapWidth = deepWoods.mapWidth.Value;
+                int mapHeight = deepWoods.mapHeight.Value;
 
                 int numBaubles = (mapWidth * mapHeight) / MINIMUM_TILES_FOR_BAUBLE;
 
