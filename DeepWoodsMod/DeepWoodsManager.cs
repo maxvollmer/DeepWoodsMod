@@ -246,6 +246,8 @@ namespace DeepWoodsMod
         // This is called by every client every frame
         public static void LocalTick()
         {
+            if (Game1.player.currentLocation is DeepWoods deepWoods)
+                deepWoods.CheckWarp();
         }
 
         public static void FixLighting()
@@ -304,8 +306,8 @@ namespace DeepWoodsMod
             if (who == Game1.player
                 && from != null
                 && to != null
-                && from.parent == null
-                && to.parent == from
+                && from.Parent == null
+                && to.Parent == from
                 && !lostMessageDisplayedToday
                 && !to.spawnedFromObelisk
                 && ExitDirToEnterDir(CastEnterDirToExitDir(from.EnterDir)) == to.EnterDir)

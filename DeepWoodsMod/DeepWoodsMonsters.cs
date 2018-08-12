@@ -69,7 +69,7 @@ namespace DeepWoodsMod
             // Get a random value from 0 to maxMonsters, using a "two dice" method, where the center numbers are more likely than the edges.
             // If, for example, maxMonsters is 100, it is much more likely to get something close to 50 than close to 100 or 0.
             // We then take the maximum of either minMonsters or the result, making sure we always have at least minMonsters monsters.
-            int numMonsters = Math.Max(minMonsters, this.random.GetRandomValue(minMonsters, maxMonsters / 2) + this.random.GetRandomValue(minMonsters, maxMonsters / 2));
+            int numMonsters = Math.Max(minMonsters, this.random.GetRandomValue(minMonsters, Math.Max(minMonsters, maxMonsters / 2)) + this.random.GetRandomValue(minMonsters, Math.Max(minMonsters, maxMonsters / 2)));
 
             if (deepWoods.GetCombatLevel() <= 1 || this.random.CheckChance(Settings.Monsters.ChanceForHalfMonsterCount))
             {

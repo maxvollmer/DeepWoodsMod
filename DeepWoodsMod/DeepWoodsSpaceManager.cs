@@ -166,6 +166,7 @@ namespace DeepWoodsMod
             {
                 location.X += (titleSafeArea.Width - currentMapWidthInPixel) / 2;
             }
+            location.X += 8;
             return location;
         }
     }

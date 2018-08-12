@@ -73,6 +73,7 @@ namespace DeepWoodsMod
             TimeEvents.AfterDayStarted += this.TimeEvents_AfterDayStarted;
             TimeEvents.TimeOfDayChanged += this.TimeEvents_TimeOfDayChanged;
             GameEvents.UpdateTick += this.GameEvents_UpdateTick;
+            GraphicsEvents.OnPostRenderEvent += this.GraphicsEvents_OnPostRenderEvent;
         }
 
         private void SaveEvents_BeforeSave(object sender, EventArgs args)
@@ -183,6 +184,12 @@ namespace DeepWoodsMod
             // Add woods obelisk to wizard shop if possible and necessary,
             // intercept Building.obeliskWarpForReal() calls.
             WoodsObelisk.InjectWoodsObeliskIntoGame();
+        }
+
+        private void GraphicsEvents_OnPostRenderEvent(object sender, EventArgs e)
+        {
+            if (Game1.player.currentLocation is DeepWoods deepWoods)
+                deepWoods.DrawLevelDisplay();
         }
 
         private void PlayerWarped(Farmer who, GameLocation prevLocation, GameLocation newLocation)
