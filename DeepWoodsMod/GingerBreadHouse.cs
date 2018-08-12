@@ -17,6 +17,7 @@ namespace DeepWoodsMod
     {
         private new int parentSheetIndex;
         private NetFloat nextSpawnFoodHealth = new NetFloat();
+        DeepWoodsRandom random = null;
 
         public GingerBreadHouse()
             : base()
@@ -115,35 +116,12 @@ namespace DeepWoodsMod
 
         private int GetRandomFoodType(DeepWoods deepWoods)
         {
-            DeepWoodsRandom random = new DeepWoodsRandom(deepWoods, (deepWoods?.Seed ?? Game1.random.Next()) ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ (int)this.tile.X ^ (int)this.tile.Y);
-            // random.EnterMasterMode();
-
-            return random.GetRandomValue(new WeightedInt[] {
-                // TODO: This should be in settings!
-                // ITEM NAME // SELL PRICE // WEIGHT
-                CreateWeightedValueForFootType(245), // Sugar               //  50 // 2000
-                CreateWeightedValueForFootType(246), // Wheat Flour         //  50 // 2000
-                CreateWeightedValueForFootType(229), // Tortilla            //  50 // 2000
-                CreateWeightedValueForFootType(216), // Bread               //  60 // 1666
-                CreateWeightedValueForFootType(223), // Cookie              // 140 //  714
-                CreateWeightedValueForFootType(234), // Blueberry Tart      // 150 //  666
-                CreateWeightedValueForFootType(220), // Chocolate Cake      // 200 //  500
-                CreateWeightedValueForFootType(243), // Miner's Treat       // 200 //  500
-                CreateWeightedValueForFootType(203), // Strange Bun         // 225 //  444
-                CreateWeightedValueForFootType(651), // Poppyseed Muffin    // 250 //  400
-                CreateWeightedValueForFootType(611), // Blackberry Cobbler  // 260 //  384
-                CreateWeightedValueForFootType(607), // Roasted Hazelnuts   // 270 //  370
-                CreateWeightedValueForFootType(731), // Maple Bar           // 300 //  333
-                CreateWeightedValueForFootType(608), // Pumpkin Pie         // 385 //  259
-                CreateWeightedValueForFootType(222), // Rhubarb Pie         // 400 //  250
-                CreateWeightedValueForFootType(221), // Pink Cake           // 480 //  208
-                // Non-food items with hardcoded weight (their price is too low, they would always spawn)
-                new WeightedInt(388, 3000),  // Wood // 2 // 3000 (50000)
-                new WeightedInt(92, 3000),   // Sap  // 2 // 3000 (50000)
-            });
+            if (random == null)
+                random = new DeepWoodsRandom(deepWoods, (deepWoods?.Seed ?? Game1.random.Next()) ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ (int)this.tile.X ^ (int)this.tile.Y);
+            return random.GetRandomValue(Settings.Objects.GingerBreadHouse.FootItems);
         }
 
-        private WeightedInt CreateWeightedValueForFootType(int type)
+        public static WeightedInt CreateWeightedValueForFootType(int type)
         {
             int price = 0;
             if (Game1.objectInformation.ContainsKey(type))

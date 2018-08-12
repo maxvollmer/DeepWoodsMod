@@ -140,6 +140,29 @@ namespace DeepWoodsMod
         public int MinimumAxeLevel { get; set; } = Axe.gold;
         public int Health { get; set; } = 200;
         public int DamageIntervalForFoodDrop { get; set; } = 20;
+
+        public WeightedInt[] FootItems { get; set; } = new WeightedInt[] {
+            // ITEM NAME // SELL PRICE // WEIGHT
+            GingerBreadHouse.CreateWeightedValueForFootType(245), // Sugar               //  50 // 2000
+            GingerBreadHouse.CreateWeightedValueForFootType(246), // Wheat Flour         //  50 // 2000
+            GingerBreadHouse.CreateWeightedValueForFootType(229), // Tortilla            //  50 // 2000
+            GingerBreadHouse.CreateWeightedValueForFootType(216), // Bread               //  60 // 1666
+            GingerBreadHouse.CreateWeightedValueForFootType(223), // Cookie              // 140 //  714
+            GingerBreadHouse.CreateWeightedValueForFootType(234), // Blueberry Tart      // 150 //  666
+            GingerBreadHouse.CreateWeightedValueForFootType(220), // Chocolate Cake      // 200 //  500
+            GingerBreadHouse.CreateWeightedValueForFootType(243), // Miner's Treat       // 200 //  500
+            GingerBreadHouse.CreateWeightedValueForFootType(203), // Strange Bun         // 225 //  444
+            GingerBreadHouse.CreateWeightedValueForFootType(651), // Poppyseed Muffin    // 250 //  400
+            GingerBreadHouse.CreateWeightedValueForFootType(611), // Blackberry Cobbler  // 260 //  384
+            GingerBreadHouse.CreateWeightedValueForFootType(607), // Roasted Hazelnuts   // 270 //  370
+            GingerBreadHouse.CreateWeightedValueForFootType(731), // Maple Bar           // 300 //  333
+            GingerBreadHouse.CreateWeightedValueForFootType(608), // Pumpkin Pie         // 385 //  259
+            GingerBreadHouse.CreateWeightedValueForFootType(222), // Rhubarb Pie         // 400 //  250
+            GingerBreadHouse.CreateWeightedValueForFootType(221), // Pink Cake           // 480 //  208
+            // Non-food items with hardcoded weight (their price is too low, they would always spawn)
+            new WeightedInt(388, 3000),  // Wood // 2 // 3000 (50000)
+            new WeightedInt(92, 3000),   // Sap  // 2 // 3000 (50000)
+        };
     }
 
     public class IridiumTreeSettings
