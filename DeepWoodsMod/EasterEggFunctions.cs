@@ -7,6 +7,7 @@ using StardewValley.Menus;
 using StardewValley.Objects;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
+using System.Collections.Generic;
 
 namespace DeepWoodsMod
 {
@@ -18,25 +19,42 @@ namespace DeepWoodsMod
             Restore
         }
 
-        private static void ProcessEggsInItems(NetObjectList<Item> items, ProcessMethod method)
+        private static void ProcessItemList(IList<Item> items, ProcessMethod method)
         {
             for (int index = items.Count - 1; index >= 0; --index)
             {
-                if (method == ProcessMethod.Remove && items[index] is EasterEggItem easterEggItem)
-                {
-                    items[index] = new StardewValley.Object(EASTER_EGG_REPLACEMENT_ITEM, easterEggItem.Stack) { name = UNIQUE_NAME_FOR_EASTER_EGG_ITEMS };
-                }
-                else if (method == ProcessMethod.Restore
-                    && items[index] is StardewValley.Object @object
-                    && @object.parentSheetIndex == EASTER_EGG_REPLACEMENT_ITEM
-                    && @object.name == UNIQUE_NAME_FOR_EASTER_EGG_ITEMS)
-                {
-                    items[index] = new EasterEggItem() { Stack = @object.Stack };
-                }
+                items[index] = ProcessSingleItem(items[index], method);
             }
         }
 
-        private static void ProcessEggsInLocation(GameLocation location, ProcessMethod method)
+        private static Item ProcessSingleItem(Item item, ProcessMethod method)
+        {
+            if (item is Chest chest)
+            {
+                ProcessItemList(chest.items, method);
+            }
+            else if (item is StardewValley.Object @object
+                && @object.heldObject.Value is Chest chest2)
+            {
+                ProcessItemList(chest2.items, method);
+            }
+
+            if (method == ProcessMethod.Remove && item is EasterEggItem easterEggItem)
+            {
+                return new StardewValley.Object(EASTER_EGG_REPLACEMENT_ITEM, easterEggItem.Stack) { name = UNIQUE_NAME_FOR_EASTER_EGG_ITEMS };
+            }
+            else if (method == ProcessMethod.Restore
+                && item is StardewValley.Object @object
+                && @object.parentSheetIndex == EASTER_EGG_REPLACEMENT_ITEM
+                && @object.name == UNIQUE_NAME_FOR_EASTER_EGG_ITEMS)
+            {
+                return new EasterEggItem() { Stack = @object.Stack };
+            }
+
+            return item;
+        }
+
+        private static void ProcessLocation(GameLocation location, ProcessMethod method)
         {
             if (location == null)
                 return;
@@ -45,16 +63,35 @@ namespace DeepWoodsMod
             {
                 foreach (Building building in buildableGameLocation.buildings)
                 {
-                    ProcessEggsInLocation(building.indoors.Value, method);
+                    ProcessLocation(building.indoors.Value, method);
+
+                    if (building is Mill mill)
+                    {
+                        ProcessItemList(mill.output.Value.items, method);
+                    }
+                    else if (building is JunimoHut hut)
+                    {
+                        ProcessItemList(hut.output.Value.items, method);
+                    }
                 }
             }
 
-            foreach (StardewValley.Object @object in location.objects.Values)
+            if (location is DecoratableLocation decoratableLocation)
             {
-                if (@object is Chest chest)
+                foreach (Furniture furniture in decoratableLocation.furniture)
                 {
-                    ProcessEggsInItems(chest.items, method);
+                    furniture.heldObject.Value = (StardewValley.Object)ProcessSingleItem(furniture.heldObject.Value, method);
                 }
+            }
+
+            if (location is FarmHouse farmHouse)
+            {
+                ProcessItemList(farmHouse.fridge.Value.items, method);
+            }
+
+            foreach (var pair in location.objects.Pairs)
+            {
+                location.objects[pair.Key] = (StardewValley.Object)ProcessSingleItem(pair.Value, method);
             }
         }
 
@@ -62,12 +99,12 @@ namespace DeepWoodsMod
         {
             foreach (GameLocation location in Game1.locations)
             {
-                ProcessEggsInLocation(location, ProcessMethod.Remove);
+                ProcessLocation(location, ProcessMethod.Remove);
             }
 
             foreach (Farmer farmer in Game1.getOnlineFarmers())
             {
-                ProcessEggsInItems(farmer.items, ProcessMethod.Remove);
+                ProcessItemList(farmer.items, ProcessMethod.Remove);
             }
         }
 
@@ -75,12 +112,12 @@ namespace DeepWoodsMod
         {
             foreach (GameLocation location in Game1.locations)
             {
-                ProcessEggsInLocation(location, ProcessMethod.Restore);
+                ProcessLocation(location, ProcessMethod.Restore);
             }
 
             foreach (Farmer farmer in Game1.getOnlineFarmers())
             {
-                ProcessEggsInItems(farmer.items, ProcessMethod.Restore);
+                ProcessItemList(farmer.items, ProcessMethod.Restore);
             }
         }
 

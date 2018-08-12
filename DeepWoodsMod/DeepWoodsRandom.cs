@@ -13,7 +13,7 @@ namespace DeepWoodsMod
         private readonly int seed;
         private readonly Random random;
         private readonly Random masterRandom;
-        private int masterModeCounter;
+        // private int masterModeCounter;
 
         public class LuckValue
         {
@@ -157,12 +157,12 @@ namespace DeepWoodsMod
             this.seed = seed;
             this.random = new Random(this.seed);
             this.masterRandom = new Random(this.seed ^ Game1.random.Next());
-            this.masterModeCounter = 0;
+            // this.masterModeCounter = 0;
         }
 
         public bool IsInMasterMode()
         {
-            return this.masterModeCounter > 0;
+            return false;// this.masterModeCounter > 0;
         }
 
         public int GetSeed()
@@ -322,6 +322,7 @@ namespace DeepWoodsMod
             throw new InvalidOperationException("Impossible to get here.");
         }
 
+        /*
         public void EnterMasterMode()
         {
             // Master Mode is used when generating interactive content (monsters, terrain features, loot etc.)
@@ -335,5 +336,6 @@ namespace DeepWoodsMod
         {
             this.masterModeCounter--;
         }
+        */
     }
 }

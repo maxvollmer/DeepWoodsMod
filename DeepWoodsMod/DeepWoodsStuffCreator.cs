@@ -36,12 +36,12 @@ namespace DeepWoodsMod
             if (!Game1.IsMasterGame)
                 return;
 
-            this.random.EnterMasterMode();
+            // this.random.EnterMasterMode();
 
             ClearStuff();
             AddStuff();
 
-            this.random.LeaveMasterMode();
+            // this.random.LeaveMasterMode();
         }
 
         private void ClearStuff()

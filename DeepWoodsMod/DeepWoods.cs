@@ -54,7 +54,6 @@ namespace DeepWoodsMod
         public List<Vector2> lightSources = new List<Vector2>();
         public List<Vector2> baubles = new List<Vector2>();
         public List<WeatherDebris> weatherDebris = new List<WeatherDebris>();
-        public bool validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = false;
 
         public EnterDirection EnterDir { get { return (EnterDirection)enterDir.Value; } set { enterDir.Value = (int)value; } }
         public Location EnterLocation { get { return new Location(enterLocation.Value.X, enterLocation.Value.Y); } set { enterLocation.Value = new Point(value.X, value.Y); } }
@@ -210,24 +209,16 @@ namespace DeepWoodsMod
                 return;
             this.hasEverBeenVisited.Value = true;
             this.playerCount.Value = this.playerCount.Value + 1;
-            if (this.playerCount.Value == 1)
-            {
-                ValidateAndIfNecessaryCreateExitChildren();
-            }
+            ValidateAndIfNecessaryCreateExitChildren();
         }
 
-        private void ValidateAndIfNecessaryCreateExitChildren()
+        public void ValidateAndIfNecessaryCreateExitChildren()
         {
             if (!Game1.IsMasterGame)
                 return;
 
             if (this.playerCount <= 0)
                 return;
-
-            if (this.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization)
-                return;
-
-            this.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = true;
 
             if (this.level.Value > 1 && this.parent == null && !this.HasExit(CastEnterDirToExitDir(this.EnterDir)))
             {
@@ -291,12 +282,7 @@ namespace DeepWoodsMod
                 }
             }
 
-            this.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = false;
-
-            if (this.playerCount > 0)
-            {
-                ValidateAndIfNecessaryCreateExitChildren();
-            }
+            ValidateAndIfNecessaryCreateExitChildren();
         }
 
         public bool TryRemove()
@@ -316,9 +302,6 @@ namespace DeepWoodsMod
             if (Game1.timeOfDay <= (this.spawnTime + TIME_BEFORE_DELETION_ALLOWED))
                 return false;
 
-            if (this.parent != null)
-                this.parent.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = false;
-
             foreach (var exit in this.exits)
             {
                 if (exit.deepWoodsName.Value != null
@@ -326,7 +309,6 @@ namespace DeepWoodsMod
                     && exitDeepWoods.parent != null)
                 {
                     exitDeepWoods.parent = null;
-                    exitDeepWoods.validateAndIfNecessaryCreateExitChildrenHasRunSinceLastExitRandomization = false;
                 }
             }
 
@@ -369,6 +351,7 @@ namespace DeepWoodsMod
             this.map.AddLayer(new Layer("Paths", this.map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
             this.map.AddLayer(new Layer("AlwaysFront", this.map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
 
+            // Build the map!
             DeepWoodsBuilder.Build(this, this.map, DeepWoodsEnterExit.CreateExitDictionary(this.EnterDir, this.EnterLocation, this.exits));
         }
 
@@ -585,11 +568,13 @@ namespace DeepWoodsMod
             return base.isTileOccupied(tileLocation, characterToIgnore);
         }
 
-        public virtual bool CanPlaceMonsterHere(int x, int y, Monster monster)
+        public bool CanPlaceMonsterHere(int x, int y, Monster monster)
         {
             Microsoft.Xna.Framework.Rectangle rectangle = monster.GetBoundingBox();
             rectangle.X = x;
             rectangle.Y = y;
+            rectangle.Width /= 16;
+            rectangle.Height /= 16;
 
             foreach (NPC npc in this.characters)
             {

@@ -25,6 +25,7 @@ namespace DeepWoodsMod
     {
         private static DeepWoods rootDeepWoodsBackup = null;
         private static bool lostMessageDisplayedToday = false;
+        private static int nextRandomizeTime = 0;
 
         public static void WarpFarmerIntoDeepWoods(int level)
         {
@@ -191,6 +192,7 @@ namespace DeepWoodsMod
 
             if (Game1.IsMasterGame)
             {
+                nextRandomizeTime = 0;
                 Remove();
                 Restore();
             }
@@ -204,18 +206,39 @@ namespace DeepWoodsMod
                 CheckValid();
 
                 // Check if it's a new hour
-                if (timeOfDay % 100 == 0)
+                if (timeOfDay >= nextRandomizeTime)
                 {
-                    // Loop over copy, because inside loop we remove and/or add DeepWoods levels from/to Game1.locations
+                    // Loop over copies, because inside loops we remove and/or add DeepWoods levels from/to Game1.locations
                     foreach (var location in new List<GameLocation>(Game1.locations))
                     {
                         // Check which DeepWoods can be removed
-                        if (location is DeepWoods deepWoods && !deepWoods.TryRemove())
-                        {
-                            // Randomize all warps
-                            deepWoods.RandomizeExits();
-                        }
+                        if (location is DeepWoods deepWoods)
+                            deepWoods.TryRemove();
                     }
+
+                    foreach (var location in new List<GameLocation>(Game1.locations))
+                    {
+                        // Randomize exits
+                        if (location is DeepWoods deepWoods)
+                            deepWoods.RandomizeExits();
+                    }
+
+                    foreach (var location in new List<GameLocation>(Game1.locations))
+                    {
+                        // Validate exits
+                        if (location is DeepWoods deepWoods)
+                            deepWoods.ValidateAndIfNecessaryCreateExitChildren();
+                    }
+
+                    int timeTillNextRandomization = Game1.random.Next(3, 10) * 10;  // one of: 30, 40, 50, 60, 70, 80, 90
+                    if (timeTillNextRandomization >= 60)
+                        timeTillNextRandomization += 40;  // one of: 30, 40, 50, 100, 110, 120, 130
+
+                    nextRandomizeTime = timeOfDay + timeTillNextRandomization;
+
+                    // e.g. 1250 + 30 gives 1280, but we want 1320
+                    if (nextRandomizeTime % 100 >= 60)
+                        timeTillNextRandomization += 40;
                 }
             }
         }

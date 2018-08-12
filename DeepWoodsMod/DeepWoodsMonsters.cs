@@ -35,18 +35,16 @@ namespace DeepWoodsMod
 
         private DeepWoods deepWoods;
         private DeepWoodsRandom random;
-        private DeepWoodsSpaceManager spaceManager;
 
-        private DeepWoodsMonsters(DeepWoods deepWoods, DeepWoodsRandom random, DeepWoodsSpaceManager spaceManager)
+        private DeepWoodsMonsters(DeepWoods deepWoods, DeepWoodsRandom random)
         {
             this.deepWoods = deepWoods;
             this.random = random;
-            this.spaceManager = spaceManager;
         }
 
         public static void AddMonsters(DeepWoods deepWoods, DeepWoodsRandom random)
         {
-            new DeepWoodsMonsters(deepWoods, random, new DeepWoodsSpaceManager(deepWoods.mapWidth.Value, deepWoods.mapHeight.Value)).AddMonsters();
+            new DeepWoodsMonsters(deepWoods, random).AddMonsters();
         }
 
         private void AddMonsters()
@@ -57,12 +55,12 @@ namespace DeepWoodsMod
             if (deepWoods.isLichtung)
                 return;
 
-            random.EnterMasterMode();
+            // random.EnterMasterMode();
+
+            int mapWidth = deepWoods.mapWidth.Value;
+            int mapHeight = deepWoods.mapHeight.Value;
 
             deepWoods.characters.Clear();
-
-            int mapWidth = this.spaceManager.GetMapWidth();
-            int mapHeight = this.spaceManager.GetMapHeight();
 
             // Calculate maximum theoretical amount of monsters for the current map.
             int maxMonsters = (mapWidth * mapHeight) / MINIMUM_TILES_FOR_MONSTER;
@@ -71,7 +69,7 @@ namespace DeepWoodsMod
             // Get a random value from 0 to maxMonsters, using a "two dice" method, where the center numbers are more likely than the edges.
             // If, for example, maxMonsters is 100, it is much more likely to get something close to 50 than close to 100 or 0.
             // We then take the maximum of either minMonsters or the result, making sure we always have at least minMonsters monsters.
-            int numMonsters = Math.Max(minMonsters, this.random.GetRandomValue(0, maxMonsters / 2) + this.random.GetRandomValue(0, maxMonsters / 2));
+            int numMonsters = Math.Max(minMonsters, this.random.GetRandomValue(minMonsters, maxMonsters / 2) + this.random.GetRandomValue(minMonsters, maxMonsters / 2));
 
             if (deepWoods.GetCombatLevel() <= 1 || this.random.CheckChance(Settings.Monsters.ChanceForHalfMonsterCount))
             {
@@ -81,6 +79,7 @@ namespace DeepWoodsMod
             List<int> allTilesInRandomOrder = Enumerable.Range(0, mapWidth * mapHeight).OrderBy(n => Game1.random.Next()).ToList();
             int allTilesCount = allTilesInRandomOrder.Count();
 
+            int numMonstersPlaced = 0;
             Monster monster = null;
             for (int i = 0, j = 0; i < numMonsters && j < allTilesCount; j++)
             {
@@ -95,10 +94,11 @@ namespace DeepWoodsMod
                     deepWoods.addCharacter(monster);
                     monster = null;
                     i++;
+                    numMonstersPlaced++;
                 }
             }
 
-            random.LeaveMasterMode();
+            // random.LeaveMasterMode();
         }
 
         Monster CreateRandomMonster()

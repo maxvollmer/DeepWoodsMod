@@ -116,9 +116,10 @@ namespace DeepWoodsMod
         private int GetRandomFoodType(DeepWoods deepWoods)
         {
             DeepWoodsRandom random = new DeepWoodsRandom(deepWoods, (deepWoods?.Seed ?? Game1.random.Next()) ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ (int)this.tile.X ^ (int)this.tile.Y);
-            random.EnterMasterMode();
+            // random.EnterMasterMode();
 
             return random.GetRandomValue(new WeightedInt[] {
+                // TODO: This should be in settings!
                 // ITEM NAME // SELL PRICE // WEIGHT
                 CreateWeightedValueForFootType(245), // Sugar               //  50 // 2000
                 CreateWeightedValueForFootType(246), // Wheat Flour         //  50 // 2000
