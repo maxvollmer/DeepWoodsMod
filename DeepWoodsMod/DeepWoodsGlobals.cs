@@ -39,6 +39,6 @@ namespace DeepWoodsMod
         public readonly static int NETWORK_MESSAGE_DEEPWOODS_WARP = 1;
         public readonly static int NETWORK_MESSAGE_DEEPWOODS_LEVEL = 2;
         public readonly static int NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN = 3;
-        public readonly static int NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE = 4; 
+        public readonly static int NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE = 4;
     }
 }

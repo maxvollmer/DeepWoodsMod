@@ -441,7 +441,7 @@ namespace DeepWoodsMod
                     {
                         if (who != Game1.player)
                         {
-                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, who, new object[] { NETWORK_MESSAGE_DEEPWOODS_LEVEL, value });
+                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_LEVEL, value });
                         }
                     }
                 }

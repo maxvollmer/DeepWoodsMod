@@ -25,6 +25,7 @@ namespace DeepWoodsMod
     public class DeepWoods : GameLocation
     {
         public readonly NetString parentName = new NetString();
+        public readonly NetPoint parentExitLocation = new NetPoint(Point.Zero);
 
         public readonly NetInt enterDir = new NetInt(0);
         public readonly NetPoint enterLocation = new NetPoint(Point.Zero);
@@ -59,6 +60,7 @@ namespace DeepWoodsMod
         public EnterDirection EnterDir { get { return (EnterDirection)enterDir.Value; } set { enterDir.Value = (int)value; } }
         public Location EnterLocation { get { return new Location(enterLocation.Value.X, enterLocation.Value.Y); } set { enterLocation.Value = new Point(value.X, value.Y); } }
         public DeepWoods Parent { get { return Game1.getLocationFromName(parentName.Value) as DeepWoods; } }
+        public Location ParentExitLocation { get { return new Location(parentExitLocation.Value.X, parentExitLocation.Value.Y); } set { parentExitLocation.Value = new Point(value.X, value.Y); } }
 
         private int seed = 0;
         public int Seed
@@ -107,6 +109,7 @@ namespace DeepWoodsMod
                 base.name.Value = "DeepWoods_" + this.seed;
             }
             this.parentName.Value = parent?.Name;
+            this.ParentExitLocation = parent?.GetExit(EnterDirToExitDir(enterDir))?.Location ?? new Location();
             this.level.Value = level;
             DeepWoodsState.LowestLevelReached = Math.Max(DeepWoodsState.LowestLevelReached, this.level.Value - 1);
             this.EnterDir = enterDir;
@@ -123,13 +126,13 @@ namespace DeepWoodsMod
 
             if (parent == null && level > 1 && !this.HasExit(CastEnterDirToExitDir(this.EnterDir)))
             {
-                this.exits.Add(new DeepWoodsExit(CastEnterDirToExitDir(this.EnterDir), this.EnterLocation));
+                this.exits.Add(new DeepWoodsExit(this, CastEnterDirToExitDir(this.EnterDir), this.EnterLocation));
             }
 
             if (parent != null)
             {
                 // TODO: Remove this
-                ModEntry.Log("Child spawned, time: " + Game1.timeOfDay + " this: " + this.Name + ", level: " + this.level + ", parent: " + this.parentName + ", enterDir: " + this.enterDir);
+                ModEntry.Log("Child spawned, time: " + Game1.timeOfDay + " this: " + this.Name + ", level: " + this.level + ", parent: " + this.parentName + ", enterDir: " + this.EnterDir);
             }
         }
 
@@ -142,7 +145,7 @@ namespace DeepWoodsMod
         protected override void initNetFields()
         {
             base.initNetFields();
-            this.NetFields.AddFields(parentName, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, resourceClumps);
+            this.NetFields.AddFields(parentName, parentExitLocation, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, resourceClumps);
         }
 
         private void DetermineExits()
@@ -165,6 +168,7 @@ namespace DeepWoodsMod
             {
                 this.exits.Add(
                     new DeepWoodsExit(
+                        this,
                         exitDir,
                         new DeepWoodsSpaceManager(this.mapWidth.Value, this.mapHeight.Value).GetRandomExitLocation(exitDir, new DeepWoodsRandom(this, this.seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()))
                     )
@@ -223,17 +227,18 @@ namespace DeepWoodsMod
             if (this.level.Value > 1 && this.Parent == null && !this.HasExit(CastEnterDirToExitDir(this.EnterDir)))
             {
                 // this.abandonedByParentTime = Game1.timeOfDay;
-                this.exits.Add(new DeepWoodsExit(CastEnterDirToExitDir(this.EnterDir), this.EnterLocation));
+                this.exits.Add(new DeepWoodsExit(this, CastEnterDirToExitDir(this.EnterDir), this.EnterLocation));
             }
 
             foreach (var exit in this.exits)
             {
-                if (exit.deepWoodsName.Value == null)
-                    exit.deepWoodsName.Value = "DeepWoods_" + DeepWoodsRandom.CalculateSeed(level + 1, ExitDirToEnterDir(CastEnterDirToExitDir(this.EnterDir)), Seed);
-                if (Game1.getLocationFromName(exit.deepWoodsName.Value) == null)
+                if (exit.TargetDeepWoodsName == null)
+                    exit.TargetDeepWoodsName = "DeepWoods_" + DeepWoodsRandom.CalculateSeed(level + 1, ExitDirToEnterDir(exit.ExitDir), Seed);
+                if (Game1.getLocationFromName(exit.TargetDeepWoodsName) == null)
                 {
                     DeepWoods exitDeepWoods = new DeepWoods(this, this.level + 1, ExitDirToEnterDir(exit.ExitDir));
-                    exit.deepWoodsName.Value = exitDeepWoods.Name;
+                    exit.TargetDeepWoodsName = exitDeepWoods.Name;
+                    exit.TargetLocation = exitDeepWoods.EnterLocation;
                     DeepWoodsManager.AddDeepWoodsToGameLocations(exitDeepWoods);
                 }
             }
@@ -269,17 +274,18 @@ namespace DeepWoodsMod
             {
                 // this.abandonedByParentTime = Game1.timeOfDay;
                 this.parentName.Value = null;
-                this.exits.Add(new DeepWoodsExit(CastEnterDirToExitDir(this.EnterDir), this.EnterLocation));
+                this.parentExitLocation.Value = Point.Zero;
+                this.exits.Add(new DeepWoodsExit(this, CastEnterDirToExitDir(this.EnterDir), this.EnterLocation));
             }
 
             foreach (var exit in this.exits)
             {
                 // Randomize exit if child level exists and has been visited
-                if (exit.deepWoodsName.Value != null
-                    && Game1.getLocationFromName(exit.deepWoodsName.Value) is DeepWoods exitDeepWoods
+                if (exit.TargetDeepWoodsName != null
+                    && Game1.getLocationFromName(exit.TargetDeepWoodsName) is DeepWoods exitDeepWoods
                     && exitDeepWoods.hasEverBeenVisited)
                 {
-                    exit.deepWoodsName.Value = null;
+                    exit.TargetDeepWoodsName = null;
                 }
             }
 
@@ -305,15 +311,15 @@ namespace DeepWoodsMod
 
             foreach (var exit in this.exits)
             {
-                if (exit.deepWoodsName.Value != null
-                    && Game1.getLocationFromName(exit.deepWoodsName.Value) is DeepWoods exitDeepWoods
-                    && exitDeepWoods.Parent != null)
+                if (Game1.getLocationFromName(exit.TargetDeepWoodsName) is DeepWoods exitDeepWoods)
                 {
                     exitDeepWoods.parentName.Value = null;
+                    exitDeepWoods.parentExitLocation.Value = Point.Zero;
                 }
             }
 
             this.parentName.Value = null;
+            this.parentExitLocation.Value = Point.Zero;
 
             this.exits.Clear();
             this.characters.Clear();
@@ -374,9 +380,9 @@ namespace DeepWoodsMod
         {
             if (Game1.player.currentLocation == this && Game1.locationRequest == null)
             {
-                if (Game1.player.Position.X - 16 < 0)
+                if (Game1.player.Position.X + 48 < 0)
                     Warp(ExitDirection.LEFT);
-                else if (Game1.player.Position.Y - 16 < 0)
+                else if (Game1.player.Position.Y + 48 < 0)
                     Warp(ExitDirection.TOP);
                 else if (Game1.player.Position.X + 16 >= this.mapWidth.Value * 64)
                     Warp(ExitDirection.RIGHT);
@@ -389,35 +395,51 @@ namespace DeepWoodsMod
         {
             if (Game1.locationRequest == null)
             {
-                Location? targetLocationWrapper = null;
-                string targetDeepWoodsName = null;
+                bool warped = false;
 
-                if (Game1.getLocationFromName(GetExit(exitDir)?.deepWoodsName) is DeepWoods exitDeepWoods)
+                string targetDeepWoodsName = null;
+                Location? targetLocationWrapper = null;
+
+                if (GetExit(exitDir) is DeepWoodsExit exit)
                 {
-                    targetLocationWrapper = exitDeepWoods.EnterLocation;
-                    targetDeepWoodsName = exitDeepWoods.Name;
+                    targetDeepWoodsName = exit.TargetDeepWoodsName;
+                    targetLocationWrapper = exit.TargetLocation;
                 }
-                else if (CastEnterDirToExitDir(EnterDir) == exitDir && Parent is DeepWoods parentDeepWoods)
+                else if (CastEnterDirToExitDir(EnterDir) == exitDir)
                 {
-                    targetLocationWrapper = parentDeepWoods.GetExit(EnterDirToExitDir(EnterDir))?.Location;
-                    targetDeepWoodsName = parentDeepWoods.Name;
+                    targetDeepWoodsName = parentName.Value;
+                    targetLocationWrapper = ParentExitLocation;
                 }
                 else if (level.Value == 1 && exitDir == ExitDirection.TOP)
                 {
-                    targetLocationWrapper = WOODS_WARP_LOCATION;
                     targetDeepWoodsName = "Woods";
+                    targetLocationWrapper = WOODS_WARP_LOCATION;
                 }
+
+                ModEntry.Log("Trying to warp from " + this.Name + ": (ExitDir: " + exitDir + ", targetDeepWoodsName: " + targetDeepWoodsName + ", targetLocation: " + (targetLocationWrapper?.X ?? -1) + ", " + (targetLocationWrapper?.Y ?? -1) + ")", LogLevel.Debug);
 
                 if (targetLocationWrapper.HasValue && targetDeepWoodsName != null)
                 {
                     Location targetLocation = targetLocationWrapper.Value;
 
-                    if (exitDir == ExitDirection.LEFT)
-                        targetLocation.X += 1;
-                    else if (exitDir == ExitDirection.BOTTOM)
-                        targetLocation.Y += 1;
+                    if (!(targetLocation.X == 0 && targetLocation.Y == 0))
+                    {
+                        if (exitDir == ExitDirection.LEFT)
+                            targetLocation.X += 1;
+                        else if (exitDir == ExitDirection.BOTTOM)
+                            targetLocation.Y += 1;
 
-                    Game1.warpFarmer(targetDeepWoodsName, targetLocation.X, targetLocation.Y, false);
+                        if (!Game1.IsMasterGame)
+                            DeepWoodsManager.AddBlankDeepWoodsToGameLocations(targetDeepWoodsName);
+
+                        Game1.warpFarmer(targetDeepWoodsName, targetLocation.X, targetLocation.Y, false);
+                        warped = true;
+                    }
+                }
+
+                if (!warped)
+                {
+                    ModEntry.Log("Warp from " + this.Name + " failed. (ExitDir: " + exitDir + ")", LogLevel.Warn);
                 }
             }
         }

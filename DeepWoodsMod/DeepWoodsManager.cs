@@ -98,7 +98,7 @@ namespace DeepWoodsMod
             {
                 foreach (Farmer who in Game1.otherFarmers.Values)
                     if (who != Game1.player)
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, who, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, 1, deepWoods.Name });
+                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, 1, deepWoods.Name });
             }
         }
 
@@ -110,12 +110,15 @@ namespace DeepWoodsMod
             {
                 foreach (Farmer who in Game1.otherFarmers.Values)
                     if (who != Game1.player)
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, who, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, 0, deepWoods.Name });
+                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, 0, deepWoods.Name });
             }
         }
 
         public static void AddBlankDeepWoodsToGameLocations(string name)
         {
+            if (Game1.IsMasterGame)
+                return;
+
             if (Game1.getLocationFromName(name) == null)
                 AddDeepWoodsToGameLocations(new DeepWoods(name));
         }

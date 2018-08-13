@@ -1,9 +1,11 @@
 ﻿
 using Microsoft.Xna.Framework;
 using Netcode;
+using StardewValley;
 using System;
 using System.Collections.Generic;
 using xTile.Dimensions;
+using static DeepWoodsMod.DeepWoodsGlobals;
 
 namespace DeepWoodsMod
 {
@@ -13,24 +15,48 @@ namespace DeepWoodsMod
         {
             public NetFields NetFields { get; } = new NetFields();
             public readonly NetInt exitDir = new NetInt(0);
+            public readonly NetString myDeepWoodsName = new NetString();
             public readonly NetPoint location = new NetPoint(Point.Zero);
-            public readonly NetString deepWoodsName = new NetString();
+            public readonly NetString targetDeepWoodsName = new NetString();
+            public readonly NetPoint targetLocation = new NetPoint(Point.Zero);
             public ExitDirection ExitDir { get { return (ExitDirection)exitDir.Value; } }
             public Location Location { get { return new Location(location.Value.X, location.Value.Y); } }
+            public Location TargetLocation
+            {
+                get
+                {
+                    return new Location(targetLocation.Value.X, targetLocation.Value.Y);
+                }
+                set
+                {
+                    targetLocation.Value = new Point(value.X, value.Y);
+                }
+            }
+            public string TargetDeepWoodsName
+            {
+                get
+                {
+                    return targetDeepWoodsName.Value;
+                }
+                set
+                {
+                    targetDeepWoodsName.Value = value;
+                }
+            }
             public DeepWoodsExit()
             {
                 this.InitNetFields();
             }
-            public DeepWoodsExit(ExitDirection exitDir, Location location)
+            public DeepWoodsExit(DeepWoods myDeepWoods, ExitDirection exitDir, Location location)
             {
                 this.InitNetFields();
+                this.myDeepWoodsName.Value = myDeepWoods.Name;
                 this.exitDir.Value = (int)exitDir;
                 this.location.Value = new Point(location.X, location.Y);
-                this.deepWoodsName.Value = null;
             }
             private void InitNetFields()
             {
-                this.NetFields.AddFields(exitDir, location, deepWoodsName);
+                this.NetFields.AddFields(myDeepWoodsName, exitDir, location, targetDeepWoodsName, targetLocation);
             }
         }
 

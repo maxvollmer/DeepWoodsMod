@@ -179,7 +179,6 @@ namespace DeepWoodsMod
                         DeepWoodsWarpMessageData data = ReadDeepWoodsWarpMessage(msg.Reader);
                         if (Game1.IsMasterGame)
                         {
-                            ModEntry.Log("Received NETWORK_MESSAGE_DEEPWOODS_WARP from client: " + data.Level);
                             // Client requests that we load and activate a specific DeepWoods level they want to warp into.
                             DeepWoods deepWoods = DeepWoodsManager.AddDeepWoodsFromObelisk(data.Level);
                             // Send message to client telling them we have the level ready.
@@ -188,7 +187,6 @@ namespace DeepWoodsMod
                         else
                         {
                             // Server informs us that we can warp now!
-                            ModEntry.Log("Received NETWORK_MESSAGE_DEEPWOODS_WARP from server: " + data.Name + ", " + data.EnterLocation);
                             DeepWoodsManager.AddBlankDeepWoodsToGameLocations(data.Name);
                             DeepWoodsManager.WarpFarmerIntoDeepWoodsFromServerObelisk(data.Name, data.EnterLocation);
                         }
