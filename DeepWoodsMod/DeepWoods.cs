@@ -135,8 +135,7 @@ namespace DeepWoodsMod
 
             if (parent != null)
             {
-                // TODO: Remove this
-                ModEntry.Log("Child spawned, time: " + Game1.timeOfDay + " this: " + this.Name + ", level: " + this.level + ", parent: " + this.parentName + ", enterDir: " + this.EnterDir);
+                ModEntry.Log("Child spawned, time: " + Game1.timeOfDay + " this: " + this.Name + ", level: " + this.level + ", parent: " + this.parentName + ", enterDir: " + this.EnterDir, LogLevel.Debug);
             }
         }
 
