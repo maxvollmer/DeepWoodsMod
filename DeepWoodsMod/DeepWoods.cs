@@ -27,6 +27,8 @@ namespace DeepWoodsMod
         public readonly NetString parentName = new NetString();
         public readonly NetPoint parentExitLocation = new NetPoint(Point.Zero);
 
+        public readonly NetBool hasReceivedNetworkData = new NetBool(false);
+
         public readonly NetInt enterDir = new NetInt(0);
         public readonly NetPoint enterLocation = new NetPoint(Point.Zero);
         public readonly NetObjectList<DeepWoodsExit> exits = new NetObjectList<DeepWoodsExit>();
@@ -61,6 +63,7 @@ namespace DeepWoodsMod
         public Location EnterLocation { get { return new Location(enterLocation.Value.X, enterLocation.Value.Y); } set { enterLocation.Value = new Point(value.X, value.Y); } }
         public DeepWoods Parent { get { return Game1.getLocationFromName(parentName.Value) as DeepWoods; } }
         public Location ParentExitLocation { get { return new Location(parentExitLocation.Value.X, parentExitLocation.Value.Y); } set { parentExitLocation.Value = new Point(value.X, value.Y); } }
+        public bool HasReceivedNetworkData { get { return Game1.IsMasterGame || hasReceivedNetworkData.Value; } }
 
         private int seed = 0;
         public int Seed
@@ -85,9 +88,8 @@ namespace DeepWoodsMod
         }
 
         public DeepWoods(string name)
-            : base()
+            : this()
         {
-            base.critters = new List<Critter>();
             base.name.Value = name;
         }
 
@@ -97,6 +99,8 @@ namespace DeepWoodsMod
             base.isOutdoors.Value = true;
             base.ignoreDebrisWeather.Value = true;
             base.ignoreOutdoorLighting.Value = true;
+
+            this.hasReceivedNetworkData.Value = true;
 
             this.uniqueMultiplayerID.Value = Game1.MasterPlayer.UniqueMultiplayerID;
             this.seed = DeepWoodsRandom.CalculateSeed(level, enterDir, parent?.Seed);
@@ -145,7 +149,7 @@ namespace DeepWoodsMod
         protected override void initNetFields()
         {
             base.initNetFields();
-            this.NetFields.AddFields(parentName, parentExitLocation, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, resourceClumps);
+            this.NetFields.AddFields(parentName, parentExitLocation, hasReceivedNetworkData, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, resourceClumps);
         }
 
         private void DetermineExits()
@@ -209,6 +213,39 @@ namespace DeepWoodsMod
 
         public void AddPlayer(Farmer who)
         {
+            if (who == Game1.player)
+            {
+                // Fix enter position (some bug I haven't figured out yet spawns network clients outside the map delimiter...)
+
+                // First check for current warp request (stored globally for local player):
+                if (DeepWoodsManager.currentWarpRequestName == this.Name
+                    && DeepWoodsManager.currentWarpRequestLocation.HasValue)
+                {
+                    who.Position = DeepWoodsManager.currentWarpRequestLocation.Value;
+                    DeepWoodsManager.currentWarpRequestName = null;
+                    DeepWoodsManager.currentWarpRequestLocation = null;
+                }
+                else
+                {
+                    // If no current warp request is known, we will heuristically determine the nearest valid location:
+                    Vector2 nearestEnterLocation = new Vector2(EnterLocation.X * 64, EnterLocation.Y * 64);
+                    float nearestEnterLocationDistance = (nearestEnterLocation - who.Position).Length();
+                    int faceDirection = EnterDirToFacingDirection(this.EnterDir);
+                    foreach (var exit in this.exits)
+                    {
+                        Vector2 exitLocation = new Vector2(exit.Location.X * 64, exit.Location.Y * 64);
+                        float exitDistance = (exitLocation - who.Position).Length();
+                        if (exitDistance < nearestEnterLocationDistance)
+                        {
+                            nearestEnterLocation = exitLocation;
+                            nearestEnterLocationDistance = exitDistance;
+                            faceDirection = EnterDirToFacingDirection(CastExitDirToEnterDir(exit.ExitDir));
+                        }
+                    }
+                    who.Position = nearestEnterLocation;
+                    // who.faceDirection(faceDirection); // Keep original face direction
+                }
+            }
             if (!Game1.IsMasterGame)
                 return;
             this.hasEverBeenVisited.Value = true;
@@ -332,30 +369,51 @@ namespace DeepWoodsMod
         }
 
 
+        private Map CreateEmptyMap(string name, int mapWidth, int mapHeight)
+        {
+            // Create new map
+            Map map = new Map(name);
+
+            // Add outdoor tilesheet
+            map.AddTileSheet(new TileSheet(DEFAULT_OUTDOOR_TILESHEET_ID, map, "Maps\\" + Game1.currentSeason.ToLower() + "_outdoorsTileSheet", new Size(25, 79), new Size(16, 16)));
+            map.AddTileSheet(new TileSheet(LAKE_TILESHEET_ID, map, "Maps\\deepWoodsLakeTilesheet", new Size(8, 5), new Size(16, 16)));
+            map.LoadTileSheets(Game1.mapDisplayDevice);
+
+            // Add default layers
+            map.AddLayer(new Layer("Back", map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
+            map.AddLayer(new Layer("Buildings", map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
+            map.AddLayer(new Layer("Front", map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
+            map.AddLayer(new Layer("Paths", map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
+            map.AddLayer(new Layer("AlwaysFront", map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
+
+            return map;
+        }
+
         public override void updateMap()
         {
+            // Always create an empty map, to avoid crashes
+            // (give it maximum size, so game doesn't mess with warp locations on network)
+            if (this.map == null)
+                this.map = CreateEmptyMap("DEEPWOODSEMPTY", Settings.Map.MaxMapWidth, Settings.Map.MaxMapHeight);
+
             // Check if level is properly initialized
             if (this.Seed == 0)
                 return;
 
-            // Check if map is already created
-            if (this.map != null)
+            // Check that network data has been sent and initialized by server
+            if (!this.HasReceivedNetworkData)
                 return;
 
-            // Create new map
-            this.map = new Map("DeepWoods");
+            // Check if map is already created
+            if (this.map != null && this.map.Id == this.Name)
+                return;
 
-            // Add outdoor tilesheet
-            this.map.AddTileSheet(new TileSheet(DEFAULT_OUTDOOR_TILESHEET_ID, this.map, "Maps\\" + Game1.currentSeason.ToLower() + "_outdoorsTileSheet", new Size(25, 79), new Size(16, 16)));
-            this.map.AddTileSheet(new TileSheet(LAKE_TILESHEET_ID, this.map, "Maps\\deepWoodsLakeTilesheet", new Size(8, 5), new Size(16, 16)));
-            this.map.LoadTileSheets(Game1.mapDisplayDevice);
+            // Check that mapWidth and mapHeight are set
+            if (mapWidth.Value == 0 || mapHeight.Value == 0)
+                return;
 
-            // Add default layers
-            this.map.AddLayer(new Layer("Back", this.map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
-            this.map.AddLayer(new Layer("Buildings", this.map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
-            this.map.AddLayer(new Layer("Front", this.map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
-            this.map.AddLayer(new Layer("Paths", this.map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
-            this.map.AddLayer(new Layer("AlwaysFront", this.map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
+            // Create map with proper size
+            this.map = CreateEmptyMap(this.Name, mapWidth, mapHeight);
 
             // Build the map!
             DeepWoodsBuilder.Build(this, this.map, DeepWoodsEnterExit.CreateExitDictionary(this.EnterDir, this.EnterLocation, this.exits));
@@ -384,9 +442,9 @@ namespace DeepWoodsMod
                     Warp(ExitDirection.LEFT);
                 else if (Game1.player.Position.Y + 48 < 0)
                     Warp(ExitDirection.TOP);
-                else if (Game1.player.Position.X + 16 >= this.mapWidth.Value * 64)
+                else if (Game1.player.Position.X + 16 > this.mapWidth.Value * 64)
                     Warp(ExitDirection.RIGHT);
-                else if (Game1.player.Position.Y + 16 >= this.mapHeight.Value * 64)
+                else if (Game1.player.Position.Y + 16 > this.mapHeight.Value * 64)
                     Warp(ExitDirection.BOTTOM);
             }
         }
@@ -400,7 +458,12 @@ namespace DeepWoodsMod
                 string targetDeepWoodsName = null;
                 Location? targetLocationWrapper = null;
 
-                if (GetExit(exitDir) is DeepWoodsExit exit)
+                if (level.Value == 1 && exitDir == ExitDirection.TOP)
+                {
+                    targetDeepWoodsName = "Woods";
+                    targetLocationWrapper = WOODS_WARP_LOCATION;
+                }
+                else if (GetExit(exitDir) is DeepWoodsExit exit)
                 {
                     targetDeepWoodsName = exit.TargetDeepWoodsName;
                     targetLocationWrapper = exit.TargetLocation;
@@ -410,13 +473,8 @@ namespace DeepWoodsMod
                     targetDeepWoodsName = parentName.Value;
                     targetLocationWrapper = ParentExitLocation;
                 }
-                else if (level.Value == 1 && exitDir == ExitDirection.TOP)
-                {
-                    targetDeepWoodsName = "Woods";
-                    targetLocationWrapper = WOODS_WARP_LOCATION;
-                }
 
-                ModEntry.Log("Trying to warp from " + this.Name + ": (ExitDir: " + exitDir + ", targetDeepWoodsName: " + targetDeepWoodsName + ", targetLocation: " + (targetLocationWrapper?.X ?? -1) + ", " + (targetLocationWrapper?.Y ?? -1) + ")", LogLevel.Debug);
+                ModEntry.Log("Trying to warp from " + this.Name + ": (ExitDir: " + exitDir + ", Position: " + Game1.player.Position.X + "," + Game1.player.Position.Y + ", targetDeepWoodsName: " + targetDeepWoodsName + ", targetLocation: " + (targetLocationWrapper?.X ?? -1) + ", " + (targetLocationWrapper?.Y ?? -1) + ")", LogLevel.Debug);
 
                 if (targetLocationWrapper.HasValue && targetDeepWoodsName != null)
                 {
@@ -429,8 +487,13 @@ namespace DeepWoodsMod
                         else if (exitDir == ExitDirection.BOTTOM)
                             targetLocation.Y += 1;
 
-                        if (!Game1.IsMasterGame)
-                            DeepWoodsManager.AddBlankDeepWoodsToGameLocations(targetDeepWoodsName);
+                        if (targetDeepWoodsName != "Woods")
+                        {
+                            DeepWoodsManager.currentWarpRequestName = targetDeepWoodsName;
+                            DeepWoodsManager.currentWarpRequestLocation = new Vector2(targetLocation.X * 64, targetLocation.Y * 64);
+                            if (!Game1.IsMasterGame)
+                                DeepWoodsManager.AddBlankDeepWoodsToGameLocations(targetDeepWoodsName);
+                        }
 
                         Game1.warpFarmer(targetDeepWoodsName, targetLocation.X, targetLocation.Y, false);
                         warped = true;

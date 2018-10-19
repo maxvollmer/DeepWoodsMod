@@ -23,6 +23,10 @@ namespace DeepWoodsMod
 {
     class DeepWoodsManager
     {
+        public static string currentWarpRequestName = null;
+        public static Vector2? currentWarpRequestLocation = null;
+
+
         private static DeepWoods rootDeepWoodsBackup = null;
         private static bool lostMessageDisplayedToday = false;
         private static int nextRandomizeTime = 0;
@@ -98,7 +102,7 @@ namespace DeepWoodsMod
             {
                 foreach (Farmer who in Game1.otherFarmers.Values)
                     if (who != Game1.player)
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, 1, deepWoods.Name });
+                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, (byte)1, deepWoods.Name });
             }
         }
 
@@ -110,7 +114,7 @@ namespace DeepWoodsMod
             {
                 foreach (Farmer who in Game1.otherFarmers.Values)
                     if (who != Game1.player)
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, 0, deepWoods.Name });
+                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, (byte)0, deepWoods.Name });
             }
         }
 
@@ -191,6 +195,9 @@ namespace DeepWoodsMod
         // This is called by every client at the start of a new day
         public static void LocalDayUpdate(int dayOfMonth)
         {
+            DeepWoodsManager.currentWarpRequestName = null;
+            DeepWoodsManager.currentWarpRequestLocation = null;
+
             lostMessageDisplayedToday = false;
 
             if (Game1.IsMasterGame)
@@ -297,14 +304,23 @@ namespace DeepWoodsMod
         }
 
 
-        // Called whenever a player warps, both from and to may be null (we just ignore the call then)
-        public static void PlayerWarped(Farmer who, DeepWoods from, DeepWoods to)
+        // Called whenever a player warps, both from and to may be null
+        public static void PlayerWarped(Farmer who, DeepWoods from, DeepWoods to, GameLocation rawTo)
         {
             from?.RemovePlayer(who);
             to?.AddPlayer(who);
 
-            if (from is DeepWoods && !(to is DeepWoods))
+            if (from != null && to == null)
+            {
+                // We left the deepwoods, fix lighting
                 DeepWoodsManager.FixLighting();
+
+                // Workaround for bug where players are warped to [0,0] for some reason
+                if (rawTo is Woods && who == Game1.player)
+                {
+                    who.Position = new Vector2(WOODS_WARP_LOCATION.X * 64, WOODS_WARP_LOCATION.Y * 64);
+                }
+            }
 
             if (who == Game1.player
                 && from != null

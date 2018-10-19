@@ -145,6 +145,23 @@ namespace DeepWoodsMod
             }
         }
 
+        public static EnterDirection CastExitDirToEnterDir(ExitDirection exitDir)
+        {
+            switch (exitDir)
+            {
+                case ExitDirection.LEFT:
+                    return EnterDirection.FROM_LEFT;
+                case ExitDirection.TOP:
+                    return EnterDirection.FROM_TOP;
+                case ExitDirection.RIGHT:
+                    return EnterDirection.FROM_RIGHT;
+                case ExitDirection.BOTTOM:
+                    return EnterDirection.FROM_BOTTOM;
+                default:
+                    return EnterDirection.FROM_TOP;
+            }
+        }
+
         public static List<ExitDirection> AllExitDirsBut(ExitDirection exclude)
         {
             List<ExitDirection> possibleExitDirs = new List<ExitDirection>{

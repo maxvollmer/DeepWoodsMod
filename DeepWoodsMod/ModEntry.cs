@@ -11,6 +11,12 @@ using xTile.Tiles;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
 using System.Collections.Concurrent;
+using StardewValley.Buildings;
+using Microsoft.Xna.Framework;
+using StardewValley.Objects;
+using StardewValley.Tools;
+using Microsoft.Xna.Framework.Audio;
+using System.IO;
 
 namespace DeepWoodsMod
 {
@@ -93,6 +99,7 @@ namespace DeepWoodsMod
 
         private void SaveEvents_AfterLoad(object sender, EventArgs args)
         {
+            mod.isDeepWoodsGameRunning = false;
             if (Game1.IsMasterGame)
             {
                 DeepWoodsSettings.DoLoad();
@@ -103,6 +110,7 @@ namespace DeepWoodsMod
             }
             else
             {
+                mod.isDeepWoodsGameRunning = false;
                 DeepWoodsManager.Remove();
                 Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.player, new object[] { NETWORK_MESSAGE_DEEPWOODS_INIT });
             }
@@ -110,8 +118,10 @@ namespace DeepWoodsMod
 
         public static void DeepWoodsInitServerAnswerReceived(List<string> deepWoodsLevelNames)
         {
-            if (Game1.IsMasterGame || mod.isDeepWoodsGameRunning)
+            if (Game1.IsMasterGame)
                 return;
+
+            ModEntry.Log("DeepWoodsInitServerAnswerReceived", StardewModdingAPI.LogLevel.Debug);
 
             DeepWoodsManager.AddAll(deepWoodsLevelNames);
             EasterEggFunctions.RestoreAllEasterEggsInGame();
@@ -142,8 +152,6 @@ namespace DeepWoodsMod
                 return;
 
             WorkErrorMessageQueue();
-
-            DeepWoodsManager.LocalTick();
 
             Dictionary<long, GameLocation> newPlayerLocations = new Dictionary<long, GameLocation>();
             foreach (Farmer farmer in Game1.getOnlineFarmers())
@@ -178,6 +186,9 @@ namespace DeepWoodsMod
             // Update cache
             playerLocations = newPlayerLocations;
 
+            // 
+            DeepWoodsManager.LocalTick();
+
             // Fix lighting in Woods and DeepWoods
             DeepWoodsManager.FixLighting();
 
@@ -202,7 +213,7 @@ namespace DeepWoodsMod
                 OpenPassageInSecretWoods(woods);
             }
 
-            DeepWoodsManager.PlayerWarped(who, prevLocation as DeepWoods, newLocation as DeepWoods);
+            DeepWoodsManager.PlayerWarped(who, prevLocation as DeepWoods, newLocation as DeepWoods, newLocation);
 
             if (newLocation is AnimalHouse animalHouse)
             {
