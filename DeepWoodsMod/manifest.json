@@ -5,6 +5,6 @@
   "Description": "Adds an explorable forest to the secret woods. How deep does it go?",
   "UniqueID": "maxvollmer.deepwoodsmod",
   "EntryDll": "deepwoodsmod.dll",
-  "MinimumApiVersion": "2.8",
+  "MinimumApiVersion": "2.8-beta",
   "UpdateKeys": [ "Nexus:2571" ]
 }
