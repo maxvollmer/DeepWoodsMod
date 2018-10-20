@@ -14,6 +14,7 @@ namespace DeepWoodsMod
         private bool wasPickedUp;
 
         public EasterEgg()
+            : base(false)
         {
             this.eggTileIndex = Game1.random.Next(67, 71);
             this.wasPickedUp = false;

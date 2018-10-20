@@ -16,13 +16,13 @@ namespace DeepWoodsMod
         private NetBool swordPulledOut = new NetBool(false);
 
         public ExcaliburStone()
-            : base()
+            : base(false)
         {
             InitNetFields();
         }
 
         public ExcaliburStone(Vector2 tileLocation)
-            : base()
+            : base(false)
         {
             this.tilePosition.Value = tileLocation;
             InitNetFields();

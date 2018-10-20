@@ -151,7 +151,7 @@ namespace DeepWoodsMod
             }
             if (isScared)
             {
-                if (this.currentLocation.getFarmersCount() == 0)
+                if (this.currentLocation.farmers.Count == 0)
                 {
                     this.currentLocation.characters.Remove(this);
                     return;

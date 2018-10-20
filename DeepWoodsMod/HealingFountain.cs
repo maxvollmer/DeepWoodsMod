@@ -9,12 +9,12 @@ namespace DeepWoodsMod
     class HealingFountain : LargeTerrainFeature
     {
         public HealingFountain()
-            : base()
+            : base(false)
         {
         }
 
         public HealingFountain(Vector2 tile)
-            : base()
+            : base(false)
         {
             this.tilePosition.Value = tile;
         }
