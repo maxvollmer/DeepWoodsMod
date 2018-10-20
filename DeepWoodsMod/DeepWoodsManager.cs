@@ -23,6 +23,7 @@ namespace DeepWoodsMod
 {
     class DeepWoodsManager
     {
+        public static DeepWoods currentDeepWoods = null;
         public static string currentWarpRequestName = null;
         public static Vector2? currentWarpRequestLocation = null;
 
@@ -195,6 +196,7 @@ namespace DeepWoodsMod
         // This is called by every client at the start of a new day
         public static void LocalDayUpdate(int dayOfMonth)
         {
+            DeepWoodsManager.currentDeepWoods = null;
             DeepWoodsManager.currentWarpRequestName = null;
             DeepWoodsManager.currentWarpRequestLocation = null;
 
@@ -257,7 +259,14 @@ namespace DeepWoodsMod
         public static void LocalTick()
         {
             if (Game1.player.currentLocation is DeepWoods deepWoods)
+            {
+                if (deepWoods != DeepWoodsManager.currentDeepWoods)
+                {
+                    deepWoods.FixPlayerPosAfterWarp(Game1.player);
+                    DeepWoodsManager.currentDeepWoods = deepWoods;
+                }
                 deepWoods.CheckWarp();
+            }
         }
 
         public static void FixLighting()
