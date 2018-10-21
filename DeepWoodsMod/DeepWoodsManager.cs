@@ -41,7 +41,7 @@ namespace DeepWoodsMod
             }
             else if (!Game1.IsMasterGame)
             {
-                Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.player, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, level, "", new Vector2() });
+                Game1.MasterPlayer.queueMessage(Settings.Network.DeepWoodsMessageId, Game1.player, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, level, "", new Vector2() });
             }
             else
             {
@@ -103,7 +103,7 @@ namespace DeepWoodsMod
             {
                 foreach (Farmer who in Game1.otherFarmers.Values)
                     if (who != Game1.player)
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, (byte)1, deepWoods.Name });
+                        who.queueMessage(Settings.Network.DeepWoodsMessageId, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, (byte)1, deepWoods.Name });
             }
         }
 
@@ -115,7 +115,7 @@ namespace DeepWoodsMod
             {
                 foreach (Farmer who in Game1.otherFarmers.Values)
                     if (who != Game1.player)
-                        who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, (byte)0, deepWoods.Name });
+                        who.queueMessage(Settings.Network.DeepWoodsMessageId, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE, (byte)0, deepWoods.Name });
             }
         }
 
