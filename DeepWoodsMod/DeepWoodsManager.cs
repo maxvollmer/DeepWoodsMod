@@ -324,6 +324,10 @@ namespace DeepWoodsMod
                 // We left the deepwoods, fix lighting
                 DeepWoodsManager.FixLighting();
 
+                // Stop music
+                Game1.changeMusicTrack("none");
+                Game1.updateMusic();
+
                 // Workaround for bug where players are warped to [0,0] for some reason
                 if (rawTo is Woods && who == Game1.player)
                 {
