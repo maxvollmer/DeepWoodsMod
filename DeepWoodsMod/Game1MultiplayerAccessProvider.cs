@@ -130,7 +130,7 @@ namespace DeepWoodsMod
 
             private void InterceptProcessIncomingMessage(IncomingMessage msg)
             {
-                if (msg.MessageType == NETWORK_MESSAGE_DEEPWOODS)
+                if (msg.MessageType == Settings.Network.DeepWoodsMessageId)
                 {
                     int deepwoodsMessageType = msg.Reader.ReadInt32();
                     int randId = Game1.random.Next();
@@ -166,7 +166,7 @@ namespace DeepWoodsMod
                             }
 
                             ModEntry.Log(" [" + randId + "] Client requests settings and state, deepWoodsLevelNames.Count: " + deepWoodsLevelNames.Count + ", deepWoodsLevelNames: " + String.Join(", ", deepWoodsLevelNames.ToArray()), StardewModdingAPI.LogLevel.Debug);
-                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, data);
+                            who.queueMessage(Settings.Network.DeepWoodsMessageId, Game1.MasterPlayer, data);
                         }
                         else
                         {
@@ -193,7 +193,7 @@ namespace DeepWoodsMod
                             DeepWoods deepWoods = DeepWoodsManager.AddDeepWoodsFromObelisk(data.Level);
                             // Send message to client telling them we have the level ready.
                             ModEntry.Log(" [" + randId + "] Client requests that we load and activate a specific DeepWoods level they want to warp into: data.Level:" + data.Level, StardewModdingAPI.LogLevel.Debug);
-                            who.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, deepWoods.level.Value, deepWoods.Name, new Vector2(deepWoods.enterLocation.Value.X, deepWoods.enterLocation.Value.Y) });
+                            who.queueMessage(Settings.Network.DeepWoodsMessageId, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, deepWoods.level.Value, deepWoods.Name, new Vector2(deepWoods.enterLocation.Value.X, deepWoods.enterLocation.Value.Y) });
                         }
                         else
                         {

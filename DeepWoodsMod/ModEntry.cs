@@ -112,7 +112,7 @@ namespace DeepWoodsMod
             {
                 mod.isDeepWoodsGameRunning = false;
                 DeepWoodsManager.Remove();
-                Game1.MasterPlayer.queueMessage(NETWORK_MESSAGE_DEEPWOODS, Game1.player, new object[] { NETWORK_MESSAGE_DEEPWOODS_INIT });
+                Game1.MasterPlayer.queueMessage(Settings.Network.DeepWoodsMessageId, Game1.player, new object[] { NETWORK_MESSAGE_DEEPWOODS_INIT });
             }
         }
 
