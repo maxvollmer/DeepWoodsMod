@@ -78,8 +78,8 @@ namespace DeepWoodsMod
             public override void sendFarmhand() { intercepted.sendFarmhand(); }
             public override void sendServerToClientsMessage(string message) { intercepted.sendServerToClientsMessage(message); }
             public override void StartServer() { intercepted.StartServer(); }
-            // public override void tickFarmerRoots() { intercepted.tickFarmerRoots(); }
-            // public override void tickLocationRoots() { intercepted.tickLocationRoots(); }
+            //public override void tickFarmerRoots() { intercepted.tickFarmerRoots(); }
+            //public override void tickLocationRoots() { intercepted.tickLocationRoots(); }
             public override void UpdateEarly() { intercepted.UpdateEarly(); }
             public override void UpdateLate(bool forceSync = false) { intercepted.UpdateLate(forceSync); }
             public override void writeObjectDelta<T>(BinaryWriter writer, NetRoot<T> root) { intercepted.writeObjectDelta<T>(writer, root); }
@@ -135,7 +135,7 @@ namespace DeepWoodsMod
                     int deepwoodsMessageType = msg.Reader.ReadInt32();
                     int randId = Game1.random.Next();
 
-                    ModEntry.Log("InterceptProcessIncomingMessage["+randId+ "], master id: " + Game1.MasterPlayer.UniqueMultiplayerID + ", local id: " + Game1.player.UniqueMultiplayerID + ", msg.FarmerID: " + msg.FarmerID + ", deepwoodsMessageType: " + deepwoodsMessageType, StardewModdingAPI.LogLevel.Debug);
+                    ModEntry.Log("InterceptProcessIncomingMessage[" + randId + "], master id: " + Game1.MasterPlayer.UniqueMultiplayerID + ", local id: " + Game1.player.UniqueMultiplayerID + ", msg.FarmerID: " + msg.FarmerID + ", deepwoodsMessageType: " + deepwoodsMessageType, StardewModdingAPI.LogLevel.Debug);
 
                     Farmer who = Game1.getFarmer(msg.FarmerID);
                     if (who == null || who == Game1.player)
@@ -183,64 +183,78 @@ namespace DeepWoodsMod
                             ModEntry.DeepWoodsInitServerAnswerReceived(deepWoodsLevelNames);
                         }
                     }
-                    else if (deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
+                    else
                     {
-                        ModEntry.Log(" [" + randId + "] deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_WARP", StardewModdingAPI.LogLevel.Debug);
-                        DeepWoodsWarpMessageData data = ReadDeepWoodsWarpMessage(msg.Reader);
-                        if (Game1.IsMasterGame)
+                        if (!Game1.IsMasterGame && !ModEntry.IsDeepWoodsGameRunning)
                         {
-                            // Client requests that we load and activate a specific DeepWoods level they want to warp into.
-                            DeepWoods deepWoods = DeepWoodsManager.AddDeepWoodsFromObelisk(data.Level);
-                            // Send message to client telling them we have the level ready.
-                            ModEntry.Log(" [" + randId + "] Client requests that we load and activate a specific DeepWoods level they want to warp into: data.Level:" + data.Level, StardewModdingAPI.LogLevel.Debug);
-                            who.queueMessage(Settings.Network.DeepWoodsMessageId, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, deepWoods.level.Value, deepWoods.Name, new Vector2(deepWoods.enterLocation.Value.X, deepWoods.enterLocation.Value.Y) });
-                        }
-                        else
-                        {
-                            // Server informs us that we can warp now!
-                            ModEntry.Log(" [" + randId + "] Server informs us that we can warp now: data.Level:" + data.Level + ", data.Name:" + data.Name, StardewModdingAPI.LogLevel.Debug);
-                            DeepWoodsManager.AddBlankDeepWoodsToGameLocations(data.Name);
-                            DeepWoodsManager.WarpFarmerIntoDeepWoodsFromServerObelisk(data.Name, data.EnterLocation);
-                        }
-                    }
-                    else if (deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_LEVEL)
-                    {
-                        ModEntry.Log(" [" + randId + "] deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_LEVEL", StardewModdingAPI.LogLevel.Debug);
-                        if (!Game1.IsMasterGame && who == Game1.MasterPlayer)
-                        {
-                            DeepWoodsState.LowestLevelReached = msg.Reader.ReadInt32();
-                            ModEntry.Log(" [" + randId + "] DeepWoodsState.LowestLevelReached: " + DeepWoodsState.LowestLevelReached, StardewModdingAPI.LogLevel.Debug);
-                        }
-                    }
-                    else if (deepwoodsMessageType == NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN)
-                    {
-                        ModEntry.Log(" [" + randId + "] deepwoodsMessageType == NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN", StardewModdingAPI.LogLevel.Debug);
-                        if (Game1.IsMasterGame)
-                        {
-                            DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Add(who.UniqueMultiplayerID);
-                        }
-                    }
-                    else if (deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE)
-                    {
-                        ModEntry.Log(" [" + randId + "] deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE", StardewModdingAPI.LogLevel.Debug);
-                        if (!Game1.IsMasterGame)
-                        {
-                            bool added = msg.Reader.ReadByte() != 0;
-                            string name = msg.Reader.ReadString();
-                            ModEntry.Log(" [" + randId + "] added: " + added + ", name: " + name, StardewModdingAPI.LogLevel.Debug);
-                            if (added)
+                            if (ModEntry.HasRequestedInitMessageFromServer)
                             {
-                                DeepWoodsManager.AddBlankDeepWoodsToGameLocations(name);
+                                ModEntry.Log("Got message from server before init message!", StardewModdingAPI.LogLevel.Warn);
                             }
                             else
                             {
-                                DeepWoodsManager.RemoveDeepWoodsFromGameLocations(name);
+                                ModEntry.Log("Got message from server before init message, never sent init message request!", StardewModdingAPI.LogLevel.Warn);
                             }
                         }
-                    }
-                    else
-                    {
-                        ModEntry.Log(" [" + randId + "] unknown deepwoodsMessageType: " + deepwoodsMessageType + "!", StardewModdingAPI.LogLevel.Warn);
+                        if (deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_WARP)
+                        {
+                            ModEntry.Log(" [" + randId + "] deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_WARP", StardewModdingAPI.LogLevel.Debug);
+                            DeepWoodsWarpMessageData data = ReadDeepWoodsWarpMessage(msg.Reader);
+                            if (Game1.IsMasterGame)
+                            {
+                                // Client requests that we load and activate a specific DeepWoods level they want to warp into.
+                                DeepWoods deepWoods = DeepWoodsManager.AddDeepWoodsFromObelisk(data.Level);
+                                // Send message to client telling them we have the level ready.
+                                ModEntry.Log(" [" + randId + "] Client requests that we load and activate a specific DeepWoods level they want to warp into: data.Level:" + data.Level, StardewModdingAPI.LogLevel.Debug);
+                                who.queueMessage(Settings.Network.DeepWoodsMessageId, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_WARP, deepWoods.level.Value, deepWoods.Name, new Vector2(deepWoods.enterLocation.Value.X, deepWoods.enterLocation.Value.Y) });
+                            }
+                            else
+                            {
+                                // Server informs us that we can warp now!
+                                ModEntry.Log(" [" + randId + "] Server informs us that we can warp now: data.Level:" + data.Level + ", data.Name:" + data.Name, StardewModdingAPI.LogLevel.Debug);
+                                DeepWoodsManager.AddBlankDeepWoodsToGameLocations(data.Name);
+                                DeepWoodsManager.WarpFarmerIntoDeepWoodsFromServerObelisk(data.Name, data.EnterLocation);
+                            }
+                        }
+                        else if (deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_LEVEL)
+                        {
+                            ModEntry.Log(" [" + randId + "] deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_LEVEL", StardewModdingAPI.LogLevel.Debug);
+                            if (!Game1.IsMasterGame && who == Game1.MasterPlayer)
+                            {
+                                DeepWoodsState.LowestLevelReached = msg.Reader.ReadInt32();
+                                ModEntry.Log(" [" + randId + "] DeepWoodsState.LowestLevelReached: " + DeepWoodsState.LowestLevelReached, StardewModdingAPI.LogLevel.Debug);
+                            }
+                        }
+                        else if (deepwoodsMessageType == NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN)
+                        {
+                            ModEntry.Log(" [" + randId + "] deepwoodsMessageType == NETWORK_MESSAGE_RCVD_STARDROP_FROM_UNICORN", StardewModdingAPI.LogLevel.Debug);
+                            if (Game1.IsMasterGame)
+                            {
+                                DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Add(who.UniqueMultiplayerID);
+                            }
+                        }
+                        else if (deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE)
+                        {
+                            ModEntry.Log(" [" + randId + "] deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_ADDREMOVE", StardewModdingAPI.LogLevel.Debug);
+                            if (!Game1.IsMasterGame)
+                            {
+                                bool added = msg.Reader.ReadByte() != 0;
+                                string name = msg.Reader.ReadString();
+                                ModEntry.Log(" [" + randId + "] added: " + added + ", name: " + name, StardewModdingAPI.LogLevel.Debug);
+                                if (added)
+                                {
+                                    DeepWoodsManager.AddBlankDeepWoodsToGameLocations(name);
+                                }
+                                else
+                                {
+                                    DeepWoodsManager.RemoveDeepWoodsFromGameLocations(name);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ModEntry.Log(" [" + randId + "] unknown deepwoodsMessageType: " + deepwoodsMessageType + "!", StardewModdingAPI.LogLevel.Warn);
+                        }
                     }
                 }
                 else
@@ -252,14 +266,45 @@ namespace DeepWoodsMod
 
         public static Multiplayer GetMultiplayer()
         {
-            if (!(Game1.multiplayer is InterceptingMultiplayer))
-            {
-                InterceptMultiplayer();
-            }
+            InterceptMultiplayerIfNecessary();
             return Game1.multiplayer;
         }
 
-        public static void InterceptMultiplayer()
+        public static void InterceptMultiplayerIfNecessary()
+        {
+            if (!IsInterceptedMultiplayer(Game1.multiplayer))
+            {
+                InterceptMultiplayer();
+            }
+        }
+
+        private static bool IsInterceptedMultiplayer(Multiplayer multiplayer)
+        {
+            if (multiplayer is InterceptingMultiplayer)
+                return true;
+
+            if (multiplayer == null)
+                return false;
+
+            // Since other mods can also write a multiplayer wrapper,
+            // we recursively check fields for an instance of our class.
+            // (Otherwise we might create an infinite loop.)
+            foreach (var field in multiplayer.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
+            {
+                if (IsMultiplayerType(field.GetType())
+                    && IsInterceptedMultiplayer(field.GetValue(multiplayer) as Multiplayer))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsMultiplayerType(Type t)
+        {
+            return t.IsSubclassOf(typeof(Multiplayer)) || t == typeof(Multiplayer);
+        }
+
+        private static void InterceptMultiplayer()
         {
             Game1.multiplayer = new InterceptingMultiplayer(Game1.multiplayer);
         }
