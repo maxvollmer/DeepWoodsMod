@@ -266,14 +266,45 @@ namespace DeepWoodsMod
 
         public static Multiplayer GetMultiplayer()
         {
-            if (!(Game1.multiplayer is InterceptingMultiplayer))
-            {
-                InterceptMultiplayer();
-            }
+            InterceptMultiplayerIfNecessary();
             return Game1.multiplayer;
         }
 
-        public static void InterceptMultiplayer()
+        public static void InterceptMultiplayerIfNecessary()
+        {
+            if (!IsInterceptedMultiplayer(Game1.multiplayer))
+            {
+                InterceptMultiplayer();
+            }
+        }
+
+        private static bool IsInterceptedMultiplayer(Multiplayer multiplayer)
+        {
+            if (multiplayer is InterceptingMultiplayer)
+                return true;
+
+            if (multiplayer == null)
+                return false;
+
+            // Since other mods can also write a multiplayer wrapper,
+            // we recursively check fields for an instance of our class.
+            // (Otherwise we might create an infinite loop.)
+            foreach (var field in multiplayer.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
+            {
+                if (IsMultiplayerType(field.GetType())
+                    && IsInterceptedMultiplayer(field.GetValue(multiplayer) as Multiplayer))
+                        return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsMultiplayerType(Type t)
+        {
+            return t.IsSubclassOf(typeof(Multiplayer)) || t == typeof(Multiplayer);
+        }
+
+        private static void InterceptMultiplayer()
         {
             Game1.multiplayer = new InterceptingMultiplayer(Game1.multiplayer);
         }

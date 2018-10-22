@@ -65,7 +65,7 @@ namespace DeepWoodsMod
         public override void Entry(IModHelper helper)
         {
             ModEntry.mod = this;
-            Game1MultiplayerAccessProvider.InterceptMultiplayer();
+            Game1MultiplayerAccessProvider.InterceptMultiplayerIfNecessary();
             Textures.LoadAll();
             RegisterEvents();
         }
@@ -117,6 +117,10 @@ namespace DeepWoodsMod
         private void InitGameIfNecessary()
         {
             ModEntry.Log("InitGameIfNecessary(" + isDeepWoodsGameRunning + ")", StardewModdingAPI.LogLevel.Trace);
+
+            // Make sure our interceptor is set.
+            // E.g. MTN overrides Game1.multiplayer instead of wrapping.
+            Game1MultiplayerAccessProvider.InterceptMultiplayerIfNecessary();
 
             if (isDeepWoodsGameRunning)
                 return;
