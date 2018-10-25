@@ -109,6 +109,20 @@ namespace DeepWoodsMod
 
         public static void RemoveDeepWoodsFromGameLocations(DeepWoods deepWoods)
         {
+            // Player might be in this level, teleport them out
+            if (Game1.player.currentLocation == deepWoods)
+            {
+                Game1.warpFarmer(Game1.getLocationRequest("Woods", false), WOODS_WARP_LOCATION.X, WOODS_WARP_LOCATION.Y, 0);
+                // Take away all health and energy to avoid cheaters using Save Anywhere to escape getting lost
+                if (deepWoods.level > 1 && deepWoods.IsLost())
+                {
+                    Game1.player.health = 1;
+                    Game1.player.Stamina = 0;
+                }
+                Game1.player.currentLocation = Game1.getLocationFromName("Woods");
+                Game1.player.Position = new Vector2(WOODS_WARP_LOCATION.X * 64, WOODS_WARP_LOCATION.Y * 64);
+            }
+
             Game1.locations.Remove(deepWoods);
 
             if (Game1.IsMasterGame)
