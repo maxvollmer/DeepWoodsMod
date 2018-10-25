@@ -89,9 +89,9 @@ namespace DeepWoodsMod
             GameEvents.UpdateTick += this.GameEvents_UpdateTick;
             GraphicsEvents.OnPostRenderEvent += this.GraphicsEvents_OnPostRenderEvent;
 
-            if (Helper.ModRegistry.IsLoaded("Save Anywhere"))
+            if (Helper.ModRegistry.IsLoaded("Omegasis.SaveAnywhere"))
             {
-                ISaveAnywhereAPI api = Helper.ModRegistry.GetApi<ISaveAnywhereAPI>("Save Anywhere");
+                ISaveAnywhereAPI api = Helper.ModRegistry.GetApi<ISaveAnywhereAPI>("Omegasis.SaveAnywhere");
                 if (api != null)
                 {
                     api.BeforeSave += this.SaveEvents_BeforeSave;
