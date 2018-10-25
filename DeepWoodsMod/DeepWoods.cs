@@ -741,7 +741,22 @@ namespace DeepWoodsMod
 
         public override void updateEvenIfFarmerIsntHere(GameTime time, bool skipWasUpdatedFlush = false)
         {
+            // Intercept exploding bombs
+            base.temporarySprites
+                .FindAll(t => t.bombRadius > 0)
+                .ForEach(t => t.endFunction = new TemporaryAnimatedSprite.endBehavior(delegate (int extraInfo) {
+                    HandleExplosion(t.position / 64, t.bombRadius);
+                })
+            );
             base.updateEvenIfFarmerIsntHere(time, skipWasUpdatedFlush);
+        }
+
+        private void HandleExplosion(Vector2 tile, int radius)
+        {
+            if (radius <= 0)
+                return;
+
+            // TODO: Make custom stuff in DeepWoods react to explosions from bombs
         }
 
         public override void UpdateWhenCurrentLocation(GameTime time)
