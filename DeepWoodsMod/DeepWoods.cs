@@ -874,5 +874,13 @@ namespace DeepWoodsMod
                 return 0;
             }
         }
+
+        public bool IsLost()
+        {
+            if (level == 1)
+                return false;
+
+            return Parent?.IsLost() ?? true;
+        }
     }
 }
