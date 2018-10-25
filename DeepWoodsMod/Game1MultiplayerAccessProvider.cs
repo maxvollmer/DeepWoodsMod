@@ -16,7 +16,7 @@ namespace DeepWoodsMod
     {
         private Game1MultiplayerAccessProvider() { }
 
-        private class InterceptingMultiplayer : Multiplayer
+        public class InterceptingMultiplayer : Multiplayer
         {
             private Multiplayer intercepted;
 
@@ -118,7 +118,7 @@ namespace DeepWoodsMod
                 public Vector2 EnterLocation { get; set; }
             }
 
-            private DeepWoodsWarpMessageData ReadDeepWoodsWarpMessage(BinaryReader reader)
+            private static DeepWoodsWarpMessageData ReadDeepWoodsWarpMessage(BinaryReader reader)
             {
                 return new DeepWoodsWarpMessageData()
                 {
@@ -129,6 +129,15 @@ namespace DeepWoodsMod
             }
 
             private void InterceptProcessIncomingMessage(IncomingMessage msg)
+            {
+                bool executeOriginal = InternalProcessIncomingMessage(msg);
+                if (executeOriginal)
+                    intercepted.processIncomingMessage(msg);
+            }
+
+            // This method is also called by the patch in DeepWoodsMTNCompatibilityMod.
+            // We return false when we handled this message, so Harmony will cancel the original MTN handler.
+            private static bool InternalProcessIncomingMessage(IncomingMessage msg)
             {
                 if (msg.MessageType == Settings.Network.DeepWoodsMessageId)
                 {
@@ -141,7 +150,7 @@ namespace DeepWoodsMod
                     if (who == null || who == Game1.player)
                     {
                         ModEntry.Log(" who is null or local!", StardewModdingAPI.LogLevel.Warn);
-                        return;
+                        return true; // execute original
                     }
 
                     if (deepwoodsMessageType == NETWORK_MESSAGE_DEEPWOODS_INIT)
@@ -254,13 +263,14 @@ namespace DeepWoodsMod
                         else
                         {
                             ModEntry.Log(" [" + randId + "] unknown deepwoodsMessageType: " + deepwoodsMessageType + "!", StardewModdingAPI.LogLevel.Warn);
+                            return true; // execute original
                         }
                     }
+
+                    return false; // don't execute original
                 }
-                else
-                {
-                    intercepted.processIncomingMessage(msg);
-                }
+
+                return true; // execute original
             }
         }
 
