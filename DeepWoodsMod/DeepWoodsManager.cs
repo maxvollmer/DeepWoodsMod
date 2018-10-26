@@ -272,18 +272,6 @@ namespace DeepWoodsMod
         // This is called by every client every frame
         public static void LocalTick()
         {
-            /*
-            if (Game1.currentLocation is DeepWoods deepWoods
-                 && Game1.locationRequest == null)
-            {
-                if (deepWoods != DeepWoodsManager.currentDeepWoods)
-                {
-                    deepWoods.FixPlayerPosAfterWarp(Game1.player);
-                    DeepWoodsManager.currentDeepWoods = deepWoods;
-                }
-                deepWoods.CheckWarp();
-            }
-            */
             DeepWoodsManager.currentDeepWoods?.CheckWarp();
         }
 

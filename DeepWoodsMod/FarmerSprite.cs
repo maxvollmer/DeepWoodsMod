@@ -29,7 +29,6 @@ namespace DeepWoodsMod
 
             this.currentAnimationIndex = copyFrom.SpriteHeight;
             this.oldFrame = copyFrom.oldFrame;
-            //this.currentAnimation = copyFrom.currentAnimation;
             this.currentAnimation.Clear();
             this.currentAnimation.AddRange(copyFrom.currentAnimation);
             this.textureUsesFlippedRightForLeft = copyFrom.textureUsesFlippedRightForLeft;
