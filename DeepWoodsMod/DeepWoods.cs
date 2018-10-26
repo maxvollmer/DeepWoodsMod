@@ -205,8 +205,13 @@ namespace DeepWoodsMod
 
         public void RemovePlayer(Farmer who)
         {
-            if (DeepWoodsManager.currentDeepWoods == this)
-                DeepWoodsManager.currentDeepWoods = null;
+            ModEntry.Log("RemovePlayer(" + who.UniqueMultiplayerID + "): " + this.Name, LogLevel.Debug);
+
+            if (who == Game1.player)
+            {
+                if (DeepWoodsManager.currentDeepWoods == this)
+                    DeepWoodsManager.currentDeepWoods = null;
+            }
 
             if (!Game1.IsMasterGame)
                 return;
@@ -216,8 +221,20 @@ namespace DeepWoodsMod
 
         public void FixPlayerPosAfterWarp(Farmer who)
         {
+            // Only fix position for local player
             if (who != Game1.player)
                 return;
+
+            // Check if level is properly initialized
+            if (this.map == null
+                || this.map.Id != this.Name
+                || this.Seed == 0
+                || !this.HasReceivedNetworkData
+                || mapWidth.Value == 0
+                || mapHeight.Value == 0)
+                return;
+
+            ModEntry.Log("FixPlayerPosAfterWarp: " + this.Name + ", mapWidth: " + mapWidth, LogLevel.Debug);
 
             // First check for current warp request (stored globally for local player):
             if (DeepWoodsManager.currentWarpRequestName == this.Name
@@ -257,14 +274,18 @@ namespace DeepWoodsMod
 
         public void AddPlayer(Farmer who)
         {
+            ModEntry.Log("AddPlayer(" + who.UniqueMultiplayerID + "): " + this.Name, LogLevel.Debug);
+
             if (who == Game1.player)
             {
                 // Fix enter position (some bug I haven't figured out yet spawns network clients outside the map delimiter...)
                 FixPlayerPosAfterWarp(who);
                 DeepWoodsManager.currentDeepWoods = this;
             }
+
             if (!Game1.IsMasterGame)
                 return;
+
             this.hasEverBeenVisited.Value = true;
             this.playerCount.Value = this.playerCount.Value + 1;
             ValidateAndIfNecessaryCreateExitChildren();
@@ -454,7 +475,7 @@ namespace DeepWoodsMod
 
         public void CheckWarp()
         {
-            if (Game1.player.currentLocation == this && Game1.locationRequest == null)
+            if (Game1.player.currentLocation == this && Game1.currentLocation == this && Game1.locationRequest == null)
             {
                 if (Game1.player.Position.X + 48 < 0)
                     Warp(ExitDirection.LEFT);
