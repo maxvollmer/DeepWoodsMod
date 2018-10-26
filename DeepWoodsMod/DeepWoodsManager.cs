@@ -325,7 +325,7 @@ namespace DeepWoodsMod
             if (from is DeepWoods dw1 && to is DeepWoods dw2 && dw1.Name == dw2.Name)
                 return;
 
-            ModEntry.Log("PlayerWarped from: " + from?.Name + ", to: " + to?.Name, LogLevel.Debug);
+            ModEntry.Log("PlayerWarped from: " + from?.Name + ", to: " + to?.Name, LogLevel.Trace);
 
             from?.RemovePlayer(who);
             to?.AddPlayer(who);
