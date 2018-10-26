@@ -58,6 +58,8 @@ namespace DeepWoodsMod
 
         public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)
         {
+            if (t == null && explosion > 0)
+                return true;
             return false;
         }
 

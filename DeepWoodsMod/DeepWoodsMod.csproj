@@ -65,6 +65,7 @@
     <Compile Include="EasterEggItem.cs" />
     <Compile Include="Excalibur.cs" />
     <Compile Include="ExcaliburStone.cs" />
+    <Compile Include="ExplodableResourceClump.cs" />
     <Compile Include="FarmerSprite.cs" />
     <Compile Include="Flower.cs" />
     <Compile Include="Game1MultiplayerAccessProvider.cs" />

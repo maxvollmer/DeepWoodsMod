@@ -777,7 +777,54 @@ namespace DeepWoodsMod
             if (radius <= 0)
                 return;
 
-            // TODO: Make custom stuff in DeepWoods react to explosions from bombs
+            List<ResourceClump> resourceClumpsCopy = new List<ResourceClump>(resourceClumps);
+            List<LargeTerrainFeature> largeTerrainFeaturesCopy = new List<LargeTerrainFeature>(largeTerrainFeatures);
+
+            bool[,] circleOutlineGrid = Game1.getCircleOutlineGrid(radius);
+            for (int x = 0; x < radius * 2 + 1; x++)
+            {
+                bool isInBombRadius = false;
+                for (int y = 0; y < radius * 2 + 1; y++)
+                {
+                    if (circleOutlineGrid[x, y])
+                        isInBombRadius = !isInBombRadius;
+
+                    if (isInBombRadius)
+                    {
+                        Vector2 location = new Vector2(tile.X + x - radius, tile.Y + y - radius);
+                        resourceClumpsCopy.RemoveAll(r =>
+                        {
+                            if (r.getBoundingBox(r.tile).Contains((int)location.X * 64, (int)location.Y * 64))
+                            {
+                                if (r.performToolAction(null, radius, location, this))
+                                {
+                                    resourceClumps.Remove(r);
+                                }
+                                return true;
+                            }
+                            return false;
+                        });
+                        largeTerrainFeaturesCopy.RemoveAll(lt =>
+                        {
+                            if (lt.getBoundingBox(lt.tilePosition).Contains((int)location.X * 64, (int)location.Y * 64))
+                            {
+                                if (lt.performToolAction(null, radius, location, this))
+                                {
+                                    largeTerrainFeatures.Remove(lt);
+                                }
+                                return true;
+                            }
+                            return false;
+                        });
+                        if (this.terrainFeatures.ContainsKey(location) &&
+                            (this.terrainFeatures[location] is Flower
+                            || this.terrainFeatures[location] is EasterEgg))
+                        {
+                            this.terrainFeatures.Remove(location);
+                        }
+                    }
+                }
+            }
         }
 
         public override void UpdateWhenCurrentLocation(GameTime time)
