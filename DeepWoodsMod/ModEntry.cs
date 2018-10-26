@@ -228,7 +228,7 @@ namespace DeepWoodsMod
                     // player left
                     PlayerWarped(Game1.getFarmer(playerLocation.Key), playerLocation.Value, null);
                 }
-                else if (playerLocation.Value != newPlayerLocations[playerLocation.Key])
+                else if (playerLocation.Value?.Name != newPlayerLocations[playerLocation.Key]?.Name)
                 {
                     // player warped
                     PlayerWarped(Game1.getFarmer(playerLocation.Key), playerLocation.Value, newPlayerLocations[playerLocation.Key]);
@@ -267,6 +267,9 @@ namespace DeepWoodsMod
         private void PlayerWarped(Farmer who, GameLocation prevLocation, GameLocation newLocation)
         {
             if (!isDeepWoodsGameRunning)
+                return;
+
+            if (prevLocation is DeepWoods dw1 && newLocation is DeepWoods dw2 && dw1.Name == dw2.Name)
                 return;
 
             if (newLocation is Woods woods)

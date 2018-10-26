@@ -272,7 +272,9 @@ namespace DeepWoodsMod
         // This is called by every client every frame
         public static void LocalTick()
         {
-            if (Game1.player.currentLocation is DeepWoods deepWoods)
+            /*
+            if (Game1.currentLocation is DeepWoods deepWoods
+                 && Game1.locationRequest == null)
             {
                 if (deepWoods != DeepWoodsManager.currentDeepWoods)
                 {
@@ -281,6 +283,8 @@ namespace DeepWoodsMod
                 }
                 deepWoods.CheckWarp();
             }
+            */
+            DeepWoodsManager.currentDeepWoods?.CheckWarp();
         }
 
         public static void FixLighting()
@@ -330,6 +334,11 @@ namespace DeepWoodsMod
         // Called whenever a player warps, both from and to may be null
         public static void PlayerWarped(Farmer who, DeepWoods from, DeepWoods to, GameLocation rawTo)
         {
+            if (from is DeepWoods dw1 && to is DeepWoods dw2 && dw1.Name == dw2.Name)
+                return;
+
+            ModEntry.Log("PlayerWarped from: " + from?.Name + ", to: " + to?.Name, LogLevel.Debug);
+
             from?.RemovePlayer(who);
             to?.AddPlayer(who);
 
