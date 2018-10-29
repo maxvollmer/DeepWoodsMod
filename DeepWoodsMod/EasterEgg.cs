@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.TerrainFeatures;
+using System;
 
 namespace DeepWoodsMod
 {
@@ -39,14 +40,21 @@ namespace DeepWoodsMod
 
             if (Game1.player.addItemToInventoryBool(new EasterEggItem(), false))
             {
-                if (!(Game1.player.FarmerSprite is DeepWoodsMod.FarmerSprite))
-                {
-                    Game1.player.FarmerSprite = new DeepWoodsMod.FarmerSprite(Game1.player.FarmerSprite);
-                }
-                Game1.player.animateOnce(StardewValley.FarmerSprite.harvestItemUp + Game1.player.FacingDirection);
-                Game1.player.canMove = false;
-                Game1.player.currentLocation.playSound("coin");
                 this.wasPickedUp = true;
+                try
+                {
+                    Game1.player.currentLocation.playSound("coin");
+                    if (!(Game1.player.FarmerSprite is DeepWoodsMod.FarmerSprite))
+                    {
+                        Game1.player.FarmerSprite = new DeepWoodsMod.FarmerSprite(Game1.player.FarmerSprite);
+                    }
+                    Game1.player.animateOnce(StardewValley.FarmerSprite.harvestItemUp + Game1.player.FacingDirection);
+                    Game1.player.canMove = false;
+                }
+                catch (Exception e)
+                {
+                    ModEntry.Log("Failed to play pickup animation: " + e, StardewModdingAPI.LogLevel.Warn);
+                }
                 return true;
             }
             else
