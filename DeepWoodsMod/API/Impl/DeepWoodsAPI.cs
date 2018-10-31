@@ -37,10 +37,13 @@ namespace DeepWoodsMod.API.Impl
         public event Action<IDeepWoodsLocation> AfterFill;
         public event Action<IDeepWoodsLocation> BeforeMonsterGeneration;
         public event Action<IDeepWoodsLocation> AfterMonsterGeneration;
+        public event Action<IDeepWoodsLocation> BeforeDebrisCreation;
+        public event Action<IDeepWoodsLocation> AfterDebrisCreation;
 
         public event Func<IDeepWoodsLocation, bool> OverrideMapGeneration;
         public event Func<IDeepWoodsLocation, bool> OverrideFill;
         public event Func<IDeepWoodsLocation, bool> OverrideMonsterGeneration;
+        public event Func<IDeepWoodsLocation, bool> OverrideDebrisCreation;
 
         public List<Tuple<Func<IDeepWoodsLocation, Vector2, bool>, Func<TerrainFeature>>> TerrainFeatures { get; } = new List<Tuple<Func<IDeepWoodsLocation, Vector2, bool>, Func<TerrainFeature>>>();
         public List<Tuple<Func<IDeepWoodsLocation, Vector2, bool>, Func<LargeTerrainFeature>>> LargeTerrainFeatures { get; } = new List<Tuple<Func<IDeepWoodsLocation, Vector2, bool>, Func<LargeTerrainFeature>>>();
@@ -199,6 +202,42 @@ namespace DeepWoodsMod.API.Impl
             }
         }
 
+        public void CallBeforeDebrisCreation(DeepWoods deepWoods)
+        {
+            if (BeforeDebrisCreation == null)
+                return;
+
+            foreach (Action<IDeepWoodsLocation> callback in BeforeDebrisCreation.GetInvocationList())
+            {
+                try
+                {
+                    callback(deepWoods);
+                }
+                catch (Exception e)
+                {
+                    ModEntry.Log("[THIS IS NOT A BUG IN DEEPWOODS] Exception caught while calling callback from another mod: " + e, StardewModdingAPI.LogLevel.Warn);
+                }
+            }
+        }
+
+        public void CallAfterDebrisCreation(DeepWoods deepWoods)
+        {
+            if (AfterDebrisCreation == null)
+                return;
+
+            foreach (Action<IDeepWoodsLocation> callback in AfterDebrisCreation.GetInvocationList())
+            {
+                try
+                {
+                    callback(deepWoods);
+                }
+                catch (Exception e)
+                {
+                    ModEntry.Log("[THIS IS NOT A BUG IN DEEPWOODS] Exception caught while calling callback from another mod: " + e, StardewModdingAPI.LogLevel.Warn);
+                }
+            }
+        }
+
         public bool CallOverrideMapGeneration(DeepWoods deepWoods)
         {
             if (OverrideMapGeneration == null)
@@ -257,6 +296,28 @@ namespace DeepWoodsMod.API.Impl
                         return true;
                 }
                 catch(Exception e)
+                {
+                    ModEntry.Log("[THIS IS NOT A BUG IN DEEPWOODS] Exception caught while calling callback from another mod: " + e, StardewModdingAPI.LogLevel.Warn);
+                }
+            }
+
+            return false;
+        }
+
+        public bool CallOverrideDebrisCreation(DeepWoods deepWoods)
+        {
+            if (OverrideDebrisCreation == null)
+                return false;
+
+            // If multiple mods add an override, we shuffle the overrides and the first one "wins":
+            foreach (Func<IDeepWoodsLocation, bool> callback in ToShuffledList(OverrideDebrisCreation.GetInvocationList()))
+            {
+                try
+                {
+                    if (callback(deepWoods))
+                        return true;
+                }
+                catch (Exception e)
                 {
                     ModEntry.Log("[THIS IS NOT A BUG IN DEEPWOODS] Exception caught while calling callback from another mod: " + e, StardewModdingAPI.LogLevel.Warn);
                 }
