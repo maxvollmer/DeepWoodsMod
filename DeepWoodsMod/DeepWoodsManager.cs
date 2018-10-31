@@ -114,7 +114,7 @@ namespace DeepWoodsMod
             {
                 Game1.warpFarmer(Game1.getLocationRequest("Woods", false), WOODS_WARP_LOCATION.X, WOODS_WARP_LOCATION.Y, 0);
                 // Take away all health and energy to avoid cheaters using Save Anywhere to escape getting lost
-                if (deepWoods.level > 1 && deepWoods.IsLost())
+                if (deepWoods.level > 1 && deepWoods.IsLost)
                 {
                     Game1.player.health = 1;
                     Game1.player.Stamina = 0;

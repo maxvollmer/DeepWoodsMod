@@ -27,7 +27,7 @@ namespace DeepWoodsMod
             this.SpriteWidth = copyFrom.SpriteWidth;
             this.SpriteHeight = copyFrom.SpriteHeight;
 
-            this.currentAnimationIndex = copyFrom.SpriteHeight;
+            this.currentAnimationIndex = copyFrom.currentAnimationIndex;
             this.oldFrame = copyFrom.oldFrame;
             if (copyFrom.currentAnimation == null)
             {
