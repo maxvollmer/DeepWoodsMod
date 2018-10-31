@@ -133,9 +133,9 @@ namespace DeepWoodsMod
         }
         public int CombatLevel { get { return this.GetCombatLevel(); } }
         public IEnumerable<IDeepWoodsExit> Exits { get { return this.exits; } }
-        public IEnumerable<ResourceClump> ResourceClumps { get { return this.resourceClumps; } }
-        public IEnumerable<Vector2> Baubles { get { return this.baubles; } }
-        public IEnumerable<WeatherDebris> WeatherDebris { get { return this.weatherDebris; } }
+        public ICollection<ResourceClump> ResourceClumps { get { return this.resourceClumps; } }
+        public ICollection<Vector2> Baubles { get { return this.baubles; } }
+        public ICollection<WeatherDebris> WeatherDebris { get { return this.weatherDebris; } }
 
 
 
@@ -609,8 +609,7 @@ namespace DeepWoodsMod
                     targetDeepWoodsName = exit.TargetLocationName;
                     if (exit.TargetLocation.X == 0 && exit.TargetLocation.Y == 0)
                     {
-                        DeepWoods exitDeepWoods = Game1.getLocationFromName(targetDeepWoodsName) as DeepWoods;
-                        if (exitDeepWoods != null)
+                        if (Game1.getLocationFromName(targetDeepWoodsName) is DeepWoods exitDeepWoods)
                             exit.TargetLocation = new Location(exitDeepWoods.enterLocation.X, exitDeepWoods.enterLocation.Y);
                     }
                     targetLocationWrapper = exit.TargetLocation;
@@ -620,8 +619,7 @@ namespace DeepWoodsMod
                     targetDeepWoodsName = parentName.Value;
                     if (ParentExitLocation.X == 0 && ParentExitLocation.Y == 0)
                     {
-                        DeepWoods parentDeepWoods = Game1.getLocationFromName(targetDeepWoodsName) as DeepWoods;
-                        if (parentDeepWoods != null)
+                        if (Game1.getLocationFromName(targetDeepWoodsName) is DeepWoods parentDeepWoods)
                             ParentExitLocation = parentDeepWoods.GetExit(EnterDirToExitDir(EnterDir)).Location;
                     }
                     targetLocationWrapper = ParentExitLocation;
@@ -801,7 +799,12 @@ namespace DeepWoodsMod
             // TODO: Better critter spawning in forest
             this.tryToAddCritters(false);
 
-            DeepWoodsDebris.Initialize(this);
+            ModEntry.GetAPI().CallBeforeDebrisCreation(this);
+            if (!ModEntry.GetAPI().CallOverrideDebrisCreation(this))
+            {
+                DeepWoodsDebris.Initialize(this);
+            }
+            ModEntry.GetAPI().CallAfterDebrisCreation(this);
 
             foreach (Vector2 lightSource in this.lightSources)
             {
