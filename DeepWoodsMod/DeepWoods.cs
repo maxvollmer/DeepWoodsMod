@@ -58,6 +58,10 @@ namespace DeepWoodsMod
         public readonly NetBool isMapSizeSetByAPI = new NetBool(false);
         public readonly NetBool canGetLost = new NetBool(true);
 
+        public readonly NetVector2Dictionary<int, NetInt> additionalExitLocations = new NetVector2Dictionary<int, NetInt>();
+
+        public readonly NetBool isOverrideMap = new NetBool(false);
+
         // Local only
         public List<Vector2> lightSources = new List<Vector2>();
         public List<Vector2> baubles = new List<Vector2>();
@@ -72,6 +76,8 @@ namespace DeepWoodsMod
 
 
         // API
+        public IDeepWoodsLocation ParentDeepWoods { get { return Parent; } }
+        public bool IsCustomMap { get { return isOverrideMap; } }
         public bool IsClearing
         {
             get
@@ -202,7 +208,7 @@ namespace DeepWoodsMod
             updateMap();
 
             ModEntry.GetAPI().CallBeforeFill(this);
-            if (!ModEntry.GetAPI().CallOverrideFill(this))
+            if ((this.isLichtung && this.lichtungHasLake) || !ModEntry.GetAPI().CallOverrideFill(this))
             {
                 DeepWoodsStuffCreator.AddStuff(this, new DeepWoodsRandom(this, this.seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()));
             }
@@ -235,7 +241,7 @@ namespace DeepWoodsMod
         protected override void initNetFields()
         {
             base.initNetFields();
-            this.NetFields.AddFields(parentName, parentExitLocation, hasReceivedNetworkData, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, resourceClumps, isLichtungSetByAPI, isMapSizeSetByAPI, canGetLost);
+            this.NetFields.AddFields(parentName, parentExitLocation, hasReceivedNetworkData, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, resourceClumps, isLichtungSetByAPI, isMapSizeSetByAPI, canGetLost, additionalExitLocations, isOverrideMap);
         }
 
         private void DetermineExits()
@@ -262,6 +268,9 @@ namespace DeepWoodsMod
                         exitDir,
                         new DeepWoodsSpaceManager(this.mapWidth.Value, this.mapHeight.Value).GetRandomExitLocation(exitDir, new DeepWoodsRandom(this, this.seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()))
                     )
+                    {
+                        TargetLocationName = "DeepWoods_" + DeepWoodsRandom.CalculateSeed(level + 1, ExitDirToEnterDir(exitDir), Seed)
+                    }
                 );
             }
         }
@@ -398,8 +407,6 @@ namespace DeepWoodsMod
 
             foreach (var exit in this.exits)
             {
-                if (exit.TargetLocationName == null)
-                    exit.TargetLocationName = "DeepWoods_" + DeepWoodsRandom.CalculateSeed(level + 1, ExitDirToEnterDir(exit.ExitDir), Seed);
                 DeepWoods exitDeepWoods = Game1.getLocationFromName(exit.TargetLocationName) as DeepWoods;
                 if (exitDeepWoods == null)
                 {
@@ -553,7 +560,13 @@ namespace DeepWoodsMod
 
             // Build the map!
             ModEntry.GetAPI().CallBeforeMapGeneration(this);
-            if (!ModEntry.GetAPI().CallOverrideMapGeneration(this))
+            if (ModEntry.GetAPI().CallOverrideMapGeneration(this))
+            {
+                this.isOverrideMap.Value = true;
+                // Make sure map id is our name, otherwise game will reload the map every frame crashing the game
+                this.map.Id = this.Name;
+            }
+            else
             {
                 DeepWoodsBuilder.Build(this, this.map, DeepWoodsEnterExit.CreateExitDictionary(this.EnterDir, this.EnterLocation, this.exits));
             }
@@ -575,6 +588,16 @@ namespace DeepWoodsMod
             }
         }
 
+        public void AddExitLocation(Location tile, DeepWoodsExit exit)
+        {
+            additionalExitLocations[new Vector2(tile.X, tile.Y)] = exit != null ? (int)exit.ExitDir : -1;
+        }
+
+        public void RemoveExitLocation(Location tile)
+        {
+            additionalExitLocations.Remove(new Vector2(tile.X, tile.Y));
+        }
+
         public void CheckWarp()
         {
             if (Game1.player.currentLocation == this && Game1.currentLocation == this && Game1.locationRequest == null)
@@ -587,6 +610,21 @@ namespace DeepWoodsMod
                     Warp(ExitDirection.RIGHT);
                 else if (Game1.player.Position.Y + 16 > this.mapHeight.Value * 64)
                     Warp(ExitDirection.BOTTOM);
+                else
+                {
+                    var playerRectangle = new Microsoft.Xna.Framework.Rectangle((int)(Game1.player.Position.X + 8), (int)(Game1.player.Position.Y + 8), 64 - 16, 64 - 16);
+                    foreach (var additionalExitLocation in additionalExitLocations.Keys)
+                    {
+                        var additionalExitLocationRectangle = new Microsoft.Xna.Framework.Rectangle((int)(additionalExitLocation.X * 64 + 8), (int)(additionalExitLocation.Y * 64 + 8), 64 - 16, 64 - 16);
+                        if (playerRectangle.Intersects(additionalExitLocationRectangle))
+                        {
+                            if (additionalExitLocations[additionalExitLocation] == -1)
+                                Warp(CastEnterDirToExitDir(EnterDir));
+                            else
+                                Warp((ExitDirection)additionalExitLocations[additionalExitLocation]);
+                        }
+                    }
+                }
             }
         }
 

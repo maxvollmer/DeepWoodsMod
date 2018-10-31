@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,6 +32,31 @@ namespace DeepWoodsMod
         private static DeepWoods rootDeepWoodsBackup = null;
         private static bool lostMessageDisplayedToday = false;
         private static int nextRandomizeTime = 0;
+
+
+        public static void AddExitLocation(DeepWoods deepWoods, Location tile, DeepWoodsExit exit)
+        {
+            if (!Game1.IsMasterGame)
+                return;
+
+            if (deepWoods == null)
+                return;
+
+            deepWoods.AddExitLocation(tile, exit);
+        }
+
+        public static void RemoveExitLocation(DeepWoods deepWoods, Location tile)
+        {
+            if (!Game1.IsMasterGame)
+                return;
+
+            if (deepWoods == null)
+                return;
+
+            deepWoods.RemoveExitLocation(tile);
+        }
+
+
 
         public static void WarpFarmerIntoDeepWoods(int level)
         {
