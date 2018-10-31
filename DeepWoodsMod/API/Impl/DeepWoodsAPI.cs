@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using xTile.Dimensions;
+using static DeepWoodsMod.DeepWoodsEnterExit;
 using static DeepWoodsMod.DeepWoodsRandom;
 
 namespace DeepWoodsMod.API.Impl
@@ -74,6 +76,16 @@ namespace DeepWoodsMod.API.Impl
         public void RegisterMonster(Func<IDeepWoodsLocation, Vector2, bool> decisionCallback, Func<Monster> creationCallback)
         {
             Monsters.Add(Tuple.Create(decisionCallback, creationCallback));
+        }
+
+        public void AddExitLocation(IDeepWoodsLocation deepWoodsLocation, IDeepWoodsExit exit, Location tile)
+        {
+            DeepWoodsManager.AddExitLocation(deepWoodsLocation as DeepWoods, tile, exit as DeepWoodsExit);
+        }
+
+        public void RemoveExitLocation(IDeepWoodsLocation deepWoodsLocation, Location tile)
+        {
+            DeepWoodsManager.RemoveExitLocation(deepWoodsLocation as DeepWoods, tile);
         }
 
         public void CallOnCreate(DeepWoods deepWoods)
