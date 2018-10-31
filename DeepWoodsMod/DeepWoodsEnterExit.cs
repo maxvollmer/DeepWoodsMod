@@ -1,4 +1,5 @@
 ﻿
+using DeepWoodsMod.API;
 using Microsoft.Xna.Framework;
 using Netcode;
 using StardewValley;
@@ -11,7 +12,7 @@ namespace DeepWoodsMod
 {
     public class DeepWoodsEnterExit
     {
-        public class DeepWoodsExit : INetObject<NetFields>
+        public class DeepWoodsExit : INetObject<NetFields>, IDeepWoodsExit
         {
             public NetFields NetFields { get; } = new NetFields();
             public readonly NetInt exitDir = new NetInt(0);
@@ -19,6 +20,7 @@ namespace DeepWoodsMod
             public readonly NetPoint location = new NetPoint(Point.Zero);
             public readonly NetString targetDeepWoodsName = new NetString();
             public readonly NetPoint targetLocation = new NetPoint(Point.Zero);
+            public int ExitDirection { get { return exitDir.Value; } }
             public ExitDirection ExitDir { get { return (ExitDirection)exitDir.Value; } }
             public Location Location { get { return new Location(location.Value.X, location.Value.Y); } }
             public Location TargetLocation
@@ -32,7 +34,7 @@ namespace DeepWoodsMod
                     targetLocation.Value = new Point(value.X, value.Y);
                 }
             }
-            public string TargetDeepWoodsName
+            public string TargetLocationName
             {
                 get
                 {
