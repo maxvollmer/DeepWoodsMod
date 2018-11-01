@@ -1,21 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Netcode;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
 using StardewValley.Locations;
-using StardewValley.Monsters;
-using StardewValley.TerrainFeatures;
-using xTile;
 using xTile.Dimensions;
-using xTile.Layers;
-using xTile.Tiles;
 using static DeepWoodsMod.DeepWoodsEnterExit;
 using static DeepWoodsMod.DeepWoodsGlobals;
 using static DeepWoodsMod.DeepWoodsSettings;
@@ -123,6 +112,9 @@ namespace DeepWoodsMod
 
         public static void AddDeepWoodsToGameLocations(DeepWoods deepWoods)
         {
+            if (deepWoods == null)
+                return;
+
             Game1.locations.Add(deepWoods);
 
             if (Game1.IsMasterGame)
@@ -179,13 +171,14 @@ namespace DeepWoodsMod
             if (!Game1.IsMasterGame)
                 return;
 
-            DeepWoodsManager.rootDeepWoodsBackup = Game1.getLocationFromName("DeepWoods") as DeepWoods;
+            if (Game1.getLocationFromName("DeepWoods") is DeepWoods rootDeepWoods)
+                DeepWoodsManager.rootDeepWoodsBackup = rootDeepWoods;
+
             List<DeepWoods> toBeRemoved = new List<DeepWoods>();
             foreach (var location in Game1.locations)
-            {
                 if (location is DeepWoods deepWoods)
                     toBeRemoved.Add(deepWoods);
-            }
+
             foreach (var deepWoods in toBeRemoved)
                 DeepWoodsManager.RemoveDeepWoodsFromGameLocations(deepWoods);
         }
@@ -207,9 +200,11 @@ namespace DeepWoodsMod
             if (!Game1.IsMasterGame)
                 return;
 
-            DeepWoodsManager.AddDeepWoodsToGameLocations(DeepWoodsManager.rootDeepWoodsBackup);
-            CheckValid();
+            if (DeepWoodsManager.rootDeepWoodsBackup != null)
+                DeepWoodsManager.AddDeepWoodsToGameLocations(DeepWoodsManager.rootDeepWoodsBackup);
             DeepWoodsManager.rootDeepWoodsBackup = null;
+
+            CheckValid();
         }
 
         public static void Add()
