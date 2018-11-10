@@ -9,6 +9,10 @@ Texture: gingerbread_house_mostlyreal.png
 By: https://forums.nexusmods.com/index.php?/user/21105194-mostlyreal/
 License: Exclusive/Custom, please ask author directly for permission if you want to use this asset.
 
+Texture: woods_obelisk_mostlyreal.png
+By: https://forums.nexusmods.com/index.php?/user/21105194-mostlyreal/
+License: Exclusive/Custom, please ask author directly for permission if you want to use this asset.
+
 Texture: unicorn_zhuria.png
 Found at: https://www.nexusmods.com/stardewvalley/mods/8
 By: https://forums.nexusmods.com/index.php?/user/5497250-zhuria/

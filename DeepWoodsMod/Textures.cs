@@ -23,7 +23,7 @@ namespace DeepWoodsMod
 
         public static void LoadAll()
         {
-            woodsObelisk = ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "woods_obelisk.png"), ContentSource.ModFolder);
+            woodsObelisk = ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "woods_obelisk_mostlyreal.png"), ContentSource.ModFolder);
             healingFountain = ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "sinceriouslyyy_fountain.png"), ContentSource.ModFolder);
             iridiumTree = ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "iridium_tree.png"), ContentSource.ModFolder);
             gingerbreadHouse = ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "gingerbread_house_mostlyreal.png"), ContentSource.ModFolder);
