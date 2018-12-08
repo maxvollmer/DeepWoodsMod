@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using StardewValley.Tools;
 using StardewValley;
 using System;
+using System.IO;
 
 namespace DeepWoodsMod
 {
@@ -483,7 +484,13 @@ namespace DeepWoodsMod
             if (!Game1.IsMasterGame)
                 return;
 
-            ModEntry.GetHelper().WriteJsonFile($"{Constants.CurrentSavePath}/{SAVE_FILE_NAME}.json", DeepWoodsState);
+            // save data
+            ModEntry.GetHelper().Data.WriteSaveData("data", DeepWoodsState);
+
+            // remove legacy file
+            FileInfo legacyFile = new FileInfo($"{Constants.CurrentSavePath}/{SAVE_FILE_NAME}.json");
+            if (legacyFile.Exists)
+                legacyFile.Delete();
         }
 
         public static void DoLoad()
@@ -491,7 +498,19 @@ namespace DeepWoodsMod
             if (!Game1.IsMasterGame)
                 return;
 
-            DeepWoodsState = ModEntry.GetHelper().ReadJsonFile<DeepWoodsStateData>($"{Constants.CurrentSavePath}/{SAVE_FILE_NAME}.json") ?? new DeepWoodsStateData();
+            // load data
+            DeepWoodsState = ModEntry.GetHelper().Data.ReadSaveData<DeepWoodsStateData>("data");
+            if (DeepWoodsState == null)
+            {
+                // legacy file
+                FileInfo legacyFile = new FileInfo($"{Constants.CurrentSavePath}/{SAVE_FILE_NAME}.json");
+                if (legacyFile.Exists)
+                    DeepWoodsState = JsonConvert.DeserializeObject<DeepWoodsStateData>(File.ReadAllText(legacyFile.FullName));
+            }
+            if (DeepWoodsState == null)
+                DeepWoodsState = new DeepWoodsStateData();
+
+            // init settings
             Settings = ModEntry.GetHelper().ReadConfig<DeepWoodsSettings>() ?? new DeepWoodsSettings();
         }
     }
