@@ -458,7 +458,7 @@ namespace DeepWoodsMod
                     {
                         if (who != Game1.player)
                         {
-                            who.queueMessage(DeepWoodsSettings.Settings.Network.DeepWoodsMessageId, Game1.MasterPlayer, new object[] { NETWORK_MESSAGE_DEEPWOODS_LEVEL, value });
+                            ModEntry.SendMessage(value, MessageId.SetLowestLevelReached, who.UniqueMultiplayerID);
                         }
                     }
                 }

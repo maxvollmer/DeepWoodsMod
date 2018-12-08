@@ -68,7 +68,8 @@
     <Compile Include="ExplodableResourceClump.cs" />
     <Compile Include="FarmerSprite.cs" />
     <Compile Include="Flower.cs" />
-    <Compile Include="Game1MultiplayerAccessProvider.cs" />
+    <Compile Include="Framework\Messages\InitResponseMessage.cs" />
+    <Compile Include="Framework\Messages\WarpMessage.cs" />
     <Compile Include="GingerBreadHouse.cs" />
     <Compile Include="HealingFountain.cs" />
     <Compile Include="IridiumTree.cs" />
