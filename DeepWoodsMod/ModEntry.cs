@@ -71,7 +71,7 @@ namespace DeepWoodsMod
             ModEntry.mod = this;
             Game1MultiplayerAccessProvider.InterceptMultiplayerIfNecessary();
             Textures.LoadAll();
-            RegisterEvents();
+            RegisterEvents(helper.Events);
         }
 
         public override object GetApi()
@@ -84,35 +84,40 @@ namespace DeepWoodsMod
             return api;
         }
 
-        private void RegisterEvents()
+        private void RegisterEvents(IModEvents events)
         {
-            SaveEvents.BeforeSave += this.SaveEvents_BeforeSave;
-            SaveEvents.AfterSave += this.SaveEvents_AfterSave;
-            SaveEvents.AfterLoad += this.SaveEvents_AfterLoad;
-            SaveEvents.AfterReturnToTitle += this.SaveEvents_AfterReturnToTitle;
-            TimeEvents.AfterDayStarted += this.TimeEvents_AfterDayStarted;
-            TimeEvents.TimeOfDayChanged += this.TimeEvents_TimeOfDayChanged;
-            GameEvents.UpdateTick += this.GameEvents_UpdateTick;
-            GameEvents.FirstUpdateTick += this.GameEvents_FirstUpdateTick;
-            GraphicsEvents.OnPostRenderEvent += this.GraphicsEvents_OnPostRenderEvent;
+            events.GameLoop.Saving += this.OnSaving;
+            events.GameLoop.Saved += this.OnSaved;
+            events.GameLoop.SaveLoaded += this.OnSaveLoaded;
+            events.GameLoop.ReturnedToTitle += this.OnReturnedToTitle;
+            events.GameLoop.DayStarted += this.OnDayStarted;
+            events.GameLoop.TimeChanged += this.OnTimeChanged;
+            events.GameLoop.UpdateTicked += this.OnUpdateTicked;
+            events.GameLoop.GameLaunched += this.OnGameLaunched;
+            events.Display.Rendered += this.OnRendered;
         }
 
-        private void GameEvents_FirstUpdateTick(object sender, EventArgs args)
+        private void OnGameLaunched(object sender, GameLaunchedEventArgs args)
         {
             if (Helper.ModRegistry.IsLoaded("Omegasis.SaveAnywhere"))
             {
                 ISaveAnywhereAPI api = Helper.ModRegistry.GetApi<ISaveAnywhereAPI>("Omegasis.SaveAnywhere");
                 if (api != null)
                 {
-                    api.BeforeSave += this.SaveEvents_BeforeSave;
-                    api.AfterSave += this.SaveEvents_AfterSave;
-                    api.AfterLoad += this.SaveEvents_AfterLoad;
+                    api.BeforeSave += (s, e) => this.CleanupBeforeSave();
+                    api.AfterSave += (s, e) => this.RestoreAfterSave();
+                    api.AfterLoad += (s, e) => this.InitAfterLoad();
                 }
             }
         }
 
         private int isBeforeSaveCount = 0;
-        private void SaveEvents_BeforeSave(object sender, EventArgs args)
+        private void OnSaving(object sender, SavingEventArgs args)
+        {
+            this.CleanupBeforeSave();
+        }
+
+        private void CleanupBeforeSave()
         {
             ModEntry.Log("SaveEvents_BeforeSave", StardewModdingAPI.LogLevel.Trace);
 
@@ -138,7 +143,12 @@ namespace DeepWoodsMod
             }
         }
 
-        private void SaveEvents_AfterSave(object sender, EventArgs args)
+        private void OnSaved(object sender, SavedEventArgs args)
+        {
+            this.RestoreAfterSave();
+        }
+
+        private void RestoreAfterSave()
         {
             ModEntry.Log("SaveEvents_AfterSave", StardewModdingAPI.LogLevel.Trace);
 
@@ -161,7 +171,7 @@ namespace DeepWoodsMod
             WoodsObelisk.RestoreAllInGame();
         }
 
-        private void SaveEvents_AfterReturnToTitle(object sender, EventArgs args)
+        private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs args)
         {
             ModEntry.Log("GameEvents_AfterReturnToTitle", StardewModdingAPI.LogLevel.Trace);
 
@@ -196,7 +206,12 @@ namespace DeepWoodsMod
             }
         }
 
-        private void SaveEvents_AfterLoad(object sender, EventArgs args)
+        private void OnSaveLoaded(object sender, SaveLoadedEventArgs args)
+        {
+            this.InitAfterLoad();
+        }
+
+        private void InitAfterLoad()
         {
             ModEntry.Log("SaveEvents_AfterLoad", StardewModdingAPI.LogLevel.Trace);
 
@@ -218,7 +233,7 @@ namespace DeepWoodsMod
             mod.isDeepWoodsGameRunning = true;
         }
 
-        private void TimeEvents_AfterDayStarted(object sender, EventArgs args)
+        private void OnDayStarted(object sender, DayStartedEventArgs args)
         {
             ModEntry.Log("TimeEvents_AfterDayStarted", StardewModdingAPI.LogLevel.Trace);
 
@@ -231,7 +246,7 @@ namespace DeepWoodsMod
             EasterEggFunctions.InterceptIncubatorEggs();
         }
 
-        private void TimeEvents_TimeOfDayChanged(object sender, EventArgs args)
+        private void OnTimeChanged(object sender, TimeChangedEventArgs args)
         {
             if (!isDeepWoodsGameRunning)
                 return;
@@ -239,7 +254,7 @@ namespace DeepWoodsMod
             DeepWoodsManager.LocalTimeUpdate(Game1.timeOfDay);
         }
 
-        private void GameEvents_UpdateTick(object sender, EventArgs args)
+        private void OnUpdateTicked(object sender, UpdateTickedEventArgs args)
         {
             if (!isDeepWoodsGameRunning)
                 return;
@@ -290,7 +305,7 @@ namespace DeepWoodsMod
             WoodsObelisk.InjectWoodsObeliskIntoGame();
         }
 
-        private void GraphicsEvents_OnPostRenderEvent(object sender, EventArgs e)
+        private void OnRendered(object sender, RenderedEventArgs e)
         {
             if (Game1.player.currentLocation is DeepWoods deepWoods)
                 deepWoods.DrawLevelDisplay();

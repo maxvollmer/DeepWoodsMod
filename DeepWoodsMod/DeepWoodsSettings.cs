@@ -463,7 +463,7 @@ namespace DeepWoodsMod
     class DeepWoodsSettings
     {
         // I18N
-        public static I18NData I18N { get; set; } = ModEntry.GetHelper().ReadJsonFile<I18NData>("i18n.json") ?? new I18NData();
+        public static I18NData I18N { get; set; } = ModEntry.GetHelper().Data.ReadJsonFile<I18NData>("i18n.json") ?? new I18NData();
 
         // Save stuff
         public static DeepWoodsStateData DeepWoodsState { get; set; } = new DeepWoodsStateData();
