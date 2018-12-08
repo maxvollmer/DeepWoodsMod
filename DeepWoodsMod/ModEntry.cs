@@ -69,6 +69,7 @@ namespace DeepWoodsMod
         public override void Entry(IModHelper helper)
         {
             ModEntry.mod = this;
+            DeepWoodsSettings.Init(helper.Translation);
             Game1MultiplayerAccessProvider.InterceptMultiplayerIfNecessary();
             Textures.LoadAll();
             RegisterEvents(helper.Events);
