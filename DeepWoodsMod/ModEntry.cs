@@ -71,9 +71,6 @@ namespace DeepWoodsMod
         public override void Entry(IModHelper helper)
         {
             ModEntry.mod = this;
-            ModEntry.multiplayer = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-            DeepWoodsSettings.Init(helper.Translation);
-            DeepWoodsTextures.Textures.LoadAll();
             RegisterEvents(helper.Events);
         }
 
@@ -103,6 +100,9 @@ namespace DeepWoodsMod
 
         private void OnGameLaunched(object sender, GameLaunchedEventArgs args)
         {
+            ModEntry.multiplayer = Helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
+            DeepWoodsSettings.Init(Helper.Translation);
+            DeepWoodsTextures.Textures.LoadAll();
             if (Helper.ModRegistry.IsLoaded("Omegasis.SaveAnywhere"))
             {
                 ISaveAnywhereAPI api = Helper.ModRegistry.GetApi<ISaveAnywhereAPI>("Omegasis.SaveAnywhere");
@@ -324,7 +324,7 @@ namespace DeepWoodsMod
                 OpenPassageInSecretWoods(woods);
             }
 
-            DeepWoodsManager.PlayerWarped(who, prevLocation as DeepWoods, newLocation as DeepWoods, newLocation);
+            DeepWoodsManager.PlayerWarped(who, prevLocation, newLocation);
 
             if (newLocation is AnimalHouse animalHouse)
             {

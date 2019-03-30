@@ -15,6 +15,7 @@ namespace DeepWoodsMod.API.Impl
         public Texture2D WoodsObelisk { get; set; }
         public Texture2D HealingFountain { get; set; }
         public Texture2D IridiumTree { get; set; }
+        public Texture2D GingerbreadHouseWinter { get; set; }
         public Texture2D GingerbreadHouse { get; set; }
         public Texture2D BushThorns { get; set; }
         public Texture2D Unicorn { get; set; }
@@ -29,6 +30,7 @@ namespace DeepWoodsMod.API.Impl
             WoodsObelisk = WoodsObelisk ?? ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "woods_obelisk_mostlyreal.png"), ContentSource.ModFolder);
             HealingFountain = HealingFountain ?? ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "sinceriouslyyy_fountain.png"), ContentSource.ModFolder);
             IridiumTree = IridiumTree ?? ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "iridium_tree.png"), ContentSource.ModFolder);
+            GingerbreadHouseWinter = GingerbreadHouseWinter ?? ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "gingerbread_house_technopoptart98.png"), ContentSource.ModFolder);
             GingerbreadHouse = GingerbreadHouse ?? ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "gingerbread_house_mostlyreal.png"), ContentSource.ModFolder);
             BushThorns = BushThorns ?? ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "bush_thorns.png"), ContentSource.ModFolder);
             Unicorn = Unicorn ?? ModEntry.GetHelper().Content.Load<Texture2D>(Path.Combine("assets", "unicorn_zhuria.png"), ContentSource.ModFolder);
