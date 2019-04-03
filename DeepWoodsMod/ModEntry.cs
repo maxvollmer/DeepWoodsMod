@@ -38,7 +38,7 @@ namespace DeepWoodsMod
             }
         }
 
-        public static void Log(string message, LogLevel level = LogLevel.Debug)
+        public static void Log(string message, LogLevel level = LogLevel.Trace)
         {
             ModEntry.mod?.Monitor?.Log(message, level);
         }
@@ -225,7 +225,7 @@ namespace DeepWoodsMod
             if (Game1.IsMasterGame)
                 return;
 
-            ModEntry.Log("DeepWoodsInitServerAnswerReceived", StardewModdingAPI.LogLevel.Debug);
+            ModEntry.Log("DeepWoodsInitServerAnswerReceived", StardewModdingAPI.LogLevel.Trace);
 
             DeepWoodsManager.AddAll(deepWoodsLevelNames);
             EasterEggFunctions.RestoreAllEasterEggsInGame();
