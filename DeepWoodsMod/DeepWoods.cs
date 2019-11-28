@@ -788,7 +788,7 @@ namespace DeepWoodsMod
             return base.isTileLocationTotallyClearAndPlaceable(v);
         }
 
-        public override bool isTileOccupied(Vector2 tileLocation, string characterToIgnore = "")
+        public override bool isTileOccupied(Vector2 tileLocation, string characterToIgnore = "", bool ignoreAllCharacters = false)
         {
             // Check resourceClumps.
             foreach (ResourceClump resourceClump in this.resourceClumps)
@@ -872,7 +872,7 @@ namespace DeepWoodsMod
 
         public override void checkForMusic(GameTime time)
         {
-            if (Game1.currentSong != null && Game1.currentSong.IsPlaying || Game1.nextMusicTrack != null && Game1.nextMusicTrack.Length != 0)
+            if (Game1.currentSong != null && Game1.currentSong.IsPlaying/* || Game1.nextMusicTrack != null && Game1.nextMusicTrack.Length != 0MizzionWorkonThis*/)
                 return;
 
             if (Game1.isRaining)
@@ -1028,17 +1028,17 @@ namespace DeepWoodsMod
 
             // Game1.spriteBatch.End();
         }
-
-        public override StardewValley.Object getFish(float millisecondsAfterNibble, int bait, int waterDepth, Farmer who, double baitPotency)
+        /*
+        public override StardewValley.Object getFish(float millisecondsAfterNibble, int bait, int waterDepth, Farmer who, double baitPotency, Vector2 bobberTile)
         {
-            return this.getFish(millisecondsAfterNibble, bait, waterDepth, who, baitPotency, (string)null);
+            return this.getFish(millisecondsAfterNibble, bait, waterDepth, who, baitPotency, bobberTile, (string)null);
         }
-
-        public override StardewValley.Object getFish(float millisecondsAfterNibble, int bait, int waterDepth, Farmer who, double baitPotency, string locationName = null)
+        */
+        public override StardewValley.Object getFish(float millisecondsAfterNibble, int bait, int waterDepth, Farmer who, double baitPotency, Vector2 bobberTile, string locationName = null)
         {
             if ((locationName != null && locationName != this.Name) || !CanHazAwesomeFish())
             {
-                return base.getFish(millisecondsAfterNibble, bait, waterDepth, who, baitPotency, locationName);
+                return base.getFish(millisecondsAfterNibble, bait, waterDepth, who, baitPotency, bobberTile, locationName);
             }
             return new StardewValley.Object(GetRandomAwesomeFish(), 1, false, -1, 0);
         }

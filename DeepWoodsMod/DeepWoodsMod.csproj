@@ -1,141 +1,29 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FCA26CA2-B4DE-4DE9-848D-FD23884E3EE4}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DeepWoodsMod</RootNamespace>
-    <AssemblyName>DeepWoodsMod</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <AssemblyName>DeepWoods</AssemblyName>
+    <RootNamespace>DeepWoods</RootNamespace>
+    <Version>1.6.1-unofficial.2-mizzion</Version>
+    <TargetFramework>net452</TargetFramework>
+    <Platforms>x86</Platforms>
+    <PlatformTarget>x86</PlatformTarget>
+
+    <EnableHarmony>false</EnableHarmony>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="3.0.0" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="DeepWoods.cs" />
-    <Compile Include="API\Impl\DeepWoodsAPI.cs" />
-    <Compile Include="DeepWoodsBuilder.cs" />
-    <Compile Include="DeepWoodsDebris.cs" />
-    <Compile Include="DeepWoodsEnterExit.cs" />
-    <Compile Include="DeepWoodsGlobals.cs" />
-    <Compile Include="DeepWoodsManager.cs" />
-    <Compile Include="DeepWoodsMonsters.cs" />
-    <Compile Include="DeepWoodsRandom.cs" />
-    <Compile Include="DeepWoodsSettings.cs" />
-    <Compile Include="DeepWoodsSpaceManager.cs" />
-    <Compile Include="DeepWoodsStuffCreator.cs" />
-    <Compile Include="DeepWoodsTileDefinitions.cs" />
-    <Compile Include="DestroyableBush.cs" />
-    <Compile Include="EasterEgg.cs" />
-    <Compile Include="EasterEggFunctions.cs" />
-    <Compile Include="EasterEggItem.cs" />
-    <Compile Include="Excalibur.cs" />
-    <Compile Include="ExcaliburStone.cs" />
-    <Compile Include="ExplodableResourceClump.cs" />
-    <Compile Include="FarmerSprite.cs" />
-    <Compile Include="Flower.cs" />
-    <Compile Include="Framework\Messages\InitResponseMessage.cs" />
-    <Compile Include="Framework\Messages\WarpMessage.cs" />
-    <Compile Include="GingerBreadHouse.cs" />
-    <Compile Include="HealingFountain.cs" />
-    <Compile Include="IridiumTree.cs" />
-    <Compile Include="ISaveAnywhereAPI.cs" />
-    <Compile Include="LichtungStuff.cs" />
-    <Compile Include="LootFreeGrass.cs" />
-    <Compile Include="ModEntry.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Sounds.cs" />
-    <Compile Include="API\Impl\DeepWoodsTextures.cs" />
-    <Compile Include="ThornyBush.cs" />
-    <Compile Include="TreasureChest.cs" />
-    <Compile Include="Unicorn.cs" />
-    <Compile Include="WoodsObelisk.cs" />
-    <Compile Include="WoodsObeliskMenu.cs" />
-    <Compile Include="XY.cs" />
+    <Reference Include="MaxVollmer.StardewValley.DeepWoodsMod.API">
+      <HintPath>..\..\..\..\Users\eurio\Desktop\MouseWithoutBorders\MaxVollmer.StardewValley.DeepWoodsMod.API.dll</HintPath>
+    </Reference>
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="i18n\default.json" />
-    <None Include="i18n\fr.json" />
-    <None Include="i18n\ko.json" />
-    <None Include="i18n\ru.json" />
-    <None Include="i18n\pt.json" />
-    <None Include="manifest.json" />
+    <Folder Include="Properties\" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="MaxVollmer.StardewValley.DeepWoodsMod.API">
-      <Version>2.0.2</Version>
-    </PackageReference>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.3-beta1</Version>
-    </PackageReference>
-    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig">
-      <Version>3.0.0-beta.8</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="assets\bush_thorns.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\Credits.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\excalibur_stone.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\gingerbread_house_mostlyreal.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\gingerbread_house_technopoptart98.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\iridium_tree.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\lake_tilesheet.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\sinceriouslyyy_fountain.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\unicorn_zhuria.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\woods_obelisk_mostlyreal.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="i18n\Credits.txt" />
-    <Content Include="README.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>
