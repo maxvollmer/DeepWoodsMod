@@ -70,7 +70,7 @@ namespace DeepWoodsMod
         public override void Entry(IModHelper helper)
         {
             ModEntry.mod = this;
-            DeepWoodsSettings.Init(helper.Translation);
+            I18N.Init(helper.Translation);
             RegisterEvents(helper.Events);
         }
 

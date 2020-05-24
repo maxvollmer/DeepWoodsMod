@@ -67,6 +67,7 @@
     <Compile Include="Framework\Messages\WarpMessage.cs" />
     <Compile Include="GingerBreadHouse.cs" />
     <Compile Include="HealingFountain.cs" />
+    <Compile Include="I18N.cs" />
     <Compile Include="IridiumTree.cs" />
     <Compile Include="ISaveAnywhereAPI.cs" />
     <Compile Include="LichtungStuff.cs" />
