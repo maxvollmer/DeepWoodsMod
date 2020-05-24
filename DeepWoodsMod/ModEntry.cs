@@ -70,6 +70,7 @@ namespace DeepWoodsMod
         public override void Entry(IModHelper helper)
         {
             ModEntry.mod = this;
+            DeepWoodsSettings.Init(helper.Translation);
             RegisterEvents(helper.Events);
         }
 
@@ -102,7 +103,6 @@ namespace DeepWoodsMod
         private void OnGameLaunched(object sender, GameLaunchedEventArgs args)
         {
             ModEntry.multiplayer = Helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-            DeepWoodsSettings.Init(Helper.Translation);
             DeepWoodsTextures.Textures.LoadAll();
             if (Helper.ModRegistry.IsLoaded("Omegasis.SaveAnywhere"))
             {
