@@ -458,6 +458,7 @@ namespace DeepWoodsMod
         public string EasterEggHatchedMessage => this.I18n.Get("easter-egg.hatched-message");
         public string LostMessage => this.I18n.Get("lost-message");
         public string WoodsObeliskWizardMailMessage => this.I18n.Get("woods-obelisk.wizard-mail");
+        public string HealingFountainDrinkMessage => this.I18n.Get("healing-fountain.drink-message");
 
         public I18NData(ITranslationHelper i18n)
         {
