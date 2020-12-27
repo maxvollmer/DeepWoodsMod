@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
-using StardewValley.Locations;
-using xTile.Layers;
-using xTile.Tiles;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
 using System.Collections.Concurrent;
@@ -134,7 +131,6 @@ namespace DeepWoodsMod
             }
 
             DeepWoodsManager.Remove();
-            EasterEggFunctions.RemoveAllEasterEggsFromGame();
             WoodsObelisk.RemoveAllFromGame();
             DeepWoodsSettings.DoSave();
 
@@ -172,7 +168,6 @@ namespace DeepWoodsMod
             }
 
             DeepWoodsManager.Restore();
-            EasterEggFunctions.RestoreAllEasterEggsInGame();
             WoodsObelisk.RestoreAllInGame();
         }
 
@@ -194,7 +189,6 @@ namespace DeepWoodsMod
             {
                 DeepWoodsSettings.DoLoad();
                 DeepWoodsManager.Add();
-                EasterEggFunctions.RestoreAllEasterEggsInGame();
                 WoodsObelisk.RestoreAllInGame();
                 isDeepWoodsGameRunning = true;
             }
@@ -226,7 +220,6 @@ namespace DeepWoodsMod
             ModEntry.Log("DeepWoodsInitServerAnswerReceived", StardewModdingAPI.LogLevel.Trace);
 
             DeepWoodsManager.AddAll(deepWoodsLevelNames);
-            EasterEggFunctions.RestoreAllEasterEggsInGame();
             // WoodsObelisk.RestoreAllInGame(); <- Not needed, server already sends correct building
             mod.isDeepWoodsGameRunning = true;
         }
@@ -241,7 +234,6 @@ namespace DeepWoodsMod
                 return;
 
             DeepWoodsManager.LocalDayUpdate(Game1.dayOfMonth);
-            EasterEggFunctions.InterceptIncubatorEggs();
         }
 
         private void OnTimeChanged(object sender, TimeChangedEventArgs args)
@@ -318,11 +310,6 @@ namespace DeepWoodsMod
                 return;
 
             DeepWoodsManager.PlayerWarped(who, prevLocation, newLocation);
-
-            if (newLocation is AnimalHouse animalHouse)
-            {
-                EasterEggFunctions.CheckEggHatched(who, animalHouse);
-            }
         }
 
         private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
