@@ -252,7 +252,7 @@ namespace DeepWoodsMod
             if (isPetted)
                 return;
 
-            typeof(AnimatedSprite).GetField("spriteTexture", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(this.Sprite, DeepWoodsTextures.Textures.Unicorn);
+            this.Sprite.spriteTexture = DeepWoodsTextures.Textures.Unicorn;
             base.draw(b);
         }
 
