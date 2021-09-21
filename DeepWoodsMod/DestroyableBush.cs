@@ -87,6 +87,7 @@ namespace DeepWoodsMod
             {
                 for (int index2 = 0; index2 < 12; ++index2)
                 {
+                    /*
                     ModEntry.GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
                     {
                         new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(355, 1200 + (Game1.IsFall ? 16 : (Game1.IsWinter ? -16 : 0)), 16, 16), Utility.getRandomPositionInThisRectangle(this.getBoundingBox(), Game1.random) - new Vector2(0.0f, (float) Game1.random.Next(64)), false, 0.01f, Game1.IsWinter ? Color.Cyan : Color.White)
@@ -102,6 +103,8 @@ namespace DeepWoodsMod
                         delayBeforeAnimationStart = (index1 + 1) * index2 * 20
                         }
                     });
+                    */
+
                     if (index2 % 6 == 0)
                     {
                         ModEntry.GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
