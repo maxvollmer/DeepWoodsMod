@@ -37,9 +37,10 @@ License: Exclusive/Custom, please ask author directly for permission if you want
 ====
 Translations:
 
+es.json by skullSG (https://forums.nexusmods.com/index.php?showuser=55091432)
 fr.json by AresRyu (https://forums.nexusmods.com/index.php?/user/31452340-aresryu/)
+hu.json by martin66789 (https://www.nexusmods.com/users/27323031)
 ko.json by S2SKY (https://github.com/S2SKY)
 ru.json by FixThisPlz (https://github.com/FixThisPlz)
 pt.json by shiro2579 (https://github.com/shiro2579)
 zh.json by q847633684 (https://forums.nexusmods.com/index.php?showuser=76028173)
-es.json by skullSG (https://forums.nexusmods.com/index.php?showuser=55091432)
