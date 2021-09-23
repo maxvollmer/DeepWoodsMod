@@ -3,7 +3,7 @@ using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
-    class Excalibur
+    public class Excalibur
     {
         public static readonly string EXCALIBUR_BASE_NAME = "Excalibur";
         public static readonly int EXCALIBUR_TILE_INDEX = 3;

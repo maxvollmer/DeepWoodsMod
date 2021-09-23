@@ -8,7 +8,7 @@ using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
-    class ThornyBush : DestroyableBush
+    public class ThornyBush : DestroyableBush
     {
         public ThornyBush()
             : base()

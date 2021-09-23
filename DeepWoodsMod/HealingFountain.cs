@@ -8,7 +8,7 @@ using static DeepWoodsMod.DeepWoodsSettings;
 
 namespace DeepWoodsMod
 {
-    class HealingFountain : LargeTerrainFeature
+    public class HealingFountain : LargeTerrainFeature
     {
         public HealingFountain()
            : base(false)

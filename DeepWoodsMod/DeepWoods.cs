@@ -300,7 +300,20 @@ namespace DeepWoodsMod
             var random = new DeepWoodsRandom(this, this.Seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next());
 
             if (!this.isLichtungSetByAPI.Value)
-                this.isLichtung.Value = this.level.Value >= Settings.Level.MinLevelForClearing && !(this.Parent?.isLichtung ?? true) && random.CheckChance(Settings.Luck.Clearings.ChanceForClearing);
+            {
+                if (this.level.Value >= Settings.Level.MinLevelForClearing)
+                {
+                    if (random.CheckChance(Settings.Luck.Clearings.ChanceForClearing))
+                    {
+                        this.isLichtung.Value = true;
+                    }
+                    else if (Settings.Level.EnableGuaranteedClearings)
+                    {
+                        if (this.level.Value == Settings.Level.MinLevelForClearing || this.level.Value % Settings.Level.GuaranteedClearingsFrequency == 0)
+                            this.isLichtung.Value = true;
+                    }
+                }
+            }
 
             if (!this.isMapSizeSetByAPI.Value)
             {

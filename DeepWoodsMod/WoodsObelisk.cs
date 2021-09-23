@@ -13,7 +13,7 @@ using System;
 
 namespace DeepWoodsMod
 {
-    class WoodsObelisk
+    public class WoodsObelisk
     {
         private static void ObeliskWarpForRealOverride()
         {

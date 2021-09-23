@@ -2,7 +2,7 @@
 
 namespace DeepWoodsMod
 {
-    class Sounds
+    public class Sounds
     {
         public const string ACHIEVEMENT = "achievement";
         public const string AXCHOP = "axchop";
