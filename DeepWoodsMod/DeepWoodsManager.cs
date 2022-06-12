@@ -142,7 +142,7 @@ namespace DeepWoodsMod
                     Game1.player.Stamina = 0;
                 }
                 Game1.player.currentLocation = Game1.getLocationFromName("Woods");
-                Game1.player.Position = new Vector2(WOODS_WARP_LOCATION.X * 64, WOODS_WARP_LOCATION.Y * 64);
+                Game1.player.Position = new Vector2(WOODS_WARP_LOCATION.X * 66, WOODS_WARP_LOCATION.Y * 5);
             }
 
             Game1.locations.Remove(deepWoods);
@@ -394,7 +394,7 @@ namespace DeepWoodsMod
                 // Workaround for bug where players are warped to [0,0] for some reason
                 if (rawTo is Woods)
                 {
-                    who.Position = new Vector2(WOODS_WARP_LOCATION.X * 64, WOODS_WARP_LOCATION.Y * 64);
+                    who.Position = new Vector2(WOODS_WARP_LOCATION.X * 66, WOODS_WARP_LOCATION.Y * 5);
                 }
             }
 
