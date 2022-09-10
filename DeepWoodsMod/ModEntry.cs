@@ -14,7 +14,7 @@ using DeepWoodsMod.Framework.Messages;
 
 namespace DeepWoodsMod
 {
-    public class ModEntry : Mod, IAssetEditor, IAssetLoader
+    public class ModEntry : Mod
     {
         private static DeepWoodsAPI api = new DeepWoodsAPI();
         private static ModEntry mod;
@@ -68,7 +68,7 @@ namespace DeepWoodsMod
         {
             ModEntry.mod = this;
             I18N.Init(helper.Translation);
-            RegisterEvents(helper.Events);
+            RegisterEvents();
         }
 
         public override object GetApi()
@@ -83,18 +83,18 @@ namespace DeepWoodsMod
 
         public static bool IsDeepWoodsGameRunning { get => ModEntry.mod.isDeepWoodsGameRunning; }
 
-        private void RegisterEvents(IModEvents events)
+        private void RegisterEvents()
         {
-            events.GameLoop.Saving += this.OnSaving;
-            events.GameLoop.Saved += this.OnSaved;
-            events.GameLoop.SaveLoaded += this.OnSaveLoaded;
-            events.GameLoop.ReturnedToTitle += this.OnReturnedToTitle;
-            events.GameLoop.DayStarted += this.OnDayStarted;
-            events.GameLoop.TimeChanged += this.OnTimeChanged;
-            events.GameLoop.UpdateTicked += this.OnUpdateTicked;
-            events.GameLoop.GameLaunched += this.OnGameLaunched;
-            events.Display.Rendered += this.OnRendered;
-            events.Multiplayer.ModMessageReceived += this.OnModMessageReceived;
+            this.Helper.Events.GameLoop.Saving += this.OnSaving;
+            this.Helper.Events.GameLoop.Saved += this.OnSaved;
+            this.Helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
+            this.Helper.Events.GameLoop.ReturnedToTitle += this.OnReturnedToTitle;
+            this.Helper.Events.GameLoop.DayStarted += this.OnDayStarted;
+            this.Helper.Events.GameLoop.TimeChanged += this.OnTimeChanged;
+            this.Helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
+            this.Helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
+            this.Helper.Events.Display.Rendered += this.OnRendered;
+            this.Helper.Events.Multiplayer.ModMessageReceived += this.OnModMessageReceived;
         }
 
         private void OnGameLaunched(object sender, GameLaunchedEventArgs args)
@@ -413,25 +413,25 @@ namespace DeepWoodsMod
 
         public bool CanEdit<T>(IAssetInfo asset)
         {
-            return asset.AssetNameEquals("Data/mail") || asset.AssetNameEquals("Data/Blueprints");
+            return asset.Name.IsEquivalentTo("Data/mail") || asset.Name.IsEquivalentTo("Data/Blueprints");
         }
 
 
         public void Edit<T>(IAssetData asset)
         {
-            if (asset.AssetNameEquals("Data/mail"))
+            if (asset.Name.IsEquivalentTo("Data/mail"))
             {
                 EditMail(asset.GetData<Dictionary<string, string>>());
                 Game1.content.Load<Dictionary<string, string>>("Data\\mail");
             }
-            else if (asset.AssetNameEquals("Data/Blueprints"))
+            else if (asset.Name.IsEquivalentTo("Data/Blueprints"))
             {
                 EditBlueprints(asset.GetData<Dictionary<string, string>>());
                 Game1.content.Load<Dictionary<string, string>>("Data\\Blueprints");
             }
             else
             {
-                throw new ArgumentException("Can't edit " + asset.AssetName);
+                throw new ArgumentException("Can't edit " + asset.Name);
             }
         }
 
@@ -457,23 +457,23 @@ namespace DeepWoodsMod
 
         public bool CanLoad<T>(IAssetInfo asset)
         {
-            return asset.AssetNameEquals($"Buildings\\{WOODS_OBELISK_BUILDING_NAME}")
-                || asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet");
+            return asset.Name.IsEquivalentTo($"Buildings\\{WOODS_OBELISK_BUILDING_NAME}")
+                || asset.Name.IsEquivalentTo("Maps\\deepWoodsLakeTilesheet");
         }
 
         public T Load<T>(IAssetInfo asset)
         {
-            if (asset.AssetNameEquals($"Buildings\\{WOODS_OBELISK_BUILDING_NAME}"))
+            if (asset.Name.IsEquivalentTo($"Buildings\\{WOODS_OBELISK_BUILDING_NAME}"))
             {
                 return (T)(object)DeepWoodsTextures.Textures.WoodsObelisk;
             }
-            else if (asset.AssetNameEquals("Maps\\deepWoodsLakeTilesheet"))
+            else if (asset.Name.IsEquivalentTo("Maps\\deepWoodsLakeTilesheet"))
             {
                 return (T)(object)DeepWoodsTextures.Textures.LakeTilesheet;
             }
             else
             {
-                throw new ArgumentException("Can't load " + asset.AssetName);
+                throw new ArgumentException("Can't load " + asset.Name);
             }
         }
 
