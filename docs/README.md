@@ -1,4 +1,4 @@
-# <img src="deepwoods_icon.png" alt="DeepWoods Game Icon" width="50"/> DeepWoods
+# <img src="deepwoods_icon.png" alt="DeepWoods Game Icon" height="50"/> DeepWoods
 
 **Download on NexusMods: [DeepWoods](https://www.nexusmods.com/stardewvalley/mods/2571/)**
 
