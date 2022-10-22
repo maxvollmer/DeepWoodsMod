@@ -947,7 +947,7 @@ namespace DeepWoodsMod
         private int GetRandomFruitTreeType()
         {
             Dictionary<int, string> fruitTrees = Game1.content.Load<Dictionary<int, string>>("Data\\fruitTrees");
-            int[] fruitTreeTypes = fruitTrees.Keys.Where(i => i != 7).ToArray();
+            int[] fruitTreeTypes = fruitTrees.Keys.Where(i => i != 69).ToArray();
             Array.Sort(fruitTreeTypes);
             return this.random.GetRandomValue(fruitTreeTypes);
         }
