@@ -228,6 +228,7 @@ namespace DeepWoodsMod
                 if (!IsValidForThisGame())
                 {
                     Remove();
+                    AddMaxHut();
                     DeepWoodsManager.rootDeepWoodsBackup = null;
                     DeepWoodsManager.AddDeepWoodsToGameLocations(new DeepWoods(null, 1, EnterDirection.FROM_TOP));
                 }
