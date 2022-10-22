@@ -13,9 +13,8 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Lib.Harmony" Version="2.2.2" />
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig">
-      <Version>4.0.1</Version>
+      <Version>4.0.2</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

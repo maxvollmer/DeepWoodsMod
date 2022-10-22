@@ -66,7 +66,7 @@ namespace DeepWoodsMod
 
         public override void Entry(IModHelper helper)
         {
-            DeepWoodsDebugInjector.Patch(this.ModManifest.UniqueID);
+            //DeepWoodsDebugInjector.Patch(this.ModManifest.UniqueID);
 
             ModEntry.mod = this;
             I18N.Init(helper.Translation);

@@ -1,10 +1,11 @@
-﻿using HarmonyLib;
+﻿//using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Locations;
 
 namespace DeepWoodsMod.Helpers
 {
+    /*
     public class DeepWoodsDebugInjector : Game1
     {
         public static void Patch(string id)
@@ -291,4 +292,5 @@ namespace DeepWoodsMod.Helpers
         }
 
     }
+    */
 }
