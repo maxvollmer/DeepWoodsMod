@@ -4,7 +4,10 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Buildings;
+using StardewValley.Characters;
 using StardewValley.Locations;
+using StardewValley.Tools;
 using xTile.Dimensions;
 using xTile.Layers;
 using xTile.Tiles;
@@ -175,14 +178,42 @@ namespace DeepWoodsMod
 
         public static void RemoveDeepWoodsFromGameLocations(DeepWoods deepWoods)
         {
-            RemoveGameLocation(deepWoods);
-
             if (Game1.IsMasterGame)
             {
+                // Teleport abandoned horses out of the level
+                var horses = deepWoods.characters.Where(c => c is Horse).Select(c => c as Horse).ToList();
+                if (horses.Count > 0)
+                {
+                    var stables = Game1.getFarm().buildings.Where(b => b is Stable && b.daysOfConstructionLeft.Value <= 0).Select(b => b as Stable).ToList();
+                    foreach (var horse in horses)
+                    {
+                        if (horse.rider != null)
+                        {
+                            horse.dismount();
+                        }
+
+                        foreach (var stable in stables)
+                        {
+                            if (stable.HorseId == horse.HorseId)
+                            {
+                                stable.grabHorse();
+                            }
+                        }
+                    }
+                }
+
+                // Tell clients to remove the level
                 foreach (Farmer who in Game1.otherFarmers.Values)
+                {
                     if (who != Game1.player)
+                    {
                         ModEntry.SendMessage(deepWoods.Name, MessageId.RemoveLocation, who.UniqueMultiplayerID);
+                    }
+                }
             }
+
+            // Remove the level
+            RemoveGameLocation(deepWoods);
         }
 
         public static void AddBlankDeepWoodsToGameLocations(string name)

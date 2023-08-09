@@ -59,13 +59,13 @@ namespace DeepWoodsMod
 
         private static bool IsMagical(CarpenterMenu carpenterMenu)
         {
-            return (bool)carpenterMenu.GetType().GetField("magicalConstruction", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(carpenterMenu)
+            return (bool)typeof(CarpenterMenu).GetField("magicalConstruction", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(carpenterMenu)
                 || GetBluePrints(carpenterMenu).Exists(bluePrint => bluePrint.magical);
         }
 
         private static List<BluePrint> GetBluePrints(CarpenterMenu carpenterMenu)
         {
-            return (List<BluePrint>)carpenterMenu.GetType().GetField("blueprints", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(carpenterMenu);
+            return (List<BluePrint>)typeof(CarpenterMenu).GetField("blueprints", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(carpenterMenu);
         }
 
         private static void SetBluePrintField(BluePrint bluePrint, string fieldName, object value)

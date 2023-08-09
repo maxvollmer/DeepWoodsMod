@@ -164,6 +164,9 @@ namespace DeepWoodsMod
     {
         public int MinLevelForFlowers { get; set; } = 3;
         public int MinLevelForFruits { get; set; } = 5;
+        public int MinLevelForSilverFruits { get; set; } = 25;
+        public int MinLevelForGoldFruits { get; set; } = 75;
+        public int MinLevelForIridiumFruits { get; set; } = 100;
         public int MinLevelForThornyBushes { get; set; } = 10;
         public int MinLevelForDangerousMonsters { get; set; } = 15;
         public int MinLevelForBuffedMonsters { get; set; } = 15;
@@ -299,6 +302,9 @@ namespace DeepWoodsMod
         public Chance ChanceForSmallTree { get; set; } = new Chance(10);
         public Chance ChanceForGrownFruitTree { get; set; } = new Chance(1);
         public Chance ChanceForSmallFruitTree { get; set; } = new Chance(5);
+        public Chance ChanceForSilverFruits { get; set; } = new Chance(new LuckValue(15, 25));
+        public Chance ChanceForGoldFruits { get; set; } = new Chance(new LuckValue(5, 35));
+        public Chance ChanceForIridiumFruits { get; set; } = new Chance(new LuckValue(0, 45));
         public Chance ChanceForWeed { get; set; } = new Chance(20);
         public Chance ChanceForTwig { get; set; } = new Chance(10);
         public Chance ChanceForStone { get; set; } = new Chance(10);

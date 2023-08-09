@@ -739,7 +739,33 @@ namespace DeepWoodsMod
         {
             FruitTree fruitTree = new FruitTree(GetRandomFruitTreeType(), growthStage);
             fruitTree.fruitsOnTree.Value = Game1.currentSeason == "winter" ? 0 : fruitsOnTree;
-            fruitTree.daysUntilMature.Value = 28 - (growthStage * 7);
+            if (growthStage == FruitTree.treeStage)
+            {
+                // itemQuality on fruit tree fruits
+                if (deepWoods.level.Value >= Settings.Level.MinLevelForIridiumFruits
+                    && this.random.CheckChance(Settings.Luck.Terrain.ChanceForIridiumFruits))
+                {
+                    fruitTree.daysUntilMature.Value = -336;     // itemQuality == 4
+                }
+                else if (deepWoods.level.Value >= Settings.Level.MinLevelForGoldFruits
+                    && this.random.CheckChance(Settings.Luck.Terrain.ChanceForGoldFruits))
+                {
+                    fruitTree.daysUntilMature.Value = -224;     // itemQuality == 2
+                }
+                else if (deepWoods.level.Value >= Settings.Level.MinLevelForSilverFruits
+                    && this.random.CheckChance(Settings.Luck.Terrain.ChanceForSilverFruits))
+                {
+                    fruitTree.daysUntilMature.Value = -112;     // itemQuality == 1
+                }
+                else
+                {
+                    fruitTree.daysUntilMature.Value = 0;        // itemQuality == 0
+                }
+            }
+            else
+            {
+                fruitTree.daysUntilMature.Value = 28 - (growthStage * 7);
+            }
             deepWoods.terrainFeatures[location] = fruitTree;
         }
 
