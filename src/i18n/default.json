@@ -29,14 +29,11 @@
 
   "sign.text.welcome": "You are entering the Deep Woods. Don't venture too deep if you aren't prepared. Many before you have gotten lost or worse. You have been warned.",
 
-  "sign.text.random.1": "Snails in this area.",
-  "sign.text.random.2": "If you are very careful and very lucky, you might meet a unicorn on a sunny day.",
-  "sign.text.random.3": "Somewhere in this forest is a sword in a stone. Has been there for centuries. No one seems to be able to pull it out.",
-  "sign.text.random.4": "I can't find my way back. Maybe putting signs up will help me. Are you lost too?",
-  "sign.text.random.5": "Don't bother with those thorny bushes. I think they are indestructible. It would take a bomb to get rid of them. But who brings bombs into a forest...",
-  "sign.text.random.6": "These woods are haunted. I swear I saw a ghost one night.",
-  "sign.text.random.7": "Found a house made of food. In the middle of the forest! Chopped it all down, lasted me a good week.",
-  "sign.text.random.8": "NO to Joja's highway plans in the forest! STOP the destruction!",
+  "maxhouse.books.random.1": "If you are very careful and very lucky, you might meet a unicorn on a sunny day.",
+  "maxhouse.books.random.2": "Somewhere in this forest is a sword in a stone. Has been there for centuries. No one seems to be able to pull it out.",
+  "maxhouse.books.random.3": "Don't bother with those thorny bushes. It would take several bombs to get rid of them. But who brings bombs into a forest...",
+  "maxhouse.books.random.4": "These woods are haunted. I swear I saw a ghost one night!",
+  "maxhouse.books.random.5": "Found a house made of food. In the middle of the forest! Chopped it all down, lasted me a good week.",
 
   "sign.text.item-marker": "I leave this sign for fellow wanderers. I am old now and my memory is fading, but somewhere here I buried {item}.",
   "sign.text.clearing-marker": "I saw a clearing {NSWE} from here. How far I don't remember. Tread carefully, friend.",
@@ -55,5 +52,7 @@
   "orb-stone.touch-message": "You carefully touch the stone. You feel a humm, but nothing happens.",
   "orb-stone.touch-message-no-orb": "You carefully touch the stone. The stone feels like it longs for something. It is a strange sensation.",
 
-  "cave-entrance.caved-in.message": "The entrance is caved in. There doesn't seem to be a way to get inside."
+  "cave-entrance.caved-in.message": "The entrance is caved in. There doesn't seem to be a way to get inside.",
+
+  "minecart.destination.deepwoods": "DeepWoods"
 }

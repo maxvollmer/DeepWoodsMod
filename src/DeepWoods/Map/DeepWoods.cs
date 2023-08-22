@@ -6,6 +6,7 @@ using DeepWoodsMod.Stuff;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
+using Newtonsoft.Json.Linq;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
@@ -246,7 +247,7 @@ namespace DeepWoodsMod
         protected override void initNetFields()
         {
             base.initNetFields();
-            this.NetFields.AddFields(parentName, parentExitLocation, hasReceivedNetworkData, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, isLichtungSetByAPI, isMapSizeSetByAPI, canGetLost, additionalExitLocations, isOverrideMap);
+            this.NetFields.AddFields(parentName, parentExitLocation, hasReceivedNetworkData, isInfested, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, isLichtungSetByAPI, isMapSizeSetByAPI, canGetLost, additionalExitLocations, isOverrideMap);
         }
 
         private void FillLevel()
@@ -415,7 +416,7 @@ namespace DeepWoodsMod
                 || mapHeight.Value == 0)
                 return;
 
-            ModEntry.Log($"FixPlayerPosAfterWarp: {this.Name}, mapWidth: {mapWidth}", LogLevel.Trace);
+            ModEntry.Log($"FixPlayerPosAfterWarp: {this.Name}, mapWidth: {mapWidth}, pos: {who.Position.X}, {who.Position.Y}", LogLevel.Trace);
 
             // First check for current warp request (stored globally for local player):
             if (DeepWoodsManager.currentWarpRequestName == this.Name
@@ -425,9 +426,14 @@ namespace DeepWoodsMod
                 DeepWoodsManager.currentWarpRequestName = null;
                 DeepWoodsManager.currentWarpRequestLocation = null;
             }
+            // then check if we spawned at the minecart (no action needed):
+            else if (Level == 1 && who.Position.X == DeepWoodsMineCart.MineCartLocation.X && who.Position.Y == (DeepWoodsMineCart.MineCartLocation.Y + 1))
+            {
+                // noop
+            }
+            // Otherwise we will heuristically determine the nearest valid location:
             else
             {
-                // If no current warp request is known, we will heuristically determine the nearest valid location:
                 Vector2 nearestEnterLocation = new Vector2(EnterLocation.X * 64, EnterLocation.Y * 64);
                 float nearestEnterLocationDistance = (nearestEnterLocation - who.Position).Length();
                 int faceDirection = EnterDirToFacingDirection(this.EnterDir);
@@ -443,7 +449,6 @@ namespace DeepWoodsMod
                     }
                 }
                 who.Position = nearestEnterLocation;
-                // who.faceDirection(faceDirection); // Keep original face direction
             }
 
             // Finally fix any errors on the border (this still happens according to some bug reports)
@@ -1165,11 +1170,30 @@ namespace DeepWoodsMod
         {
             base.updateCharacters(time);
 
-            if (this.isInfested.Value && !this.characters.Any(c => c is Monster))
+            if (Context.IsMainPlayer && this.isInfested.Value && !this.characters.Any(c => c is Monster))
             {
-                // not infested anymore!
-                this.isInfested.Value = false;
+                DeInfest();
+            }
+        }
 
+        public void DeInfest()
+        {
+            if (Context.IsMainPlayer)
+            {
+                foreach (Farmer who in Game1.otherFarmers.Values)
+                {
+                    if (who != Game1.player)
+                    {
+                        ModEntry.SendMessage(Name, MessageId.DeInfest, who.UniqueMultiplayerID);
+                    }
+                }
+            }
+
+            // not infested anymore!
+            this.isInfested.Value = false;
+
+            if (Game1.player.currentLocation == this)
+            {
                 // audible feedback
                 Game1.playSound(Sounds.YOBA);
 
@@ -1178,24 +1202,24 @@ namespace DeepWoodsMod
                 {
                     Game1.changeMusicTrack("woodsTheme");
                 }
-
-                // restore good debris
-                ModEntry.GetAPI().CallBeforeDebrisCreation(this);
-                if (!ModEntry.GetAPI().CallOverrideDebrisCreation(this))
-                {
-                    DeepWoodsDebris.Initialize(this);
-                }
-                ModEntry.GetAPI().CallAfterDebrisCreation(this);
-
-                // remove infested look
-                DeepWoodsBuilder.RemoveInfested(this, this.map);
-
-                // spawn a gift
-                DeepWoodsStuffCreator.ClearAndGiftInfestedLevel(this, new DeepWoodsRandom(this, this.seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()));
-
-                // spawn critters
-                tryToAddCritters(false);
             }
+
+            // restore good debris
+            ModEntry.GetAPI().CallBeforeDebrisCreation(this);
+            if (!ModEntry.GetAPI().CallOverrideDebrisCreation(this))
+            {
+                DeepWoodsDebris.Initialize(this);
+            }
+            ModEntry.GetAPI().CallAfterDebrisCreation(this);
+
+            // remove infested look
+            DeepWoodsBuilder.RemoveInfested(this, this.map);
+
+            // spawn a gift
+            DeepWoodsStuffCreator.ClearAndGiftInfestedLevel(this, new DeepWoodsRandom(this, this.seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()));
+
+            // spawn critters
+            tryToAddCritters(false);
         }
     }
 }

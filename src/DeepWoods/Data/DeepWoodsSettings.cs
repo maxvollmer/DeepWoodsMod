@@ -508,6 +508,7 @@ namespace DeepWoodsMod
     public class DeepWoodsStateData
     {
         private int lowestLevelReached = 0;
+        private int orbStonesSaved = 0;
 
         public HashSet<long> PlayersWhoGotStardropFromUnicorn { get; set; } = new HashSet<long>();
         public HashSet<XY> WoodsObeliskLocations { get; set; } = new HashSet<XY>();
@@ -532,6 +533,29 @@ namespace DeepWoodsMod
                     }
                 }
                 lowestLevelReached = value;
+            }
+        }
+
+        public int OrbStonesSaved
+        {
+            get
+            {
+                return orbStonesSaved;
+            }
+
+            set
+            {
+                if (value > orbStonesSaved && Game1.IsMasterGame)
+                {
+                    foreach (Farmer who in Game1.otherFarmers.Values)
+                    {
+                        if (who != Game1.player)
+                        {
+                            ModEntry.SendMessage(value, MessageId.SetOrbStonesSaved, who.UniqueMultiplayerID);
+                        }
+                    }
+                }
+                orbStonesSaved = value;
             }
         }
     }

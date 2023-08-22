@@ -3,6 +3,7 @@ using DeepWoodsMod.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Netcode;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using System.Linq;
 using xTile.Dimensions;
@@ -13,17 +14,17 @@ namespace DeepWoodsMod
     {
         private NetVector2 internalMaxHutLocation = new NetVector2();
 
-        private static Vector2 maxHutLocation;
+        private static PerScreen<Vector2> maxHutLocation = new();
 
         public static Vector2 MaxHutLocation
         {
             get
             {
-                return maxHutLocation;
+                return maxHutLocation.Value;
             }
             set
             {
-                maxHutLocation = value;
+                maxHutLocation.Value = value;
                 if (Game1.getLocationFromName("DeepWoodsMaxHouse") is DeepWoodsMaxHouse deepWoodsMaxHouse)
                 {
                     deepWoodsMaxHouse.internalMaxHutLocation.Value = value;

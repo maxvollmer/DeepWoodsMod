@@ -63,25 +63,25 @@ namespace DeepWoodsMod
 
         public static string BigWoodenSignMessage => Get("bigsign.message");
 
+        public static string SmallWoodenSign => Get("sign.text.welcome");
+
+        public static string DeepWoodsMineCartText => Get("minecart.destination.deepwoods");
+
 
         public static void Init(ITranslationHelper i18n)
         {
             I18n = i18n;
         }
 
-        public class SignTexts
+        public class BookTexts
         {
             public readonly static string[] textIDs = new string[]
             {
-                "sign.text.welcome",
-                "sign.text.random.1",
-                "sign.text.random.2",
-                "sign.text.random.3",
-                "sign.text.random.4",
-                "sign.text.random.5",
-                "sign.text.random.6",
-                "sign.text.random.7",
-                "sign.text.random.8",
+                "maxhouse.books.random.1",
+                "maxhouse.books.random.2",
+                "maxhouse.books.random.3",
+                "maxhouse.books.random.4",
+                "maxhouse.books.random.5",
             };
 
             public static string Get(int index)

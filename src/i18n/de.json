@@ -29,14 +29,11 @@
 
   "sign.text.welcome": "Du betrittst den tiefen Wald. Laufe nicht zu weit, wenn du nicht vorbereitet bist. Viele vor dir sind verschollen oder schlimmeres. Du bist gewarnt.",
 
-  "sign.text.random.1": "Schnecken in dieser Region.",
-  "sign.text.random.2": "Wenn du sehr vorsichtig und sehr glücklich bist, kannst du vielleicht an einem sonnigen Tag ein Einhorn treffen.",
-  "sign.text.random.3": "Irgendwo in diesem Wald ist ein Schwert in einem Stein. Ist da seit Jahrhunderten. Niemand scheint es herausziehen zu können.",
-  "sign.text.random.4": "Ich finde nicht mehr zurück. Vielleicht hilft es wenn ich diese Schilder aufstelle. Bist du auch verirrt?",
-  "sign.text.random.5": "Versuchs gar nicht erst mit diesen Dornenbüschen. Ich glaub die sind unzerstörbar. Da brauchts vermutlich eine Bombe um durchzukommen. Aber wer bringt schon Bomben in den Wald...",
-  "sign.text.random.6": "In diesen Wälder spukt es. Ich schwöre ich hab ein Gespenst gesehen.",
-  "sign.text.random.7": "Hab ein Haus aus Essen gefunden. Mitten im Wald! Habs komplett zerhackt, hat mir gut eine Woche gereicht.",
-  "sign.text.random.8": "NEIN zu Jojas Autobahnplänen im Wald! STOPP die Zerstörung!",
+  "maxhouse.books.random.1": "Wenn du sehr vorsichtig und sehr glücklich bist, kannst du vielleicht an einem sonnigen Tag ein Einhorn treffen.",
+  "maxhouse.books.random.2": "Irgendwo in diesem Wald ist ein Schwert in einem Stein. Ist da seit Jahrhunderten. Niemand scheint es herausziehen zu können.",
+  "maxhouse.books.random.3": "Versuchs gar nicht erst mit diesen Dornenbüschen. Da brauchts mehrere Bomben um durchzukommen. Aber wer bringt schon Bomben in den Wald...",
+  "maxhouse.books.random.4": "In diesen Wälder spukt es. Ich schwöre ich hab ein Gespenst gesehen.",
+  "maxhouse.books.random.5": "Hab ein Haus aus Essen gefunden. Mitten im Wald! Habs komplett zerhackt, hat mir gut eine Woche gereicht.",
 
   "sign.text.item-marker": "Ich hinterlasse dieses Schild für andere Abenteuerlustige. Ich bin alt und mein Gedächtnis will nicht mehr so, aber irgendwo hier habe ich {item} vergraben.",
   "sign.text.clearing-marker": "Ich habe eine Lichtung im {NSWE} von hier gesehen. Ich weiß nicht mehr wie weit. Sei vorsichtig.",

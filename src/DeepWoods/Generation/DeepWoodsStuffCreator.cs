@@ -81,7 +81,7 @@ namespace DeepWoodsMod
             deepWoods.overlayObjects.Clear();
         }
 
-        private void AddCuteSignToExit(HashSet<Location> blockedLocations, Location location, DeepWoodsEnterExit.ExitDirection direction, int? textIndex = null)
+        private void AddCuteSignToExit(HashSet<Location> blockedLocations, Location location, DeepWoodsEnterExit.ExitDirection direction)
         {
             Vector2 exitLocation = new Vector2(location.X, location.Y);
             Vector2 xDir = new Vector2();
@@ -107,7 +107,7 @@ namespace DeepWoodsMod
             }
 
             Vector2 cuteSignLocation = exitLocation + (xDir * Settings.Map.ExitRadius) + (yDir * Settings.Map.ExitRadius);
-            deepWoods.largeTerrainFeatures.Add(new CuteSign(cuteSignLocation, textIndex));
+            deepWoods.largeTerrainFeatures.Add(new CuteSign(cuteSignLocation));
             deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, cuteSignLocation * 64f, 1.0f));
 
             blockedLocations.Add(new Location((int)cuteSignLocation.X, (int)cuteSignLocation.Y));
@@ -162,6 +162,7 @@ namespace DeepWoodsMod
             int mapWidth = this.spaceManager.GetMapWidth();
             int mapHeight = this.spaceManager.GetMapHeight();
 
+            /*
             if (!deepWoods.IsClearing)
             {
                 // Add cute signs (we do this before the thorny bushes, so signs can spawn inside an overgrown exit :3
@@ -177,6 +178,7 @@ namespace DeepWoodsMod
                     AddCuteSignToExit(blockedLocations, deepWoods.EnterLocation, DeepWoodsEnterExit.CastEnterDirToExitDir(deepWoods.EnterDir));
                 }
             }
+            */
 
             // Add thorny bushes around exit areas.
             if (!deepWoods.isLichtung.Value && deepWoods.level.Value > Settings.Level.MinLevelForThornyBushes)
@@ -985,14 +987,22 @@ namespace DeepWoodsMod
 
             List<int> allTilesInRandomOrder = Enumerable.Range(0, deepWoods.mapWidth.Value * deepWoods.mapHeight.Value).OrderBy(n => Game1.random.Next()).ToList();
 
+            int centerX = mapWidth / 2;
+            int centerY = mapHeight / 2;
+
+            CheckAndBlockSpace(blockedLocations, new Vector2(centerX, centerY), new Size(2, 1));
+            deepWoods.largeTerrainFeatures.Add(new DeepWoodsOrbStone(new Vector2(centerX, centerY)));
+
             int numInfestedStuff = 40;
 
-            int i = 0;
-            for (; i < numInfestedStuff; i++)
+            for (int i = 0; i < numInfestedStuff; i++)
             {
                 int tileIndex = allTilesInRandomOrder[i];
                 int x = tileIndex % mapWidth;
                 int y = tileIndex / mapWidth;
+
+                if (!IsTileFree(blockedLocations, new Vector2(x, y)))
+                    continue;
 
                 switch (this.random.GetRandomValue(Settings.Luck.Clearings.InfestedPerks))
                 {
@@ -1013,19 +1023,7 @@ namespace DeepWoodsMod
             int mapWidth = this.spaceManager.GetMapWidth();
             int mapHeight = this.spaceManager.GetMapHeight();
 
-            List<int> allTilesInRandomOrder = Enumerable.Range(0, deepWoods.mapWidth.Value * deepWoods.mapHeight.Value).OrderBy(n => Game1.random.Next()).ToList();
-            for (int i = 0; i < allTilesInRandomOrder.Count; i++)
-            {
-                int tileIndex = allTilesInRandomOrder[i];
-                int x = tileIndex % mapWidth;
-                int y = tileIndex / mapWidth;
-
-                if (deepWoods.isTileLocationTotallyClearAndPlaceable(new Vector2(x, y)))
-                {
-                    AddGiftInClearedInfestedLevel(new Vector2(x, y));
-                    break;
-                }
-            }
+            SaveOrbStone(deepWoods.largeTerrainFeatures.Where(f => f is DeepWoodsOrbStone).Select(f => f as DeepWoodsOrbStone).FirstOrDefault());
 
             Array.ForEach(deepWoods.terrainFeatures.Pairs.ToArray(), pair =>
             {
@@ -1041,10 +1039,27 @@ namespace DeepWoodsMod
             });
         }
 
-        private void AddGiftInClearedInfestedLevel(Vector2 location)
+        private void SaveOrbStone(DeepWoodsOrbStone orbStone)
         {
-            // TODO: Actual gift :D
-            deepWoods.objects[location] = new StardewValley.Object(location, GetRandomMushroomType(), 1) { IsSpawnedObject = true };
+            orbStone.HasOrb = true;
+
+            if (Game1.IsMasterGame)
+            {
+                var orbStonesSaved = DeepWoodsState.OrbStonesSaved;
+
+                if (orbStonesSaved < DeepWoodsOrbStone.SavedColors.Length)
+                {
+                    orbStone.OrbColor = DeepWoodsOrbStone.SavedColors[orbStonesSaved];
+                }
+                else
+                {
+                    orbStone.OrbColor = Color.White;
+                }
+
+                DeepWoodsState.OrbStonesSaved = orbStonesSaved + 1;
+            }
+
+            deepWoods.lightSources.Add(new LightSource(LightSource.sconceLight, orbStone.tilePosition.Value - new Vector2(0, - 2), 6, new Color(1f, 0f, 0f)));
         }
 
 
@@ -1063,14 +1078,19 @@ namespace DeepWoodsMod
                 - a minecart
              */
 
+            int mapWidth = this.spaceManager.GetMapWidth();
+            int mapHeight = this.spaceManager.GetMapHeight();
+
+
+
             // cute exit signs
             foreach (var exit in deepWoods.exits)
             {
-                AddCuteSignToExit(blockedLocations, exit.Location, exit.ExitDir, 0);
+                AddCuteSignToExit(blockedLocations, exit.Location, exit.ExitDir);
             }
 
 
-            // hut with fruit tree
+            // hut with fruit trees
             var maxHutLocation = new Vector2(deepWoods.EnterLocation.X + Settings.Map.ExitRadius + 2, deepWoods.EnterLocation.Y + 1);
             DeepWoodsMaxHouse.MaxHutLocation = maxHutLocation;
             deepWoods.largeTerrainFeatures.Add(new MaxHut(maxHutLocation));
@@ -1078,34 +1098,28 @@ namespace DeepWoodsMod
             var fruitTree1Location = new Vector2(deepWoods.EnterLocation.X + Settings.Map.ExitRadius + 2 + 6, deepWoods.EnterLocation.Y + 8);
             AddFruitTree(fruitTree1Location, FruitTree.treeStage, 3);
 
-
-            // big welcome sign with 2 fruit trees
-            var woodenSignLocation = new Vector2(deepWoods.EnterLocation.X - Settings.Map.ExitRadius - 2, deepWoods.EnterLocation.Y + 3);
-            deepWoods.largeTerrainFeatures.Add(new BigWoodenSign(woodenSignLocation));
-            deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, woodenSignLocation * 64f, 1.0f));
-
+            /*
             var fruitTree2Location = new Vector2(deepWoods.EnterLocation.X - Settings.Map.ExitRadius - 2 - 2, deepWoods.EnterLocation.Y + 7);
             AddFruitTree(fruitTree2Location, FruitTree.treeStage, 3);
 
             var fruitTree3Location = new Vector2(deepWoods.EnterLocation.X - Settings.Map.ExitRadius - 2 - 6, deepWoods.EnterLocation.Y + 9);
             AddFruitTree(fruitTree3Location, FruitTree.treeStage, 3);
+            */
+
+
+            // big welcome sign with minecart
+            var woodenSignLocation = new Vector2(deepWoods.EnterLocation.X - Settings.Map.ExitRadius - 2, deepWoods.EnterLocation.Y + 3);
+            deepWoods.largeTerrainFeatures.Add(new BigWoodenSign(woodenSignLocation));
+            deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, woodenSignLocation * 64f, 1.0f));
 
 
             // orb stones
-            int mapWidth = this.spaceManager.GetMapWidth();
-            int mapHeight = this.spaceManager.GetMapHeight();
-
             float y = mapHeight - Settings.Map.ExitRadius - 6;
             for (int i = 0; i < 5; i++)
             {
                 float x = mapWidth * (i + 1) / 6.0f;
 
-                var orbStone = new DeepWoodsOrbStone(new Vector2(x, y));
-                if (i == 1)
-                {
-                    orbStone.HasOrb = true;
-                    deepWoods.lightSources.Add(new LightSource(LightSource.sconceLight, new Vector2(x, y - 2), 6, new Color(1f, 0f, 0f)));
-                }
+                var orbStone = new DeepWoodsOrbStone(new Vector2(x, y), i);
                 deepWoods.largeTerrainFeatures.Add(orbStone);
             }
         }
