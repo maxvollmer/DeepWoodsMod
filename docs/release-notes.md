@@ -10,6 +10,19 @@ A mod for Stardew Valley that adds a procedurally generated infinite forest with
 
 ### Release Notes
 
+#### 3.1.0-beta
+
+ - Fixed splitscreen multiplayer
+ - Removed small signs from deeper levels (broke immersion)
+ - Book shelf now gives clues
+ - Infested levels now have orb stones, clearing them activates orb stones in root level
+   - Purely visual, no functionality yet
+ - Added minecart to root level (activates when first entering the level, if minecarts are unlocked)
+   - Works with Vanilla and MineCartPatcher
+ - Fixed several minor issues and bugs
+ - Updated translations
+
+---
 #### 3.0.0-beta
 
   - Prepared compatibility for SMAPI 4
