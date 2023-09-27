@@ -21,6 +21,7 @@ namespace DeepWoodsMod
         {
             public bool isDeepWoodsGameRunning = false;
             public Dictionary<long, GameLocation> playerLocations = new Dictionary<long, GameLocation>();
+            public int beforeSaveCount = 0;
         }
 
         private static DeepWoodsAPI api = new DeepWoodsAPI();
@@ -38,6 +39,11 @@ namespace DeepWoodsMod
         {
             get => _perScreenStuff.Value.playerLocations;
             set => _perScreenStuff.Value.playerLocations = value;
+        }
+        private static int BeforeSaveCount
+        {
+            get => _perScreenStuff.Value.beforeSaveCount;
+            set => _perScreenStuff.Value.beforeSaveCount = value;
         }
 
 
@@ -126,7 +132,6 @@ namespace DeepWoodsMod
             }
         }
 
-        private int isBeforeSaveCount = 0;
         private void OnSaving(object sender, SavingEventArgs args)
         {
             this.CleanupBeforeSave();
@@ -151,16 +156,12 @@ namespace DeepWoodsMod
         {
             ModEntry.Log("SaveEvents_BeforeSave", StardewModdingAPI.LogLevel.Trace);
 
-            isBeforeSaveCount++;
-            if (isBeforeSaveCount > 1)
+            BeforeSaveCount++;
+            if (BeforeSaveCount > 1)
             {
                 ModEntry.Log("BeforeSave event was called twice in a row. Ignoring second call.", StardewModdingAPI.LogLevel.Warn);
                 return;
             }
-
-            DeepWoodsManager.Remove();
-            WoodsObelisk.RemoveAllFromGame();
-            DeepWoodsSettings.DoSave();
 
             foreach (var who in Game1.getAllFarmers())
             {
@@ -170,21 +171,25 @@ namespace DeepWoodsMod
                     who.Position = new Vector2(DeepWoodsSettings.Settings.WoodsPassage.WoodsWarpLocation.X * 64, DeepWoodsSettings.Settings.WoodsPassage.WoodsWarpLocation.Y * 64);
                 }
             }
+
+            DeepWoodsManager.Remove();
+            WoodsObelisk.RemoveAllFromGame();
+            DeepWoodsSettings.DoSave();
         }
 
         private void RestoreAfterSave()
         {
             ModEntry.Log("SaveEvents_AfterSave", StardewModdingAPI.LogLevel.Trace);
 
-            isBeforeSaveCount--;
+            BeforeSaveCount--;
 
-            if (isBeforeSaveCount > 0)
+            if (BeforeSaveCount > 0)
             {
                 ModEntry.Log("AfterSave event was called before save has finished. Ignoring.", StardewModdingAPI.LogLevel.Warn);
                 return;
             }
 
-            if (isBeforeSaveCount < 0)
+            if (BeforeSaveCount < 0)
             {
                 ModEntry.Log("AfterSave event was called without previous BeforeSave call. Mod is now in unknown state, all hell might break lose.", StardewModdingAPI.LogLevel.Error);
                 return;

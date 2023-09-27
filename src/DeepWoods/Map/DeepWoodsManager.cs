@@ -358,6 +358,8 @@ namespace DeepWoodsMod
                 Remove();
                 Restore();
             }
+
+            WoodsObelisk.SendLetterIfNecessaryAndPossible();
         }
 
         // This is called by every client everytime the time of day changes (10 ingame minute intervals)

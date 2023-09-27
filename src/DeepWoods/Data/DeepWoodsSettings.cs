@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using StardewValley.Tools;
 using StardewValley;
 using System.IO;
+using StardewValley.TerrainFeatures;
 
 namespace DeepWoodsMod
 {
@@ -312,7 +313,25 @@ namespace DeepWoodsMod
         public Chance ChanceForFlower { get; set; } = new Chance(7);
         public Chance ChanceForFlowerInWinter { get; set; } = new Chance(3);
         public Chance ChanceForFlowerOnClearing { get; set; } = new Chance(5);
+        public Chance ChanceForExtraForageable { get; set; } = new Chance(0);
         public ResourceClumpLuckSettings ResourceClump { get; set; } = new ResourceClumpLuckSettings();
+
+        public WeightedInt[] TreeTypes { get; set; } = new WeightedInt[]{
+            new WeightedInt(Tree.bushyTree, 300),
+            new WeightedInt(Tree.leafyTree, 300),
+            new WeightedInt(Tree.pineTree, 300),
+            new WeightedInt(Tree.mahoganyTree, 100),
+        };
+
+        public WeightedInt[] FruitTreeTypes { get; set; } = new WeightedInt[]{
+            new WeightedInt(628, 200),  // apricot
+            new WeightedInt(629, 200),  // cherry
+            new WeightedInt(630, 200),  // orange
+            new WeightedInt(631, 200),  // peach
+            new WeightedInt(632, 200),  // apple
+            new WeightedInt(633, 200),  // pomegrenade
+            new WeightedInt(835, 200),  // mango
+        };
 
         public WeightedInt[] FruitCount { get; set; } = new WeightedInt[]{
             new WeightedInt(0, 60),
@@ -333,6 +352,11 @@ namespace DeepWoodsMod
             new WeightedInt(453, 50),  // 376, // Poppy, summer (140g)
             new WeightedInt(425, 30),  // 595, // FairyRose, fall (290g)
         };
+
+        public WeightedInt[] WinterForageables { get; set; } = new WeightedInt[] { };
+        public WeightedInt[] SummerForageables { get; set; } = new WeightedInt[] { };
+        public WeightedInt[] FallForageables { get; set; } = new WeightedInt[] { };
+        public WeightedInt[] SpringForageables { get; set; } = new WeightedInt[] { };
     }
 
     public class ClearingLuckSettings
@@ -535,6 +559,8 @@ namespace DeepWoodsMod
                 lowestLevelReached = value;
             }
         }
+
+        public Dictionary<long, int> LowestLevelReachedPerPlayer { get; set; } = new Dictionary<long, int>();
 
         public int OrbStonesSaved
         {

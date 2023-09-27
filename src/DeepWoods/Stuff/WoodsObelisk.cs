@@ -17,6 +17,16 @@ namespace DeepWoodsMod
             Game1.activeClickableMenu = new WoodsObeliskMenu();
         }
 
+        public static void SendLetterIfNecessaryAndPossible()
+        {
+            if (DeepWoodsState.LowestLevelReached >= Settings.Level.MinLevelForWoodsObelisk
+                && !Game1.player.hasOrWillReceiveMail(WOODS_OBELISK_WIZARD_MAIL_ID)
+                && (Game1.player.mailReceived.Contains("hasPickedUpMagicInk") || Game1.player.hasMagicInk))
+            {
+                Game1.addMailForTomorrow(WOODS_OBELISK_WIZARD_MAIL_ID);
+            }
+        }
+
         public static void InjectWoodsObeliskIntoGame()
         {
             foreach (var a in Game1.delayedActions)

@@ -322,6 +322,10 @@ namespace DeepWoodsMod
                     {
                         deepWoods.terrainFeatures[location] = new Flower(GetRandomFlowerType(), location);
                     }
+                    else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForExtraForageable))
+                    {
+                        deepWoods.objects[location] = new StardewValley.Object(location, GetRandomForageable(), 1);
+                    }
                     else
                     {
                         AddModOrGrass(location);
@@ -936,6 +940,30 @@ namespace DeepWoodsMod
             return GameLocation.getWeedForSeason(new Random(this.random.GetRandomValue()), Game1.currentSeason);
         }
 
+        private int GetRandomForageable()
+        {
+            if (Game1.IsWinter && Settings.Luck.Terrain.WinterForageables.Length > 0)
+            {
+                return this.random.GetRandomValue(Settings.Luck.Terrain.WinterForageables);
+            }
+            else if (Game1.IsSummer && Settings.Luck.Terrain.SummerForageables.Length > 0)
+            {
+                return this.random.GetRandomValue(Settings.Luck.Terrain.SummerForageables);
+            }
+            else if (Game1.IsSpring && Settings.Luck.Terrain.SpringForageables.Length > 0)
+            {
+                return this.random.GetRandomValue(Settings.Luck.Terrain.SpringForageables);
+            }
+            else if (Game1.IsFall && Settings.Luck.Terrain.FallForageables.Length > 0)
+            {
+                return this.random.GetRandomValue(Settings.Luck.Terrain.FallForageables);
+            }
+            else
+            {
+                return GetRandomWeedType();
+            }
+        }
+
         private int GetRandomStoneType()
         {
             return this.random.GetRandomValue(new int[] { 343, 668, 670 });
@@ -948,7 +976,7 @@ namespace DeepWoodsMod
 
         private int GetRandomTreeType()
         {
-            return this.random.GetRandomValue(new int[] { Tree.bushyTree, Tree.leafyTree, Tree.pineTree });
+            return this.random.GetRandomValue(Settings.Luck.Terrain.TreeTypes);
         }
 
         private int GetRandomMushroomType()
@@ -974,10 +1002,7 @@ namespace DeepWoodsMod
 
         private int GetRandomFruitTreeType()
         {
-            Dictionary<int, string> fruitTrees = Game1.content.Load<Dictionary<int, string>>("Data\\fruitTrees");
-            int[] fruitTreeTypes = fruitTrees.Keys.Where(i => i != 69).ToArray();
-            Array.Sort(fruitTreeTypes);
-            return this.random.GetRandomValue(fruitTreeTypes);
+            return this.random.GetRandomValue(Settings.Luck.Terrain.FruitTreeTypes);
         }
 
         private void Infest(HashSet<Location> blockedLocations)
