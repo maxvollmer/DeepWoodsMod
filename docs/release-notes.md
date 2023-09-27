@@ -11,22 +11,21 @@ A mod for Stardew Valley that adds a procedurally generated infinite forest with
 ### Release Notes
 
 #### 3.1.0-beta
-
  - Fixed splitscreen multiplayer
+ - Fixed crash bug in infested levels in multiplayer
+ - Fixed WoodsObelisk not becoming available if reaching level 20 before having magic ink
+ - Horses lost in DeepWoods return to their stable
  - Removed small signs from deeper levels (broke immersion)
  - Book shelf now gives clues
  - Infested levels now have orb stones, clearing them activates orb stones in root level
    - Purely visual, no functionality yet
  - Added minecart to root level (activates when first entering the level, if minecarts are unlocked)
    - Works with Vanilla and MineCartPatcher
- - Fixed several minor issues and bugs
- - Updated translations
+ - Updated some translations
  - Added fruit trees and extra forageables to config.json
- - WoodsObelisk available in any order (20 level vs magic ink)
 
 ---
 #### 3.0.0-beta
-
   - Prepared compatibility for SMAPI 4
   - Performance improvement in forest generation
   - Fixed excalibur sword luck condition
@@ -39,7 +38,6 @@ A mod for Stardew Valley that adds a procedurally generated infinite forest with
 
 ---
 #### 2.0.0-beta
-
  - Added compatibility for SDV 1.5.5+ (64bit)
  - Added German and Hungarian translations (provided by Deflaktor and martin66789 respectively)
  - Fixed gingerbread house textures for winter and rest of year were switched.
