@@ -21,6 +21,8 @@ A mod for Stardew Valley that adds a procedurally generated infinite forest with
    - Works with Vanilla and MineCartPatcher
  - Fixed several minor issues and bugs
  - Updated translations
+ - Added fruit trees and extra forageables to config.json
+ - WoodsObelisk available in any order (20 level vs magic ink)
 
 ---
 #### 3.0.0-beta
