@@ -213,7 +213,7 @@ namespace DeepWoodsMod
             this.parentName.Value = parent?.Name;
             this.ParentExitLocation = parent?.GetExit(EnterDirToExitDir(enterDir))?.Location ?? new Location();
             this.level.Value = level;
-            DeepWoodsState.LowestLevelReached = Math.Max(DeepWoodsState.LowestLevelReached, this.level.Value - 1);
+            DeepWoodsState.LowestLevelReached = Math.Max(DeepWoodsState.LowestLevelReached, this.level.Value);
             this.EnterDir = enterDir;
             this.spawnTime.Value = Game1.timeOfDay;
 

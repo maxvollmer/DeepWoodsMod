@@ -560,8 +560,6 @@ namespace DeepWoodsMod
             }
         }
 
-        public Dictionary<long, int> LowestLevelReachedPerPlayer { get; set; } = new Dictionary<long, int>();
-
         public int OrbStonesSaved
         {
             get
