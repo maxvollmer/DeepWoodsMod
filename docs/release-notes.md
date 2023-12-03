@@ -14,6 +14,7 @@ A mod for Stardew Valley that adds a procedurally generated infinite forest with
  - Fixed splitscreen multiplayer
  - Fixed crash bug in infested levels in multiplayer
  - Fixed WoodsObelisk not becoming available if reaching level 20 before having magic ink
+ - Fixed an exploit with the Woods Obelisk
  - Added minecart to root level (activates when first entering the level, if minecarts are unlocked)
    - Works with Vanilla and MineCartPatcher
  - Horses lost in DeepWoods now return to their stable

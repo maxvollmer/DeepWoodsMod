@@ -191,9 +191,11 @@ namespace DeepWoodsMod
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("SMAPI.CommonErrors", "AvoidNetField")]
-        public DeepWoods(DeepWoods parent, int level, EnterDirection enterDir)
+        public DeepWoods(DeepWoods parent, int level, EnterDirection enterDir, bool spawnedFromObelisk)
             : this()
         {
+            this.spawnedFromObelisk.Value = spawnedFromObelisk;
+
             base.isOutdoors.Value = true;
             base.ignoreDebrisWeather.Value = true;
             base.ignoreOutdoorLighting.Value = true;
@@ -217,8 +219,6 @@ namespace DeepWoodsMod
             this.EnterDir = enterDir;
             this.spawnTime.Value = Game1.timeOfDay;
 
-            this.spawnedFromObelisk.Value = parent?.spawnedFromObelisk?.Value ?? false;
-
             ModEntry.GetAPI().CallOnCreate(this);
 
             CreateSpace();
@@ -236,12 +236,6 @@ namespace DeepWoodsMod
             {
                 ModEntry.Log($"Child spawned, time: {Game1.timeOfDay}, name: {this.Name}, level: {this.level}, parent: {this.parentName}, enterDir: {this.EnterDir}, enterLocation: {this.EnterLocation.X}, {this.EnterLocation.Y}", LogLevel.Trace);
             }
-        }
-
-        public DeepWoods(int level)
-            : this(null, level, EnterDirection.FROM_TOP)
-        {
-            this.spawnedFromObelisk.Value = true;
         }
 
         protected override void initNetFields()
@@ -496,7 +490,7 @@ namespace DeepWoodsMod
                 DeepWoods exitDeepWoods = Game1.getLocationFromName(exit.TargetLocationName) as DeepWoods;
                 if (exitDeepWoods == null)
                 {
-                    exitDeepWoods = new DeepWoods(this, this.level.Value + 1, ExitDirToEnterDir(exit.ExitDir));
+                    exitDeepWoods = new DeepWoods(this, this.level.Value + 1, ExitDirToEnterDir(exit.ExitDir), false);
                     DeepWoodsManager.AddDeepWoodsToGameLocations(exitDeepWoods);
                 }
                 exit.TargetLocationName = exitDeepWoods.Name;

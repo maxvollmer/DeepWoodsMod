@@ -144,7 +144,7 @@ namespace DeepWoodsMod
             }
 
             // Otherwise create a new level.
-            DeepWoods deepWoods = new DeepWoods(level);
+            DeepWoods deepWoods = new DeepWoods(null, level, EnterDirection.FROM_TOP, true);
             DeepWoodsManager.AddDeepWoodsToGameLocations(deepWoods);
             return deepWoods;
         }
@@ -303,7 +303,7 @@ namespace DeepWoodsMod
                     Remove();
                     AddMaxHut();
                     DeepWoodsManager.rootDeepWoodsBackup = null;
-                    DeepWoodsManager.AddDeepWoodsToGameLocations(new DeepWoods(null, 1, EnterDirection.FROM_TOP));
+                    DeepWoodsManager.AddDeepWoodsToGameLocations(new DeepWoods(null, 1, EnterDirection.FROM_TOP, false));
                 }
             }
 
