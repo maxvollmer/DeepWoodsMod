@@ -39,9 +39,9 @@ namespace DeepWoodsMod.Stuff
 
         public override bool performUseAction(Vector2 tileLocation, GameLocation location)
         {
-            DeepWoodsQuestMenu.OpenQuestMenu(I18N.BigWoodenSignMessage, new Response[1]
+            DeepWoodsQuestMenu.OpenQuestMenuWithModInfo(I18N.BigWoodenSignMessage, new Response[1]
             {
-                new Response("No", I18N.MessageBoxOK).SetHotKey(Keys.Escape)
+                new Response("No", I18N.MessageBoxClose).SetHotKey(Keys.Escape)
             });
 
             return true;

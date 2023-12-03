@@ -149,20 +149,16 @@ namespace DeepWoodsMod.Stuff
                 {
                     DeepWoodsQuestMenu.OpenQuestMenu(I18N.OrbStoneTouchMessage, new Response[1]
                     {
-                        new Response("No", I18N.MessageBoxOK).SetHotKey(Keys.Escape)
+                        new Response("No", I18N.MessageBoxClose).SetHotKey(Keys.Escape)
                     });
                 }
                 else
                 {
                     DeepWoodsQuestMenu.OpenQuestMenu(I18N.OrbStoneTouchMessageNoOrb, new Response[1]
                     {
-                        new Response("No", I18N.MessageBoxOK).SetHotKey(Keys.Escape)
+                        new Response("No", I18N.MessageBoxClose).SetHotKey(Keys.Escape)
                     });
                 }
-            }
-            else if (whichAnswer == "ModInfo")
-            {
-                DeepWoodsQuestMenu.ShowModInfo();
             }
         }
 

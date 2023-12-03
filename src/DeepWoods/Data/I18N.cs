@@ -38,7 +38,7 @@ namespace DeepWoodsMod
         public static string WoodsObeliskWizardMailMessage => Get("woods-obelisk.wizard-mail", false);
         public static string HealingFountainDrinkMessage => Get("healing-fountain.drink-message", false);
         public static string ExcaliburNopeMessage => Get("excalibur.nope-message", false);
-        public static string MessageBoxOK => Get("messagebox.ok", false);
+        public static string MessageBoxClose => Get("messagebox.close", false);
         public static string MaxHousePuzzleNopeMessage => Get("maxhouse.puzzle.nope", false);
 
         public static string OrbStoneTouchQuestion => Get("orb-stone.question", false);
@@ -47,11 +47,7 @@ namespace DeepWoodsMod
         public static string OrbStoneTouchMessage => Get("orb-stone.touch-message", false);
         public static string OrbStoneTouchMessageNoOrb => Get("orb-stone.touch-message-no-orb", false);
 
-        public static string BooksMessage => Get("maxhouse.books.question", false);
-        public static string BooksAnswerRead => Get("maxhouse.books.answer.read", false);
-        public static string BooksAnswerNevermind => Get("maxhouse.books.answer.nevermind", false);
-        public static string BooksInteresting => Get("maxhouse.books.interesting", false);
-
+        public static string CloseBook => Get("maxhouse.books.closebook", false);
 
         public static string StuffMessage => Get("maxhouse.stuff.question", false);
         public static string StuffAnswerSearch => Get("maxhouse.stuff.answer.search", false);
@@ -62,8 +58,7 @@ namespace DeepWoodsMod
         public static string ShopEmptyMessage => Get("maxhouse.shop.empty", false);
 
         public static string BigWoodenSignMessage => Get("bigsign.message", false);
-
-        public static string SmallWoodenSign => Get("sign.text.welcome", false);
+        public static string EntrySignMessage => Get("entrysign.message", false);
 
         public static string DeepWoodsMineCartText => Get("minecart.destination.deepwoods", false);
 

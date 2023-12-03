@@ -14,15 +14,16 @@ A mod for Stardew Valley that adds a procedurally generated infinite forest with
  - Fixed splitscreen multiplayer
  - Fixed crash bug in infested levels in multiplayer
  - Fixed WoodsObelisk not becoming available if reaching level 20 before having magic ink
- - Horses lost in DeepWoods return to their stable
- - Removed small signs from deeper levels (broke immersion)
- - Book shelf now gives clues
- - Infested levels now have orb stones, clearing them activates orb stones in root level
-   - Purely visual, no functionality yet
  - Added minecart to root level (activates when first entering the level, if minecarts are unlocked)
    - Works with Vanilla and MineCartPatcher
- - Updated some translations
+ - Horses lost in DeepWoods now return to their stable
+ - Book shelves in the hut now give in-universe clues
+ - Infested levels now have orb stones, clearing them activates orb stones in root level
+   - (This is purely visual, no functionality yet)
  - Added fruit trees and extra forageables to config.json
+ - Removed small signs from deeper levels (broke immersion)
+ - Removed "Mod Info" button from all interactive menus, except the big wooden sign.
+ - Updated some translations
 
 ---
 #### 3.0.0-beta
