@@ -10,6 +10,9 @@ A mod for Stardew Valley that adds a procedurally generated infinite forest with
 
 ### Release Notes
 
+#### 4.0.0-alpha
+-- Fixes and updates for 1.6.9 compatibility (WIP)
+
 #### 3.1.0-beta
  - Fixed splitscreen multiplayer
  - Fixed crash bug in infested levels in multiplayer

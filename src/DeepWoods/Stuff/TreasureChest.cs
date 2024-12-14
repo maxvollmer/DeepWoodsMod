@@ -30,7 +30,7 @@ namespace DeepWoodsMod
         protected override void initNetFields()
         {
             base.initNetFields();
-            this.NetFields.AddFields(this.isTrashCan);
+            this.NetFields.AddField(this.isTrashCan);
         }
 
         public TreasureChest(Vector2 location, List<Item> items, bool isTrashCan = false)
@@ -39,15 +39,14 @@ namespace DeepWoodsMod
             this.name = nameof(Chest);
             this.Type = "interactive";
             this.giftbox.Value = false;
-            this.items.Set(items);
-            this.coins.Value = 0;
+            this.Items.OverwriteWith(items);
             this.TileLocation = location;
             this.Tint = Color.Pink;
             this.isTrashCan.Value = isTrashCan;
             this.boundingBox.Value = new Rectangle((int)this.TileLocation.X * 64, (int)this.TileLocation.Y * 64, 64, 64);
         }
 
-        public override bool performToolAction(Tool t, GameLocation location)
+        public override bool performToolAction(Tool t)
         {
             return false;
         }
@@ -121,7 +120,7 @@ namespace DeepWoodsMod
 
         private int PlayerChestLidFrameToTreasureChestLidFrame(int lidFrame)
         {
-            if (isTrashCan)
+            if (isTrashCan.Value)
             {
                 return 354;
             }

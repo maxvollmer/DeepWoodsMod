@@ -14,6 +14,12 @@ using StardewValley.Menus;
 using StardewValley;
 using System.Reflection;
 using DeepWoodsMod.Stuff;
+using StardewModdingAPI;
+using StardewValley.Locations;
+using xTile.Layers;
+using xTile.Tiles;
+using StardewValley.Objects;
+using xTile.ObjectModel;
 
 namespace DeepWoodsMod.Helpers
 {
@@ -96,6 +102,60 @@ namespace DeepWoodsMod.Helpers
             else if (e.NameWithoutLocale.IsEquivalentTo("MinecartPatcher.Minecarts"))
             {
                 e.Edit(a => EditMinecartPatcherMinecarts(a.GetData<IDictionary>()));
+            }
+            else if (e.Name.IsEquivalentTo("Maps/Woods"))
+            {
+                e.Edit(a => PatchSecretWoodsDeepWoodsEntrance(a.AsMap()));
+            }
+        }
+
+        private static void PatchSecretWoodsDeepWoodsEntrance(IAssetDataForMap mapData)
+        {
+            Map map = mapData.Data;
+            DeleteSecretWoodsBuildingsTiles(map.GetLayer("Buildings"));
+            AddSecretWoodsBuildingsTiles(map.GetLayer("Buildings"), map.TileSheets.First(), 0);
+            AddWarpsToSecretWoods(map.Properties);
+        }
+
+        private static void AddWarpsToSecretWoods(IPropertyCollection properties)
+        {
+            if (!properties.TryGetValue("Warp", out var warps))
+            {
+                warps = string.Empty;
+            }
+            string swarps = warps;
+
+            foreach (var location in Settings.WoodsPassage.WarpLocations)
+            {
+                swarps += $" {location.X} {location.Y} DeepWoods {Settings.Map.RootLevelEnterLocation.X} {Settings.Map.RootLevelEnterLocation.Y + 1}";
+            }
+
+            properties["Warp"] = swarps;
+        }
+
+        private static void DeleteSecretWoodsBuildingsTiles(Layer buildingsLayer)
+        {
+            for (int x = Settings.WoodsPassage.DeleteBuildingTileArea[0].X; x <= Settings.WoodsPassage.DeleteBuildingTileArea[1].X; x++)
+            {
+                for (int y = Settings.WoodsPassage.DeleteBuildingTileArea[0].X; y <= Settings.WoodsPassage.DeleteBuildingTileArea[1].Y; y++)
+                {
+                    buildingsLayer.Tiles[x, y] = null;
+                }
+            }
+            foreach (var location in Settings.WoodsPassage.DeleteBuildingTiles)
+            {
+                buildingsLayer.Tiles[location.X, location.Y] = null;
+            }
+        }
+
+        private static void AddSecretWoodsBuildingsTiles(Layer buildingsLayer, TileSheet tileSheet, int tileIndex)
+        {
+            foreach (var location in Settings.WoodsPassage.AddBuildingTiles)
+            {
+                if (buildingsLayer.Tiles[location.X, location.Y] == null)
+                {
+                    buildingsLayer.Tiles[location.X, location.Y] = new StaticTile(buildingsLayer, tileSheet, BlendMode.Alpha, tileIndex);
+                }
             }
         }
 

@@ -30,21 +30,21 @@ namespace DeepWoodsMod
         protected override void initNetFields()
         {
             base.initNetFields();
-            this.NetFields.AddFields(this.isScared, this.isPetted, this.fleeFacingDirection);
+            this.NetFields.AddField(this.isScared).AddField(this.isPetted).AddField(this.fleeFacingDirection);
         }
 
         public override bool checkAction(Farmer who, GameLocation l)
         {
-            if (!isScared && !isPetted)
+            if (!isScared.Value && !isPetted.Value)
             {
                 isPetted.Value = true;
                 this.farmerPassesThrough = true;
                 who.health = who.maxHealth;
                 who.Stamina = who.MaxStamina;
-                who.addedLuckLevel.Value = Math.Max(10, who.addedLuckLevel.Value);
+                //who.addedLuckLevel.Value = Math.Max(10, who.addedLuckLevel.Value);
                 if (!DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Contains(who.UniqueMultiplayerID))
                 {
-                    who.addItemByMenuIfNecessaryElseHoldUp(new StardewValley.Object(434, 1), null);
+                    who.addItemByMenuIfNecessaryElseHoldUp(new StardewValley.Object("434", 1), null);
                     DeepWoodsState.PlayersWhoGotStardropFromUnicorn.Add(who.UniqueMultiplayerID);
                     if (!Game1.IsMasterGame)
                     {
@@ -53,14 +53,14 @@ namespace DeepWoodsMod
                 }
                 else
                 {
-                    l.playSoundAt(Sounds.STARDROP, this.getTileLocation());
+                    l.playSound(Sounds.STARDROP, Tile);
                 }
-                l.playSoundAt(Sounds.ACHIEVEMENT, this.getTileLocation());
-                l.playSoundAt(Sounds.HEAL_SOUND, this.getTileLocation());
-                l.playSoundAt(Sounds.REWARD, this.getTileLocation());
-                l.playSoundAt(Sounds.SECRET1, this.getTileLocation());
-                l.playSoundAt(Sounds.SHINY4, this.getTileLocation());
-                l.playSoundAt(Sounds.YOBA, this.getTileLocation());
+                l.playSound(Sounds.ACHIEVEMENT, Tile);
+                l.playSound(Sounds.HEAL_SOUND, Tile);
+                l.playSound(Sounds.REWARD, Tile);
+                l.playSound(Sounds.SECRET1, Tile);
+                l.playSound(Sounds.SHINY4, Tile);
+                l.playSound(Sounds.YOBA, Tile);
                 l.temporarySprites.Add(new TemporaryAnimatedSprite("TileSheets\\animations", new Rectangle(0, 320, 64, 64), 50f, 8, 0, this.Position, false, false));
             }
             return true;
@@ -68,7 +68,7 @@ namespace DeepWoodsMod
 
         private void CheckScared()
         {
-            if (isScared || isPetted)
+            if (isScared.Value || isPetted.Value)
                 return;
 
             foreach (Farmer farmer in this.currentLocation.farmers)
@@ -80,9 +80,9 @@ namespace DeepWoodsMod
                         isScared.Value = true;
                         this.farmerPassesThrough = true;
                         Game1.player.team.sharedDailyLuck.Value = -0.12;
-                        farmer.addedLuckLevel.Value = Math.Min(-10, farmer.addedLuckLevel.Value);
-                        this.currentLocation.playSoundAt(Sounds.THUNDER_SMALL, this.getTileLocation());
-                        this.currentLocation.playSoundAt(Sounds.GHOST, this.getTileLocation());
+                        //farmer.addedLuckLevel.Value = Math.Min(-10, farmer.addedLuckLevel.Value);
+                        this.currentLocation.playSound(Sounds.THUNDER_SMALL, Tile);
+                        this.currentLocation.playSound(Sounds.GHOST, Tile);
                         Game1.isRaining = true;
                         Game1.isLightning = true;
                         Game1.changeMusicTrack("rain");
@@ -140,16 +140,16 @@ namespace DeepWoodsMod
 
         public override void update(GameTime time, GameLocation location)
         {
-            if (isPetted)
+            if (isPetted.Value)
             {
                 this.currentLocation.characters.Remove(this);
                 return;
             }
-            if (!isScared)
+            if (!isScared.Value)
             {
                 CheckScared();
             }
-            if (isScared)
+            if (isScared.Value)
             {
                 if (this.currentLocation.farmers.Count == 0)
                 {
@@ -169,17 +169,17 @@ namespace DeepWoodsMod
 
                 if (this.Sprite.CurrentAnimation == null)
                 {
-                    AnimatedSprite.endOfAnimationBehavior frameBehavior = (AnimatedSprite.endOfAnimationBehavior)(x =>
+                    AnimatedSprite.endOfAnimationBehavior frameBehavior = (x =>
                     {
                         string stepAudio = "thudStep";
 
-                        string str = this.currentLocation.doesTileHaveProperty((int)this.getTileLocation().X, (int)this.getTileLocation().Y, "Type", "Back");
+                        string str = this.currentLocation.doesTileHaveProperty((int)Tile.X, (int)Tile.Y, "Type", "Back");
                         if (str == "Wood")
                             stepAudio = "woodyStep";
                         else if (str == "Stone")
                             stepAudio = "stoneStep";
 
-                        this.currentLocation.localSoundAt(stepAudio, this.getTileLocation());
+                        this.currentLocation.playSound(stepAudio, Tile);
                     });
 
                     if (this.FacingDirection == 1)
@@ -225,16 +225,16 @@ namespace DeepWoodsMod
                 }
 
                 if (this.FacingDirection == 3)
-                    this.drawOffset.Set(Vector2.Zero);
+                    this.drawOffset = Vector2.Zero;
                 else
-                    this.drawOffset.Set(new Vector2(-16f, 0.0f));
+                    this.drawOffset = new Vector2(-16f, 0.0f);
 
                 this.flip = this.FacingDirection == 3;
 
-                if (!this.currentLocation.isTileOnMap(this.getTileLocation()))
+                if (!this.currentLocation.isTileOnMap(Tile))
                 {
                     this.currentLocation.characters.Remove(this);
-                    this.currentLocation.playSoundAt(Sounds.LEAFRUSTLE, this.getTileLocation());
+                    this.currentLocation.playSound(Sounds.LEAFRUSTLE, Tile);
                     return;
                 }
 
@@ -248,7 +248,7 @@ namespace DeepWoodsMod
 
         public override void draw(SpriteBatch b)
         {
-            if (isPetted)
+            if (isPetted.Value)
                 return;
 
             this.Sprite.spriteTexture = DeepWoodsTextures.Textures.Unicorn;

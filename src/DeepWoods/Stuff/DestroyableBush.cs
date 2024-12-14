@@ -25,18 +25,15 @@ namespace DeepWoodsMod
             minAxeLevel = Settings.Objects.Bush.MinAxeLevel;
         }
 
-        public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)
+        public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation)
         {
-            if (location == null)
-                location = Game1.currentLocation;
-
             if (t == null && explosion > 0)
             {
                 ModEntry.GetReflection().GetMethod(this, "shake").Invoke(tileLocation, true);
                 this.health -= Math.Min(explosion / 5f, 0.5f);
                 if (this.health <= -1)
                 {
-                    DoDeath(location, tileLocation);
+                    DoDeath(Location, tileLocation);
                     return true;
                 }
                 return false;
@@ -44,18 +41,18 @@ namespace DeepWoodsMod
 
             if (t != null && t is Axe)
             {
-                location.playSound("leafrustle");
+                Location.playSound("leafrustle", Tile);
                 ModEntry.GetReflection().GetMethod(this, "shake").Invoke(tileLocation, true);
                 if ((t as Axe).UpgradeLevel >= minAxeLevel)
                 {
                     this.health -= (t as Axe).UpgradeLevel / 5f;
                     if (this.health <= -1)
                     {
-                        location.playSound("treethud");
-                        DoDeath(location, tileLocation);
+                        Location.playSound("treethud", Tile);
+                        DoDeath(Location, tileLocation);
                         return true;
                     }
-                    location.playSound("axchop");
+                    Location.playSound("axchop", Tile);
                 }
             }
             return false;
@@ -89,7 +86,13 @@ namespace DeepWoodsMod
                 {
                     ModEntry.GetMultiplayer().broadcastSprites(location, new TemporaryAnimatedSprite[1]
                     {
-                        new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(355, 1200 + (Game1.IsFall ? 16 : (Game1.IsWinter ? -16 : 0)), 16, 16), Utility.getRandomPositionInThisRectangle(this.getBoundingBox(), Game1.random) - new Vector2(0.0f, (float) Game1.random.Next(64)), false, 0.01f, Game1.IsWinter ? Color.Cyan : Color.White)
+                        new TemporaryAnimatedSprite(
+                            "LooseSprites\\Cursors",
+                            new Rectangle(355, 1200 + (Game1.IsFall ? 16 : (Game1.IsWinter ? -16 : 0)), 16, 16),
+                            Utility.getRandomPositionInThisRectangle(this.getBoundingBox(), Game1.random) - new Vector2(0.0f, (float) Game1.random.Next(64)),
+                            false,
+                            0.01f,
+                            Game1.IsWinter ? Color.Cyan : Color.White)
                         {
                         motion = new Vector2((float) Game1.random.Next(-10, 11) / 10f, (float) -Game1.random.Next(5, 7)),
                         acceleration = new Vector2(0.0f, (float) Game1.random.Next(13, 17) / 100f),

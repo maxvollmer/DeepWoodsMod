@@ -1,5 +1,4 @@
 ﻿
-using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using System.Collections.Generic;
 using xTile.Dimensions;
@@ -159,7 +158,7 @@ namespace DeepWoodsMod
 
         public Location GetActualTitleSafeTopleftCorner()
         {
-            Microsoft.Xna.Framework.Rectangle titleSafeArea = Game1.game1.GraphicsDevice.Viewport.GetTitleSafeArea();
+            Microsoft.Xna.Framework.Rectangle titleSafeArea = Game1.game1.GraphicsDevice.Viewport.TitleSafeArea;
             int currentMapWidthInPixel = this.mapWidth * 64;
             Location location = new Location(titleSafeArea.Left, titleSafeArea.Top);
             if (currentMapWidthInPixel < titleSafeArea.Width)

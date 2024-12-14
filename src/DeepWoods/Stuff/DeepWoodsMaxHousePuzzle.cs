@@ -20,7 +20,6 @@ namespace DeepWoodsMod.Stuff
         public DeepWoodsMaxHousePuzzle()
            : base(false)
         {
-            InitNetFields();
             for (int i = 0; i < NUM_COLUMNS; i++)
             {
                 this.currentState.Add(true);
@@ -31,12 +30,13 @@ namespace DeepWoodsMod.Stuff
         public DeepWoodsMaxHousePuzzle(Vector2 tileLocation)
             : this()
         {
-            this.tilePosition.Value = tileLocation;
+            this.Tile = tileLocation;
         }
 
-        private void InitNetFields()
+        public override void initNetFields()
         {
-            this.NetFields.AddFields(this.currentState, this.columnPositions);
+            base.initNetFields();
+            this.NetFields.AddField(this.currentState).AddField(this.columnPositions);
         }
 
         public override bool isActionable()
@@ -44,9 +44,9 @@ namespace DeepWoodsMod.Stuff
             return false;
         }
 
-        public override Rectangle getBoundingBox(Vector2 tileLocation)
+        public override Rectangle getBoundingBox()
         {
-            return new Rectangle((int)tileLocation.X * 64, (int)tileLocation.Y * 64, 128, 128);
+            return new Rectangle((int)Tile.X * 64, (int)Tile.Y * 64, 128, 128);
         }
 
         public override bool isPassable(Character c = null)
@@ -54,18 +54,18 @@ namespace DeepWoodsMod.Stuff
             return !this.currentState.Contains(true);
         }
 
-        public override bool performUseAction(Vector2 tileLocation, GameLocation location)
+        public override bool performUseAction(Vector2 tileLocation)
         {
             if (this.currentState.Contains(true))
             {
-                location.playSoundAt(Sounds.THUD_STEP, this.tilePosition.Value);
+                Location.playSound(Sounds.THUD_STEP, this.Tile);
                 Game1.showRedMessage(I18N.ExcaliburNopeMessage);
             }
 
             return true;
         }
 
-        public override bool tickUpdate(GameTime time, Vector2 tileLocation, GameLocation location)
+        public override bool tickUpdate(GameTime time)
         {
             if (!Game1.IsMasterGame)
                 return false;
@@ -109,7 +109,7 @@ namespace DeepWoodsMod.Stuff
             if (!this.currentState.Contains(true))
                 return;
 
-            this.currentLocation.playSound("button1");
+            this.Location.playSound("button1");
 
             // TODO: Disabled until more story is implemented
             // this.currentLocation.playSound(Sounds.THUD_STEP);
@@ -171,7 +171,7 @@ namespace DeepWoodsMod.Stuff
         */
 
 
-        public override void dayUpdate(GameLocation environment, Vector2 tileLocation)
+        public override void dayUpdate()
         {
         }
 
@@ -180,18 +180,18 @@ namespace DeepWoodsMod.Stuff
             return false;
         }
 
-        public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)
+        public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation)
         {
             return false;
         }
 
-        public override void performPlayerEntryAction(Vector2 tileLocation)
+        public override void performPlayerEntryAction()
         {
         }
 
-        public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)
+        public override void draw(SpriteBatch spriteBatch)
         {
-            Vector2 globalPosition = tileLocation * 64f;
+            Vector2 globalPosition = Tile * 64f;
 
             Rectangle sourceRectangle = new Rectangle(0, 0, 16, 16);
 
@@ -201,7 +201,7 @@ namespace DeepWoodsMod.Stuff
                 {
                     Vector2 position = globalPosition + new Vector2(i * 32 - 16, (COLUMN_LENGTH - 1) * 64 - (columnPositions[i] * COLUMN_LENGTH - j) * 64 - 16);
 
-                    spriteBatch.Draw(DeepWoodsTextures.Textures.DeepWoodsMaxHousePuzzleColumn, Game1.GlobalToLocal(Game1.viewport, position), sourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((tileLocation.Y + 1f) * 64f / 10000f + tileLocation.X / 100000f));
+                    spriteBatch.Draw(DeepWoodsTextures.Textures.DeepWoodsMaxHousePuzzleColumn, Game1.GlobalToLocal(Game1.viewport, position), sourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((Tile.Y + 1f) * 64f / 10000f + Tile.X / 100000f));
                 }
             }
         }

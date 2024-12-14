@@ -20,27 +20,26 @@ namespace DeepWoodsMod
         public GingerBreadHouse()
             : base()
         {
-            InitNetFields();
             this.parentSheetIndex = 0;
         }
 
         public GingerBreadHouse(Vector2 tile)
             : base(602, 5, 3, tile)
         {
-            InitNetFields();
             this.parentSheetIndex = 0;
             this.health.Value = Settings.Objects.GingerBreadHouse.Health;
             this.nextSpawnFoodHealth.Value = Settings.Objects.GingerBreadHouse.Health - Settings.Objects.GingerBreadHouse.DamageIntervalForFoodDrop;
         }
 
-        private void InitNetFields()
+        public override void initNetFields()
         {
-            this.NetFields.AddFields(this.nextSpawnFoodHealth);
+            base.initNetFields();
+            this.NetFields.AddField(this.nextSpawnFoodHealth);
         }
 
-        public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)
+        public override void draw(SpriteBatch spriteBatch)
         {
-            Vector2 globalPosition = this.tile.Value * 64f;
+            Vector2 globalPosition = this.Tile * 64f;
             if (this.shakeTimer > 0)
             {
                 globalPosition.X += (float)Math.Sin(2.0 * Math.PI / this.shakeTimer) * 4f;
@@ -58,11 +57,11 @@ namespace DeepWoodsMod
             Vector2 upperHousePartPosition = globalPosition;
             upperHousePartPosition.Y -= 4 * 64;
 
-            spriteBatch.Draw(DeepWoodsTextures.Textures.GingerbreadHouse, Game1.GlobalToLocal(Game1.viewport, upperHousePartPosition), upperHousePartRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((this.tile.Y + 1f) * 64f / 10000f + this.tile.X / 100000f));
-            spriteBatch.Draw(DeepWoodsTextures.Textures.GingerbreadHouse, Game1.GlobalToLocal(Game1.viewport, globalPosition), bottomHousePartRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((this.tile.Y + 1f) * 64f / 10000f + this.tile.X / 100000f));
+            spriteBatch.Draw(DeepWoodsTextures.Textures.GingerbreadHouse, Game1.GlobalToLocal(Game1.viewport, upperHousePartPosition), upperHousePartRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((this.Tile.Y + 1f) * 64f / 10000f + this.Tile.X / 100000f));
+            spriteBatch.Draw(DeepWoodsTextures.Textures.GingerbreadHouse, Game1.GlobalToLocal(Game1.viewport, globalPosition), bottomHousePartRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((this.Tile.Y + 1f) * 64f / 10000f + this.Tile.X / 100000f));
         }
 
-        public override bool performToolAction(Tool t, int damage, Vector2 tileLocation, GameLocation location)
+        public override bool performToolAction(Tool t, int damage, Vector2 tileLocation)
         {
             if (t == null && damage > 0)
             {
@@ -76,7 +75,7 @@ namespace DeepWoodsMod
 
             if (t.UpgradeLevel < Settings.Objects.GingerBreadHouse.MinimumAxeLevel)
             {
-                location.playSound("axe");
+                Location.playSound("axe", tileLocation);
                 Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:ResourceClump.cs.13948"));
                 Game1.player.jitterStrength = 1f;
                 return false;
@@ -84,19 +83,19 @@ namespace DeepWoodsMod
 
             Vector2 debrisLocation = CalculateDebrisLocation(tileLocation);
 
-            location.playSound("axchop");
-            Game1.createRadialDebris(Game1.currentLocation, Debris.woodDebris, (int)debrisLocation.X, (int)tileLocation.Y, Game1.random.Next(4, 9), false, -1, false, -1);
+            Location.playSound("axchop", tileLocation);
+            Game1.createRadialDebris(Game1.currentLocation, Debris.woodDebris, (int)debrisLocation.X, (int)tileLocation.Y, Game1.random.Next(4, 9), false);
             this.health.Value -= Math.Max(1f, (t.UpgradeLevel + 1) * 0.75f);
 
             if (this.health.Value > 0)
             {
                 if (this.health.Value <= this.nextSpawnFoodHealth.Value)
                 {
-                    location.playSound("stumpCrack");
+                    Location.playSound("stumpCrack", tileLocation);
 
                     t.getLastFarmerToUse().gainExperience(Farmer.foragingSkill, 25);
 
-                    SpawnFoodItem(location as DeepWoods, t, (int)tileLocation.X, (int)tileLocation.Y);
+                    SpawnFoodItem(Location as DeepWoods, t, (int)tileLocation.X, (int)tileLocation.Y);
 
                     this.nextSpawnFoodHealth.Value = this.health.Value - Settings.Objects.GingerBreadHouse.DamageIntervalForFoodDrop;
                 }
@@ -105,25 +104,25 @@ namespace DeepWoodsMod
                 return false;
             }
 
-            PlayDestroyedSounds(location);
+            PlayDestroyedSounds();
 
             for (int x = 0; x < this.width.Value; x++)
             {
                 for (int y = 0; y < this.height.Value; y++)
                 {
-                    SpawnFoodItems(location as DeepWoods, t, (int)(this.tile.X + x), (int)(this.tile.Y + y));
-                    Game1.createRadialDebris(Game1.currentLocation, Debris.woodDebris, (int)(this.tile.X + x), (int)(this.tile.Y + y), Game1.random.Next(4, 9), false, -1, false, -1);
+                    SpawnFoodItems(Location as DeepWoods, t, (int)(this.Tile.X + x), (int)(this.Tile.Y + y));
+                    Game1.createRadialDebris(Game1.currentLocation, Debris.woodDebris, (int)(this.Tile.X + x), (int)(this.Tile.Y + y), Game1.random.Next(4, 9), false);
                 }
             }
 
             return true;
         }
 
-        private int GetRandomFoodType(DeepWoods deepWoods)
+        private string GetRandomFoodType(DeepWoods deepWoods)
         {
             if (random == null)
-                random = new DeepWoodsRandom(deepWoods, (deepWoods?.Seed ?? Game1.random.Next()) ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ (int)this.tile.X ^ (int)this.tile.Y);
-            return random.GetRandomValue(Settings.Objects.GingerBreadHouse.FootItems);
+                random = new DeepWoodsRandom(deepWoods, (deepWoods?.Seed ?? Game1.random.Next()) ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ (int)this.Tile.X ^ (int)this.Tile.Y);
+            return random.GetRandomValue(Settings.Objects.GingerBreadHouse.FootItems).ToString();
         }
 
         public static WeightedInt CreateWeightedValueForFootType(int type)
@@ -131,9 +130,9 @@ namespace DeepWoodsMod
             int price = 1;
             try
             {
-                if (Game1.objectInformation != null && Game1.objectInformation.ContainsKey(type))
+                if (Game1.objectData != null && Game1.objectData.ContainsKey(type.ToString()))
                 {
-                    price = Convert.ToInt32(Game1.objectInformation[type].Split('/')[StardewValley.Object.objectInfoPriceIndex]);
+                    price = Convert.ToInt32(Game1.objectData[type.ToString()].Price);
                 }
             }
             catch (Exception) { /*i dont know i dont care*/ }
@@ -157,19 +156,19 @@ namespace DeepWoodsMod
                 Game1.createMultipleObjectDebris(GetRandomFoodType(deepWoods), x, y, 1);
         }
 
-        private void PlayDestroyedSounds(GameLocation location)
+        private void PlayDestroyedSounds()
         {
-            DelayedAction.playSoundAfterDelay("stumpCrack", 0, location);
-            DelayedAction.playSoundAfterDelay("boulderBreak", 10, location);
-            DelayedAction.playSoundAfterDelay("breakingGlass", 20, location);
-            DelayedAction.playSoundAfterDelay("stumpCrack", 50, location);
-            DelayedAction.playSoundAfterDelay("boulderBreak", 60, location);
-            DelayedAction.playSoundAfterDelay("breakingGlass", 70, location);
-            DelayedAction.playSoundAfterDelay("boulderBreak", 110, location);
-            DelayedAction.playSoundAfterDelay("breakingGlass", 120, location);
-            DelayedAction.playSoundAfterDelay("boulderBreak", 160, location);
+            DelayedAction.playSoundAfterDelay("stumpCrack", 0, Location, Tile);
+            DelayedAction.playSoundAfterDelay("boulderBreak", 10, Location, Tile);
+            DelayedAction.playSoundAfterDelay("breakingGlass", 20, Location, Tile);
+            DelayedAction.playSoundAfterDelay("stumpCrack", 50, Location, Tile);
+            DelayedAction.playSoundAfterDelay("boulderBreak", 60, Location, Tile);
+            DelayedAction.playSoundAfterDelay("breakingGlass", 70, Location, Tile);
+            DelayedAction.playSoundAfterDelay("boulderBreak", 110, Location, Tile);
+            DelayedAction.playSoundAfterDelay("breakingGlass", 120, Location, Tile);
+            DelayedAction.playSoundAfterDelay("boulderBreak", 160, Location, Tile);
 
-            DelayedAction.playSoundAfterDelay("cacklingWitch", 2000, location);
+            DelayedAction.playSoundAfterDelay("cacklingWitch", 2000, Location);
         }
 
         private Vector2 CalculateDebrisLocation(Vector2 tileLocation)
@@ -179,11 +178,11 @@ namespace DeepWoodsMod
 
             Vector2 debrisLocation = new Vector2(tileLocation.X, tileLocation.Y);
 
-            if ((tileLocation.X + xOffset) > (this.tile.X + this.width.Value - 1))
+            if ((tileLocation.X + xOffset) > (this.Tile.X + this.width.Value - 1))
             {
                 debrisLocation.X = debrisLocation.X - xOffset;
             }
-            else if ((tileLocation.X - xOffset) < this.tile.X)
+            else if ((tileLocation.X - xOffset) < this.Tile.X)
             {
                 debrisLocation.X = debrisLocation.X + xOffset;
             }
@@ -192,11 +191,11 @@ namespace DeepWoodsMod
                 debrisLocation.X = debrisLocation.X + (Game1.random.NextDouble() < 0.5 ? xOffset : -xOffset);
             }
 
-            if ((tileLocation.Y + yOffset) > (this.tile.Y + this.height.Value - 1))
+            if ((tileLocation.Y + yOffset) > (this.Tile.Y + this.height.Value - 1))
             {
                 debrisLocation.Y = debrisLocation.Y - yOffset;
             }
-            else if ((tileLocation.Y - yOffset) < this.tile.Y)
+            else if ((tileLocation.Y - yOffset) < this.Tile.Y)
             {
                 debrisLocation.Y = debrisLocation.Y + yOffset;
             }
@@ -208,7 +207,7 @@ namespace DeepWoodsMod
             return debrisLocation;
         }
 
-        public override bool performUseAction(Vector2 tileLocation, GameLocation location)
+        public override bool performUseAction(Vector2 tileLocation)
         {
             return true;
         }

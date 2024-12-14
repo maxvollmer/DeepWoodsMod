@@ -53,12 +53,12 @@ namespace DeepWoodsMod
             if (!Game1.IsMasterGame)
                 return;
 
-            if (deepWoods.isLichtung.Value && !deepWoods.isInfested.Value)
+            if (deepWoods.IsClearing && !deepWoods.IsInfested)
                 return;
 
             deepWoods.characters.Clear();
 
-            if (!deepWoods.isInfested.Value && Settings.Monsters.MonsterDensity <= 0)
+            if (!deepWoods.IsInfested && Settings.Monsters.MonsterDensity <= 0)
                 return;
 
             int mapWidth = deepWoods.mapWidth.Value;
@@ -73,7 +73,7 @@ namespace DeepWoodsMod
             // We then take the maximum of either minMonsters or the result, making sure we always have at least minMonsters monsters.
             int numMonsters = Math.Max(minMonsters, this.random.GetRandomValue(minMonsters, Math.Max(minMonsters, maxMonsters / 2)) + this.random.GetRandomValue(minMonsters, Math.Max(minMonsters, maxMonsters / 2)));
 
-            if (deepWoods.isInfested.Value)
+            if (deepWoods.IsInfested)
             {
                 numMonsters *= 2;
             }
@@ -83,16 +83,16 @@ namespace DeepWoodsMod
                 numMonsters /= 2;
             }
 
-            if (!deepWoods.isInfested.Value && Settings.Monsters.MonsterDensity < 100)
+            if (!deepWoods.IsInfested && Settings.Monsters.MonsterDensity < 100)
             {
                 numMonsters = (int)(numMonsters * Settings.Monsters.MonsterDensity / 100);
             }
-            else if (deepWoods.isInfested.Value && Settings.Monsters.InfestedMonsterDensity < 100)
+            else if (deepWoods.IsInfested && Settings.Monsters.InfestedMonsterDensity < 100)
             {
                 numMonsters = (int)(numMonsters * Settings.Monsters.InfestedMonsterDensity / 100);
             }
 
-            if (deepWoods.isInfested.Value)
+            if (deepWoods.IsInfested)
             {
                 // minimum 10 monsters in infested level
                 numMonsters = Math.Max(numMonsters, 10);
@@ -114,7 +114,7 @@ namespace DeepWoodsMod
 
                 if (monster == null)
                 {
-                    monster = CreateRandomMonster(new Vector2(x, y));
+                    monster = CreateRandomMonster(deepWoods, new Vector2(x, y));
                 }
                 if (CanPlaceMonsterHere(deepWoods, blockedLocations, x, y, monster))
                 {
@@ -176,15 +176,15 @@ namespace DeepWoodsMod
             return true;
         }
 
-        Monster CreateRandomMonster(Vector2 location)
+        Monster CreateRandomMonster(DeepWoods deepWoods, Vector2 location)
         {
             Monster monster = null;
 
-            if (Game1.isDarkOut() && CanHazMonster(Settings.Monsters.Bat))
+            if (Game1.isDarkOut(deepWoods) && CanHazMonster(Settings.Monsters.Bat))
             {
                 monster = new Bat(new Vector2());
             }
-            else if (Game1.isDarkOut() && CanHazMonster(Settings.Monsters.Ghost))
+            else if (Game1.isDarkOut(deepWoods) && CanHazMonster(Settings.Monsters.Ghost))
             {
                 monster = new Ghost(new Vector2());
             }
@@ -217,20 +217,20 @@ namespace DeepWoodsMod
                 monster = new Bug(new Vector2(), 0);
                 monster.isHardModeMonster.Value = true;
             }
-            else if (CanHazMonster(Settings.Monsters.ArmoredBug) && !deepWoods.isInfested.Value)
+            else if (CanHazMonster(Settings.Monsters.ArmoredBug) && !deepWoods.IsInfested)
             {
                 monster = new Bug(new Vector2(), 121);
                 monster.isHardModeMonster.Value = true;
             }
-            else if (Game1.isDarkOut() && CanHazMonster(Settings.Monsters.PutridGhost))
+            else if (Game1.isDarkOut(deepWoods) && CanHazMonster(Settings.Monsters.PutridGhost))
             {
                 monster = new Ghost(new Vector2(), "Putrid Ghost");
             }
-            else if (Game1.isDarkOut() && CanHazMonster(Settings.Monsters.DustSprite))
+            else if (Game1.isDarkOut(deepWoods) && CanHazMonster(Settings.Monsters.DustSprite))
             {
                 monster = new DustSpirit(new Vector2()); new Leaper();
             }
-            else if (Game1.isDarkOut() && CanHazMonster(Settings.Monsters.Spider))
+            else if (Game1.isDarkOut(deepWoods) && CanHazMonster(Settings.Monsters.Spider))
             {
                 monster = new Leaper(new Vector2());
             }

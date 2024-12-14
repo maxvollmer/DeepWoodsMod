@@ -16,7 +16,7 @@ namespace DeepWoodsMod
         {
         }
 
-        public override bool performToolAction(Tool t, int damage, Vector2 tileLocation, GameLocation location)
+        public override bool performToolAction(Tool t, int damage, Vector2 tileLocation)
         {
             if (t == null && damage > 0)
             {
@@ -24,19 +24,19 @@ namespace DeepWoodsMod
 
                 if (this.health.Value <= 0)
                 {
-                    Game1.createRadialDebris(Game1.currentLocation, GetDebrisType(), (int)tileLocation.X + Game1.random.Next(this.width.Value / 2 + 1), (int)tileLocation.Y + Game1.random.Next(this.height.Value / 2 + 1), Game1.random.Next(12, 20), false, -1, false, -1);
+                    Game1.createRadialDebris(Location, GetDebrisType(), (int)tileLocation.X + Game1.random.Next(this.width.Value / 2 + 1), (int)tileLocation.Y + Game1.random.Next(this.height.Value / 2 + 1), Game1.random.Next(12, 20), false);
                     if (this.parentSheetIndex.Value == 600 || this.parentSheetIndex.Value == 602)
-                        location.playSound("stumpCrack");
+                        Location.playSound("stumpCrack");
                     else
-                        location.playSound("boulderBreak");
+                        Location.playSound("boulderBreak");
                     return true;
                 }
 
-                Game1.createRadialDebris(Game1.currentLocation, GetDebrisType(), (int)tileLocation.X + Game1.random.Next(this.width.Value / 2 + 1), (int)tileLocation.Y + Game1.random.Next(this.height.Value / 2 + 1), Game1.random.Next(4, 9), false, -1, false, -1);
+                Game1.createRadialDebris(Location, GetDebrisType(), (int)tileLocation.X + Game1.random.Next(this.width.Value / 2 + 1), (int)tileLocation.Y + Game1.random.Next(this.height.Value / 2 + 1), Game1.random.Next(4, 9), false);
                 return false;
             }
 
-            return base.performToolAction(t, damage, tileLocation, location);
+            return base.performToolAction(t, damage, tileLocation);
         }
 
         private int GetDebrisType()

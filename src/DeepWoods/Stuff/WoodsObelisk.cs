@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
+using StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6;
+using System.Linq;
 
 namespace DeepWoodsMod
 {
@@ -29,6 +31,7 @@ namespace DeepWoodsMod
 
         public static void InjectWoodsObeliskIntoGame()
         {
+            /*
             foreach (var a in Game1.delayedActions)
             {
                 if (a.behavior == a.doGlobalFade && a.afterFadeBehavior != null
@@ -47,7 +50,7 @@ namespace DeepWoodsMod
                 && !HasBluePrint(carpenterMenu))
             {
                 // Create a new Woods Obelisk BluePrint, but override the values as settings might have been loaded after blueprints
-                BluePrint woodsObeliskBluePrint = new BluePrint(WOODS_OBELISK_BUILDING_NAME)
+                CarpenterMenu.BlueprintEntry woodsObeliskBluePrint = new CarpenterMenu.BlueprintEntry(WOODS_OBELISK_BUILDING_NAME)
                 {
                     displayName = I18N.WoodsObeliskDisplayName,
                     description = I18N.WoodsObeliskDescription,
@@ -62,30 +65,25 @@ namespace DeepWoodsMod
                 SetBluePrintField(woodsObeliskBluePrint, "texture", Game1.content.Load<Texture2D>(woodsObeliskBluePrint.textureName));
 
                 // Add Woods Obelisk directly after the other obelisks
-                int lastObeliskIndex = GetBluePrints(carpenterMenu).FindLastIndex(bluePrint => bluePrint.name.Contains("Obelisk"));
-                GetBluePrints(carpenterMenu).Insert(lastObeliskIndex + 1, woodsObeliskBluePrint);
+                int lastObeliskIndex = carpenterMenu.Blueprints.FindLastIndex(bluePrint => bluePrint.DisplayName.Contains("Obelisk"));
+                carpenterMenu.Blueprints.Insert(lastObeliskIndex + 1, woodsObeliskBluePrint);
             }
+            */
         }
 
         private static bool IsMagical(CarpenterMenu carpenterMenu)
         {
-            return (bool)typeof(CarpenterMenu).GetField("magicalConstruction", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(carpenterMenu)
-                || GetBluePrints(carpenterMenu).Exists(bluePrint => bluePrint.magical);
+            return carpenterMenu.Blueprints.Exists(b => b.MagicalConstruction);
         }
 
-        private static List<BluePrint> GetBluePrints(CarpenterMenu carpenterMenu)
+        private static void SetBluePrintField(CarpenterMenu.BlueprintEntry bluePrint, string fieldName, object value)
         {
-            return (List<BluePrint>)typeof(CarpenterMenu).GetField("blueprints", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(carpenterMenu);
-        }
-
-        private static void SetBluePrintField(BluePrint bluePrint, string fieldName, object value)
-        {
-            typeof(BluePrint).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).SetValue(bluePrint, value);
+            //typeof(BluePrint).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).SetValue(bluePrint, value);
         }
 
         private static bool HasBluePrint(CarpenterMenu carpenterMenu)
         {
-            return GetBluePrints(carpenterMenu).Exists(bluePrint => bluePrint.name == WOODS_OBELISK_BUILDING_NAME);
+            return carpenterMenu.Blueprints.Exists(bluePrint => bluePrint.DisplayName == WOODS_OBELISK_BUILDING_NAME);
         }
 
 
@@ -112,7 +110,7 @@ namespace DeepWoodsMod
             }
             processedLocations.Add(location);
 
-            if (location is BuildableGameLocation buildableGameLocation)
+            if (location is GameLocation buildableGameLocation)
             {
                 foreach (Building building in buildableGameLocation.buildings)
                 {

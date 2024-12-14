@@ -50,7 +50,7 @@ namespace DeepWoodsMod
 
         private static int GetLeafType(DeepWoods deepWoods)
         {
-            if (deepWoods.isInfested.Value)
+            if (deepWoods.IsInfested)
             {
                 return WeatherDebris.fallLeaves;
             }

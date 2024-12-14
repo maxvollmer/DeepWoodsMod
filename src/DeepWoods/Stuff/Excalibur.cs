@@ -6,15 +6,15 @@ namespace DeepWoodsMod
     public class Excalibur
     {
         public static readonly string EXCALIBUR_BASE_NAME = "Excalibur";
-        public static readonly int EXCALIBUR_TILE_INDEX = 3;
+        public static readonly string EXCALIBUR_TILE_INDEX = "3";
 
         public static MeleeWeapon GetOne()
         {
             MeleeWeapon excalibur = new MeleeWeapon(EXCALIBUR_TILE_INDEX)
             {
-                BaseName = EXCALIBUR_BASE_NAME,
+                Name = EXCALIBUR_BASE_NAME,
                 description = I18N.ExcaliburDescription,
-                DisplayName = I18N.ExcaliburDisplayName
+                //DisplayName = I18N.ExcaliburDisplayName
             };
             excalibur.minDamage.Value = Settings.Objects.Excalibur.MinDamage;
             excalibur.maxDamage.Value = Settings.Objects.Excalibur.MaxDamage;

@@ -21,24 +21,24 @@ namespace DeepWoodsMod
             minAxeLevel = Settings.Objects.Bush.ThornyBushMinAxeLevel;
         }
 
-        public override bool performUseAction(Vector2 tileLocation, GameLocation location)
+        public override bool performUseAction(Vector2 tileLocation)
         {
-            base.performUseAction(tileLocation, location);
-            DamageFarmer(Game1.player, location);
+            base.performUseAction(tileLocation);
+            DamageFarmer(Game1.player);
             return true;
         }
 
-        public override void doCollisionAction(Rectangle positionOfCollider, int speedOfCollision, Vector2 tileLocation, Character who, GameLocation location)
+        public override void doCollisionAction(Rectangle positionOfCollider, int speedOfCollision, Vector2 tileLocation, Character who)
         {
             if (who is Farmer farmer)
             {
-                DamageFarmer(farmer, location);
+                DamageFarmer(farmer);
             }
         }
 
-        private void DamageFarmer(Farmer who, GameLocation location)
+        private void DamageFarmer(Farmer who)
         {
-            who.takeDamage(GetDamage(location as DeepWoods), false, null);
+            who.takeDamage(GetDamage(Location as DeepWoods), false, null);
         }
 
         private int GetDamage(DeepWoods deepWoods)
@@ -55,11 +55,11 @@ namespace DeepWoodsMod
             Bush.texture = backupTexture;
         }
 
-        public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)
+        public override void draw(SpriteBatch spriteBatch)
         {
             var backupTexture = Bush.texture;
             Bush.texture = new System.Lazy<Texture2D>(() => DeepWoodsTextures.Textures.InfestedBushes);
-            base.draw(spriteBatch, tileLocation);
+            base.draw(spriteBatch);
             Bush.texture = backupTexture;
         }
     }

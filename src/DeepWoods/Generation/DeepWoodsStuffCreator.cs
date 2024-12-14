@@ -108,7 +108,7 @@ namespace DeepWoodsMod
 
             Vector2 cuteSignLocation = exitLocation + (xDir * Settings.Map.ExitRadius) + (yDir * Settings.Map.ExitRadius);
             deepWoods.largeTerrainFeatures.Add(new CuteSign(cuteSignLocation));
-            deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, cuteSignLocation * 64f, 1.0f));
+            deepWoods.AddLightSource(cuteSignLocation);
 
             blockedLocations.Add(new Location((int)cuteSignLocation.X, (int)cuteSignLocation.Y));
         }
@@ -192,13 +192,13 @@ namespace DeepWoodsMod
                 }
             }
 
-            if (deepWoods.isLichtung.Value)
+            if (deepWoods.IsClearing)
             {
                 // Add something awesome in the lichtung center
                 AddSomethingAwesomeForLichtung(new Vector2(deepWoods.lichtungCenter.X, deepWoods.lichtungCenter.Y));
             }
 
-            if (!deepWoods.isLichtung.Value && deepWoods.level.Value >= Settings.Level.MinLevelForGingerbreadHouse && this.random.CheckChance(Settings.Luck.Terrain.ChanceForGingerbreadHouse))
+            if (!deepWoods.IsClearing && deepWoods.level.Value >= Settings.Level.MinLevelForGingerbreadHouse && this.random.CheckChance(Settings.Luck.Terrain.ChanceForGingerbreadHouse))
             {
                 // Add a gingerbread house
                 deepWoods.resourceClumps.Add(new GingerBreadHouse(new Vector2(mapWidth / 2, mapHeight / 2)));
@@ -233,14 +233,14 @@ namespace DeepWoodsMod
                     continue;
 
                 // Don't place anything on the bright grass in Lichtungen
-                if (deepWoods.isLichtung.Value && DeepWoodsBuilder.IsTileIndexBrightGrass(deepWoods.map.GetLayer("Back").Tiles[x, y]?.TileIndex ?? 0))
+                if (deepWoods.IsClearing && DeepWoodsBuilder.IsTileIndexBrightGrass(deepWoods.map.GetLayer("Back").Tiles[x, y]?.TileIndex ?? 0))
                     continue;
 
-                if (deepWoods.isLichtung.Value)
+                if (deepWoods.IsClearing)
                 {
                     if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForFlowerOnClearing))
                     {
-                        deepWoods.terrainFeatures[location] = new Flower(GetRandomFlowerType(), location);
+                        deepWoods.terrainFeatures[location] = new Flower(GetRandomFlowerType(), deepWoods, location);
                     }
                     else
                     {
@@ -289,6 +289,8 @@ namespace DeepWoodsMod
                     {
                         deepWoods.terrainFeatures[location] = new Tree(GetRandomTreeType(), this.random.GetRandomValue(Tree.sproutStage, Tree.saplingStage));
                     }
+                    // TODO: TEMP: 1.6: fruit trees drop seeds, which is super unbalanced. disable them until fix
+                    /*
                     else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForGrownFruitTree) && IsRegionTreeFree(location, 2))
                     {
                         int numFruits = 0;
@@ -302,29 +304,30 @@ namespace DeepWoodsMod
                     {
                         AddFruitTree(location, FruitTree.bushStage);
                     }
+                    */
                     else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForWeed))
                     {
-                        deepWoods.objects[location] = new StardewValley.Object(location, GetRandomWeedType(), 1);
+                        deepWoods.objects[location] = CreateObject(GetRandomWeedType(), false);
                     }
                     else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForTwig))
                     {
-                        deepWoods.objects[location] = new StardewValley.Object(location, GetRandomTwigType(), 1);
+                        deepWoods.objects[location] = CreateObject(GetRandomTwigType(), false);
                     }
                     else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForStone))
                     {
-                        deepWoods.objects[location] = new StardewValley.Object(location, GetRandomStoneType(), 1);
+                        deepWoods.objects[location] = CreateObject(GetRandomStoneType(), false);
                     }
                     else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForMushroom))
                     {
-                        deepWoods.objects[location] = new StardewValley.Object(location, GetRandomMushroomType(), 1) { IsSpawnedObject = true };
+                        deepWoods.objects[location] = CreateObject(GetRandomMushroomType(), true);
                     }
                     else if (deepWoods.level.Value >= Settings.Level.MinLevelForFlowers && this.random.CheckChance(Game1.currentSeason == "winter" ? Settings.Luck.Terrain.ChanceForFlowerInWinter : Settings.Luck.Terrain.ChanceForFlower))
                     {
-                        deepWoods.terrainFeatures[location] = new Flower(GetRandomFlowerType(), location);
+                        deepWoods.terrainFeatures[location] = new Flower(GetRandomFlowerType(), deepWoods, location);
                     }
                     else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForExtraForageable))
                     {
-                        deepWoods.objects[location] = new StardewValley.Object(location, GetRandomForageable(), 1);
+                        deepWoods.objects[location] = CreateObject(GetRandomForageable(), true);
                     }
                     else
                     {
@@ -334,7 +337,7 @@ namespace DeepWoodsMod
             }
 
             // Fill up with grass (if not a Lichtung)
-            if (!deepWoods.isLichtung.Value)
+            if (!deepWoods.IsClearing)
             {
                 int maxGrass = (allTilesInRandomOrder.Count() - maxTerrainFeatures) / 3;
                 if (Game1.currentSeason == "winter")
@@ -357,6 +360,22 @@ namespace DeepWoodsMod
                     deepWoods.terrainFeatures[location] = new LootFreeGrass(GetSeasonGrassType(), this.random.GetRandomValue(1, 3));
                 }
             }
+        }
+
+        private StardewValley.Object CreateObject(string id, bool canBePickedUp)
+        {
+            return new StardewValley.Object(id, 1, false, -1, GetRandomItemQuality())
+            {
+                IsSpawnedObject = canBePickedUp,
+                CanBeSetDown = false,
+                CanBeGrabbed = false,
+                //TileLocation = tileLocation,
+            };
+        }
+
+        private StardewValley.Object CreateFurniture(Vector2 location, string id, bool isFlipped)
+        {
+            return new StardewValley.Object(location, id) { Flipped = isFlipped };
         }
 
         private void AddModOrGrass(Vector2 location)
@@ -426,25 +445,15 @@ namespace DeepWoodsMod
 
         private void AddSomethingAwesomeForLichtung(Vector2 location)
         {
-            // the lake is the awesome thing!
-            if (deepWoods.lichtungHasLake.Value)
-                return;
-
-            // awesome stuff comes after level is cleared
-            if (deepWoods.isInfested.Value)
+            // no stuff for infested or lakes!
+            if (deepWoods.clearingType.Value != LichtungType.Default)
                 return;
 
             // prevent obelisk based exploits
             if (deepWoods.spawnedFromObelisk.Value)
                 return;
 
-            // Lakes are generated in DeepWoodsBuilder, so we need to pick smth else here if we get lake.
-            // Maximum 10 trys, then give up. (Will probably never happen, but just in case.)
             string perk = this.random.GetRandomValue(Settings.Luck.Clearings.Perks);
-            for (int i = 0; i < 10 && perk == LichtungStuff.Lake; i++)
-            {
-                perk = this.random.GetRandomValue(Settings.Luck.Clearings.Perks);
-            }
 
             switch (perk)
             {
@@ -477,7 +486,7 @@ namespace DeepWoodsMod
                 case LichtungStuff.IridiumTree:
                     deepWoods.resourceClumps.Add(new IridiumTree(location));
                     AddIridiumNodesAroundTree(location);
-                    deepWoods.lightSources.Add(new LightSource(LightSource.sconceLight, location, 6, new Color(1f, 0f, 0f)));
+                    deepWoods.lightSources.Add(new LightSource($"DeepWoods{deepWoods.level}IridiumTreeLight", LightSource.sconceLight, location, 6, new Color(1f, 0f, 0f)));
                     break;
                 case LichtungStuff.Unicorn:
                     if (!Game1.isRaining)
@@ -487,9 +496,6 @@ namespace DeepWoodsMod
                     break;
                 case LichtungStuff.ExcaliburStone:
                     deepWoods.largeTerrainFeatures.Add(new ExcaliburStone(location));
-                    break;
-                case LichtungStuff.Lake:
-                    ModEntry.Log("Ended up with LichtungStuff.Lake after 10 tries in AddSomethingAwesomeForLichtung :O");
                     break;
                 case LichtungStuff.Nothing:
                 default:
@@ -588,19 +594,20 @@ namespace DeepWoodsMod
                 Vector2 rightPos = new Vector2(location.X + 6, location.Y + y);
                 if (y == 1 || y == 5)
                 {
-                    int id = this.random.GetRandomValue(new int[] { 40, 44 });  // Big Green Cane or Big Red Cane
-                    deepWoods.objects[leftPos] = new StardewValley.Object(leftPos, id) { Flipped = true };
-                    deepWoods.objects[rightPos] = new StardewValley.Object(rightPos, id) { Flipped = false };
+                    string id = this.random.GetRandomValue(new int[] { 40, 44 }).ToString();  // Big Green Cane or Big Red Cane
+                    deepWoods.objects[leftPos] = CreateFurniture(leftPos, id, true);
+                    deepWoods.objects[rightPos] = CreateFurniture(rightPos, id, false);
                 }
                 else
                 {
-                    deepWoods.objects[leftPos] = new StardewValley.Object(leftPos, GetRandomSmallCaneType()) { Flipped = this.random.CheckChance(Chance.FIFTY_FIFTY) };
-                    deepWoods.objects[rightPos] = new StardewValley.Object(rightPos, GetRandomSmallCaneType()) { Flipped = this.random.CheckChance(Chance.FIFTY_FIFTY) };
+                    deepWoods.objects[leftPos] = CreateFurniture(leftPos, GetRandomSmallCaneType(), this.random.CheckChance(Chance.FIFTY_FIFTY));
+                    deepWoods.objects[rightPos] = CreateFurniture(rightPos, GetRandomSmallCaneType(), this.random.CheckChance(Chance.FIFTY_FIFTY));
                 }
                 if (y >= 3)
                 {
                     Vector2 centerPos = new Vector2(location.X + 2, location.Y + y);
-                    deepWoods.objects[centerPos] = new StardewValley.Object(centerPos, 409, 1) { Flipped = this.random.CheckChance(Chance.FIFTY_FIFTY) }; // Crystal Floor
+                    //deepWoods.objects[centerPos] = CreateFurniture(centerPos, "409", this.random.CheckChance(Chance.FIFTY_FIFTY)); // Crystal Floor
+                    deepWoods.objects[centerPos] = CreateObject("409", true); // Crystal Floor
                 }
             }
 
@@ -609,20 +616,20 @@ namespace DeepWoodsMod
                 if (x != 2)
                 {
                     Vector2 pos = new Vector2(location.X + x, location.Y + 5);
-                    deepWoods.terrainFeatures[pos] = new Flower(431, pos);   // Sunflower
+                    deepWoods.terrainFeatures[pos] = new Flower(431, deepWoods, pos);   // Sunflower
                 }
                 if (x == -1 || x == 5)
                 {
                     Vector2 pos = new Vector2(location.X + x, location.Y + 1);
-                    deepWoods.terrainFeatures[pos] = new Flower(431, pos);   // Sunflower
+                    deepWoods.terrainFeatures[pos] = new Flower(431, deepWoods, pos);   // Sunflower
                 }
             }
         }
 
-        private int GetRandomSmallCaneType()
+        private string GetRandomSmallCaneType()
         {
             // Green Canes, Mixed Canes or Red Canes
-            return this.random.GetRandomValue(41, 43+1);
+            return this.random.GetRandomValue(41, 43 + 1).ToString();
         }
 
         private void AddIridiumNodesAroundTree(Vector2 location)
@@ -645,7 +652,9 @@ namespace DeepWoodsMod
                     if (deepWoods.objects.ContainsKey(nodeLocation))
                         continue;
 
-                    deepWoods.objects[nodeLocation] = new StardewValley.Object(nodeLocation, 765, "Stone", true, false, false, false) { MinutesUntilReady = 16 };
+                    var iridiumNode = CreateObject("765", false);
+                    iridiumNode.MinutesUntilReady = 16;
+                    deepWoods.objects[nodeLocation] = iridiumNode;
                 }
             }
         }
@@ -672,7 +681,7 @@ namespace DeepWoodsMod
                 if (deepWoods.objects.ContainsKey(fruitLocation))
                     continue;
 
-                deepWoods.objects[fruitLocation] = new StardewValley.Object(414, 1, false, -1, GetRandomItemQuality()) { IsSpawnedObject = true };
+                deepWoods.objects[fruitLocation] = CreateObject("414", true);
             }
         }
 
@@ -692,7 +701,7 @@ namespace DeepWoodsMod
 
                 Vector2 mushroomTreeLocation = new Vector2(mushroomTreeX, mushroomTreeY);
 
-                if (!deepWoods.isTileLocationTotallyClearAndPlaceable(mushroomTreeLocation))
+                if (!deepWoods.CanItemBePlacedHere(mushroomTreeLocation))
                     continue;
 
                 Tree mushroomTree = new Tree(Tree.mushroomTree, Tree.treeStage);
@@ -718,13 +727,13 @@ namespace DeepWoodsMod
 
                 Vector2 mushroomLocation = new Vector2(mushroomX, mushroomY);
 
-                if (!deepWoods.isTileLocationTotallyClearAndPlaceable(mushroomLocation))
+                if (!deepWoods.CanItemBePlacedHere(mushroomLocation))
                     continue;
 
                 // only purple mushrooms in winter
-                int mushroomType = (Game1.currentSeason == "winter") ? 422 : GetRandomMushroomType();
+                string mushroomType = (Game1.currentSeason == "winter") ? "422" : GetRandomMushroomType();
 
-                deepWoods.objects[mushroomLocation] = new StardewValley.Object(mushroomType, 1, false, -1, GetRandomItemQuality()) { IsSpawnedObject = true };
+                deepWoods.objects[mushroomLocation] = CreateObject(mushroomType, true);
             }
         }
 
@@ -744,7 +753,17 @@ namespace DeepWoodsMod
         private void AddFruitTree(Vector2 location, int growthStage, int fruitsOnTree = 0)
         {
             FruitTree fruitTree = new FruitTree(GetRandomFruitTreeType(), growthStage);
-            fruitTree.fruitsOnTree.Value = Game1.currentSeason == "winter" ? 0 : fruitsOnTree;
+            deepWoods.terrainFeatures[location] = fruitTree;
+
+            fruitTree.fruit.Clear();
+            if (Game1.season != Season.Winter)
+            {
+                for (int i = 0; i < fruitsOnTree; i++)
+                {
+                    fruitTree.TryAddFruit();
+                }
+            }
+
             if (growthStage == FruitTree.treeStage)
             {
                 // itemQuality on fruit tree fruits
@@ -772,12 +791,11 @@ namespace DeepWoodsMod
             {
                 fruitTree.daysUntilMature.Value = 28 - (growthStage * 7);
             }
-            deepWoods.terrainFeatures[location] = fruitTree;
         }
 
         private void AddItem(List<Item> items, int id, int stackSize = 1)
         {
-            items.Add(new StardewValley.Object(id, stackSize));
+            items.Add(new StardewValley.Object(id.ToString(), stackSize));
         }
 
         private List<Item> CreateRandomTreasureChestItems()
@@ -913,7 +931,7 @@ namespace DeepWoodsMod
         {
             return deepWoods.terrainFeatures.ContainsKey(location)
                 && (deepWoods.terrainFeatures[location] is FruitTree
-                    || ((deepWoods.terrainFeatures[location] as Tree)?.growthStage ?? 0) >= Tree.treeStage
+                    || ((deepWoods.terrainFeatures[location] as Tree)?.growthStage.Value ?? 0) >= Tree.treeStage
                 );
         }
 
@@ -930,33 +948,33 @@ namespace DeepWoodsMod
             return true;
         }
 
-        private int GetSeasonGrassType()
+        private byte GetSeasonGrassType()
         {
             return Game1.currentSeason == "winter" ? Grass.frostGrass : Grass.springGrass;
         }
 
-        private int GetRandomWeedType()
+        private string GetRandomWeedType()
         {
-            return GameLocation.getWeedForSeason(new Random(this.random.GetRandomValue()), Game1.currentSeason);
+            return GameLocation.getWeedForSeason(new Random(this.random.GetRandomValue()), Game1.season);
         }
 
-        private int GetRandomForageable()
+        private string GetRandomForageable()
         {
             if (Game1.IsWinter && Settings.Luck.Terrain.WinterForageables.Length > 0)
             {
-                return this.random.GetRandomValue(Settings.Luck.Terrain.WinterForageables);
+                return this.random.GetRandomValue(Settings.Luck.Terrain.WinterForageables).ToString();
             }
             else if (Game1.IsSummer && Settings.Luck.Terrain.SummerForageables.Length > 0)
             {
-                return this.random.GetRandomValue(Settings.Luck.Terrain.SummerForageables);
+                return this.random.GetRandomValue(Settings.Luck.Terrain.SummerForageables).ToString();
             }
             else if (Game1.IsSpring && Settings.Luck.Terrain.SpringForageables.Length > 0)
             {
-                return this.random.GetRandomValue(Settings.Luck.Terrain.SpringForageables);
+                return this.random.GetRandomValue(Settings.Luck.Terrain.SpringForageables).ToString();
             }
             else if (Game1.IsFall && Settings.Luck.Terrain.FallForageables.Length > 0)
             {
-                return this.random.GetRandomValue(Settings.Luck.Terrain.FallForageables);
+                return this.random.GetRandomValue(Settings.Luck.Terrain.FallForageables).ToString();
             }
             else
             {
@@ -964,22 +982,22 @@ namespace DeepWoodsMod
             }
         }
 
-        private int GetRandomStoneType()
+        private string GetRandomStoneType()
         {
-            return this.random.GetRandomValue(new int[] { 343, 668, 670 });
+            return this.random.GetRandomValue(new int[] { 343, 668, 670 }).ToString();
         }
 
-        private int GetRandomTwigType()
+        private string GetRandomTwigType()
         {
-            return this.random.GetRandomValue(new int[] { 294, 295 });
+            return this.random.GetRandomValue(new int[] { 294, 295 }).ToString();
         }
 
-        private int GetRandomTreeType()
+        private string GetRandomTreeType()
         {
-            return this.random.GetRandomValue(Settings.Luck.Terrain.TreeTypes);
+            return this.random.GetRandomValue(Settings.Luck.Terrain.TreeTypes).ToString();
         }
 
-        private int GetRandomMushroomType()
+        private string GetRandomMushroomType()
         {
             return this.random.GetRandomValue(new WeightedInt[] {
                 new WeightedInt(422, 1),  // Purple one
@@ -987,7 +1005,7 @@ namespace DeepWoodsMod
                 new WeightedInt(257, 10), // Morel
                 new WeightedInt(281, 20), // Big brown one
                 new WeightedInt(404, 50), // Normal one
-            });
+            }).ToString();
         }
 
         private int GetRandomItemQuality()
@@ -1000,9 +1018,9 @@ namespace DeepWoodsMod
             });
         }
 
-        private int GetRandomFruitTreeType()
+        private string GetRandomFruitTreeType()
         {
-            return this.random.GetRandomValue(Settings.Luck.Terrain.FruitTreeTypes);
+            return this.random.GetRandomValue(Settings.Luck.Terrain.FruitTreeTypes).ToString();
         }
 
         private void Infest(HashSet<Location> blockedLocations)
@@ -1059,7 +1077,7 @@ namespace DeepWoodsMod
                 else if (pair.Value is ThornyBush thornyBush)
                 {
                     deepWoods.terrainFeatures.Remove(pair.Key);
-                    deepWoods.terrainFeatures[pair.Key] = new Flower(GetRandomFlowerType(), pair.Key);
+                    deepWoods.terrainFeatures[pair.Key] = new Flower(GetRandomFlowerType(), deepWoods, pair.Key);
                 }
             });
         }
@@ -1084,7 +1102,7 @@ namespace DeepWoodsMod
                 DeepWoodsState.OrbStonesSaved = orbStonesSaved + 1;
             }
 
-            deepWoods.lightSources.Add(new LightSource(LightSource.sconceLight, orbStone.tilePosition.Value - new Vector2(0, - 2), 6, new Color(1f, 0f, 0f)));
+            deepWoods.lightSources.Add(new LightSource($"DeepWoods{deepWoods.level}OrbStone", LightSource.sconceLight, orbStone.Tile - new Vector2(0, - 2), 6, new Color(1f, 0f, 0f)));
         }
 
 
@@ -1120,22 +1138,25 @@ namespace DeepWoodsMod
             DeepWoodsMaxHouse.MaxHutLocation = maxHutLocation;
             deepWoods.largeTerrainFeatures.Add(new MaxHut(maxHutLocation));
 
+            // TODO: TEMP: 1.6: fruit trees drop seeds. disable fruit tree for now
+            /*
             var fruitTree1Location = new Vector2(deepWoods.EnterLocation.X + Settings.Map.ExitRadius + 2 + 6, deepWoods.EnterLocation.Y + 8);
-            AddFruitTree(fruitTree1Location, FruitTree.treeStage, 3);
+            AddRipeFruitTree(fruitTree1Location);
+            */
 
             /*
             var fruitTree2Location = new Vector2(deepWoods.EnterLocation.X - Settings.Map.ExitRadius - 2 - 2, deepWoods.EnterLocation.Y + 7);
-            AddFruitTree(fruitTree2Location, FruitTree.treeStage, 3);
+            AddRipeFruitTree(fruitTree2Location);
 
             var fruitTree3Location = new Vector2(deepWoods.EnterLocation.X - Settings.Map.ExitRadius - 2 - 6, deepWoods.EnterLocation.Y + 9);
-            AddFruitTree(fruitTree3Location, FruitTree.treeStage, 3);
+            AddRipeFruitTree(fruitTree3Location);
             */
 
 
             // big welcome sign with minecart
             var woodenSignLocation = new Vector2(deepWoods.EnterLocation.X - Settings.Map.ExitRadius - 2, deepWoods.EnterLocation.Y + 3);
             deepWoods.largeTerrainFeatures.Add(new BigWoodenSign(woodenSignLocation));
-            deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, woodenSignLocation * 64f, 1.0f));
+            deepWoods.AddLightSource(woodenSignLocation);
 
 
             // orb stones

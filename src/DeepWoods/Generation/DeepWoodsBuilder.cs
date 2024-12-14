@@ -12,6 +12,7 @@ using static DeepWoodsMod.DeepWoodsSettings;
 using static DeepWoodsMod.DeepWoodsGlobals;
 using StardewValley;
 using DeepWoodsMod.Stuff;
+using StardewModdingAPI;
 
 namespace DeepWoodsMod
 {
@@ -182,7 +183,7 @@ namespace DeepWoodsMod
             this.defaultOutdoorTileSheet = map.GetTileSheet(DEFAULT_OUTDOOR_TILESHEET_ID);
             this.infestedOutdoorTileSheet = map.GetTileSheet(INFESTED_OUTDOOR_TILESHEET_ID);
 
-            if (deepWoods.isInfested.Value)
+            if (deepWoods.IsInfested)
             {
                 this.outdoorTileSheet = this.infestedOutdoorTileSheet;
             }
@@ -267,15 +268,21 @@ namespace DeepWoodsMod
         {
             GenerateForestBorder();
 
-            if (deepWoods.isLichtung.Value)
+            if (deepWoods.IsClearing)
+            {
                 GenerateLichtung();
+            }
             else
+            {
                 GenerateForestPatches();
+            }
 
             GenerateGround();
 
-            if (deepWoods.lichtungHasLake.Value)
+            if (deepWoods.IsLake)
+            {
                 AddLakeToLichtung();
+            }
 
             if (deepWoods.Level == 1)
             {
@@ -599,7 +606,7 @@ namespace DeepWoodsMod
                 }
             }
 
-            deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, new Vector2(startXPos, startYPos) * 64f, 1.0f));
+            deepWoods.AddLightSource(new Vector2(startXPos, startYPos));
 
             return new Size(width, height);
         }
@@ -623,7 +630,7 @@ namespace DeepWoodsMod
                         GenerateExit(new Placing(exit.Value, PlacingDirection.DOWNWARDS, PlacingDirection.LEFTWARDS), DeepWoodsRowTileMatrix.RIGHT);
                         break;
                 }
-                deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, new Vector2(exit.Value.X, exit.Value.Y) * 64f, 1.0f));
+                deepWoods.AddLightSource(new Vector2(exit.Value.X, exit.Value.Y));
             }
         }
 
@@ -746,7 +753,7 @@ namespace DeepWoodsMod
             GenerateLichtungLakeCorner(rightPos, bottomPos, -1, 0, 0, 1, DeepWoodsLichtungTileMatrix.RIGHT_TO_BOTTOM);
             GenerateLichtungLakeCorner(bottomPos, leftPos, 0, -1, -1, 0, DeepWoodsLichtungTileMatrix.BOTTOM_TO_LEFT);
 
-            deepWoods.waterTiles = new bool[this.spaceManager.GetMapWidth(), this.spaceManager.GetMapHeight()];
+            deepWoods.waterTiles = new(new bool[this.spaceManager.GetMapWidth(), this.spaceManager.GetMapHeight()]);
 
             int minX = leftPos.X + Settings.Map.ExitLength;
             int maxX = rightPos.X - Settings.Map.ExitLength;
@@ -919,7 +926,7 @@ namespace DeepWoodsMod
             int maxY = this.spaceManager.GetMapHeight() - Settings.Map.ExitLength;
 
             var lightSourcePos = new Vector2(this.spaceManager.GetMapWidth() / 2, this.spaceManager.GetMapHeight() / 2);
-            deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, lightSourcePos * 64f, 1.0f));
+            deepWoods.AddLightSource(lightSourcePos);
 
             if (Settings.Performance.LightSourceDensity > 0)
             {
@@ -933,7 +940,7 @@ namespace DeepWoodsMod
                 {
                     int x = this.random.GetRandomValue(minX, maxX);
                     int y = this.random.GetRandomValue(minY, maxY);
-                    deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, new Vector2(x, y) * 64f, 1.0f));
+                    deepWoods.AddLightSource(new Vector2(x, y));
                 }
             }
 
@@ -1236,7 +1243,7 @@ namespace DeepWoodsMod
                 for (int i = 0; i < numLightSources; i++)
                 {
                     var lightSourcePos = new Vector2(this.random.GetRandomValue(minFillX, maxFillX + 1), this.random.GetRandomValue(minFillY, maxFillY + 1));
-                    deepWoods.lightSources.Add(new LightSource(LightSource.indoorWindowLight, lightSourcePos * 64f, 1.0f));
+                    deepWoods.AddLightSource(lightSourcePos);
                 }
             }
         }

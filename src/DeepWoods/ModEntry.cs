@@ -12,6 +12,7 @@ using DeepWoodsMod.Framework.Messages;
 using DeepWoodsMod.Helpers;
 using DeepWoodsMod.Stuff;
 using StardewModdingAPI.Utilities;
+using xTile.Tiles;
 
 namespace DeepWoodsMod
 {
@@ -291,12 +292,12 @@ namespace DeepWoodsMod
                 if (!newPlayerLocations.ContainsKey(playerLocation.Key))
                 {
                     // player left
-                    PlayerWarped(Game1.getFarmer(playerLocation.Key), playerLocation.Value, null);
+                    PlayerWarped(Game1.GetPlayer(playerLocation.Key, false), playerLocation.Value, null);
                 }
                 else if (playerLocation.Value?.Name != newPlayerLocations[playerLocation.Key]?.Name)
                 {
                     // player warped
-                    PlayerWarped(Game1.getFarmer(playerLocation.Key), playerLocation.Value, newPlayerLocations[playerLocation.Key]);
+                    PlayerWarped(Game1.GetPlayer(playerLocation.Key, false), playerLocation.Value, newPlayerLocations[playerLocation.Key]);
                 }
             }
 
@@ -305,7 +306,7 @@ namespace DeepWoodsMod
                 if (!PlayerLocations.ContainsKey(newPlayerLocation.Key))
                 {
                     // player joined
-                    PlayerWarped(Game1.getFarmer(newPlayerLocation.Key), null, newPlayerLocation.Value);
+                    PlayerWarped(Game1.GetPlayer(newPlayerLocation.Key, false), null, newPlayerLocation.Value);
                 }
             }
 
@@ -334,6 +335,9 @@ namespace DeepWoodsMod
 
         private void PlayerWarped(Farmer who, GameLocation prevLocation, GameLocation newLocation)
         {
+            if (who == null)
+                return;
+
             if (!IsDeepWoodsGameRunning)
                 return;
 

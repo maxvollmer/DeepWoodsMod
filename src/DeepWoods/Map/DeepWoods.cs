@@ -41,10 +41,9 @@ namespace DeepWoodsMod
         public readonly NetInt mapHeight = new NetInt(0);
 
         public readonly NetBool isLichtung = new NetBool(false);
-        public readonly NetBool lichtungHasLake = new NetBool(false);
         public readonly NetPoint lichtungCenter = new NetPoint(Point.Zero);
 
-        public readonly NetBool isInfested = new NetBool(false);
+        public readonly NetString clearingType = new NetString(LichtungType.Default);
 
         public readonly NetBool spawnedFromObelisk = new NetBool(false);
 
@@ -77,7 +76,7 @@ namespace DeepWoodsMod
 
         // API
         public IDeepWoodsLocation ParentDeepWoods { get { return Parent; } }
-        public bool IsCustomMap { get { return isOverrideMap; } }
+        public bool IsCustomMap { get { return isOverrideMap.Value; } }
         public bool IsClearing
         {
             get
@@ -90,6 +89,9 @@ namespace DeepWoodsMod
                 isLichtungSetByAPI.Value = true;
             }
         }
+        public bool IsInfested => IsClearing && this.clearingType.Value == LichtungType.Infested;
+        public bool IsLake => IsClearing && this.clearingType.Value == LichtungType.Lake;
+
         public Tuple<int, int> MapSize
         {
             get
@@ -124,7 +126,7 @@ namespace DeepWoodsMod
         {
             get
             {
-                if (level == 1)
+                if (level.Value == 1)
                     return false;
 
                 return Parent?.IsLost ?? true;
@@ -176,9 +178,12 @@ namespace DeepWoodsMod
         public DeepWoods()
             : base()
         {
-            base.locationContext = LocationContext.Default;
-            base.seasonOverride = "";
-            base.name.Value = "";
+            base.locationContextId = "Default";
+            base.mapPath.Value = string.Empty;
+            base.loadedMapPath = string.Empty;
+            base._mapPathDirty = false;
+            //typeof(GameLocation).GetField("seasonOverride").SetValue(this, new Lazy<Season>(null));
+            base.name.Value = string.Empty;
             base.critters = new List<Critter>();
             this.updateMap();
         }
@@ -241,7 +246,7 @@ namespace DeepWoodsMod
         protected override void initNetFields()
         {
             base.initNetFields();
-            this.NetFields.AddFields(parentName, parentExitLocation, hasReceivedNetworkData, isInfested, enterDir, enterLocation, exits, uniqueMultiplayerID, level, mapWidth, mapHeight, isLichtung, lichtungHasLake, lichtungCenter, spawnedFromObelisk, hasEverBeenVisited, spawnTime, abandonedByParentTime, playerCount, isLichtungSetByAPI, isMapSizeSetByAPI, canGetLost, additionalExitLocations, isOverrideMap);
+            this.NetFields.AddField(parentName).AddField(parentExitLocation).AddField(hasReceivedNetworkData).AddField(clearingType).AddField(enterDir).AddField(enterLocation).AddField(exits).AddField(uniqueMultiplayerID).AddField(level).AddField(mapWidth).AddField(mapHeight).AddField(isLichtung).AddField(lichtungCenter).AddField(spawnedFromObelisk).AddField(hasEverBeenVisited).AddField(spawnTime).AddField(abandonedByParentTime).AddField(playerCount).AddField(isLichtungSetByAPI).AddField(isMapSizeSetByAPI).AddField(canGetLost).AddField(additionalExitLocations).AddField(isOverrideMap);
         }
 
         private void FillLevel()
@@ -254,7 +259,7 @@ namespace DeepWoodsMod
                 return;
             }
 
-            if (this.isInfested.Value)
+            if (IsInfested)
             {
                 ModEntry.GetAPI().CallBeforeInfest(this);
                 if (!ModEntry.GetAPI().CallOverrideInfest(this))
@@ -266,7 +271,7 @@ namespace DeepWoodsMod
             else
             {
                 ModEntry.GetAPI().CallBeforeFill(this);
-                if ((this.isLichtung.Value && this.lichtungHasLake.Value) || !ModEntry.GetAPI().CallOverrideFill(this))
+                if (IsLake || !ModEntry.GetAPI().CallOverrideFill(this))
                 {
                     DeepWoodsStuffCreator.AddStuff(this, new DeepWoodsRandom(this, this.seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()), blockedLocations);
                 }
@@ -317,7 +322,7 @@ namespace DeepWoodsMod
                         new DeepWoodsSpaceManager(this.mapWidth.Value, this.mapHeight.Value).GetRandomExitLocation(exitDir, new DeepWoodsRandom(this, this.seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()))
                     )
                     {
-                        TargetLocationName = "DeepWoods_" + DeepWoodsRandom.CalculateSeed(level + 1, ExitDirToEnterDir(exitDir), Seed)
+                        TargetLocationName = "DeepWoods_" + DeepWoodsRandom.CalculateSeed(level.Value + 1, ExitDirToEnterDir(exitDir), Seed)
                     }
                 );
             }
@@ -363,10 +368,10 @@ namespace DeepWoodsMod
                 {
                     this.mapWidth.Value = Game1.random.Next(Settings.Map.MinMapWidth, Settings.Map.MaxMapWidthForClearing);
                     this.mapHeight.Value = Game1.random.Next(Settings.Map.MinMapWidth, Settings.Map.MaxMapWidthForClearing);
-                    this.isInfested.Value = random.GetRandomValue(Settings.Luck.Clearings.Perks) == LichtungStuff.Infested;
-                    if (!this.isInfested.Value && !this.spawnedFromObelisk.Value)
+
+                    if (!this.spawnedFromObelisk.Value)
                     {
-                        this.lichtungHasLake.Value = random.GetRandomValue(Settings.Luck.Clearings.Perks) == LichtungStuff.Lake;
+                        clearingType.Value = random.GetRandomValue(Settings.Luck.Clearings.ClearingType);
                     }
                 }
                 else
@@ -447,8 +452,8 @@ namespace DeepWoodsMod
 
             // Finally fix any errors on the border (this still happens according to some bug reports)
             who.Position = new Vector2(
-                Math.Max(0, Math.Min((mapWidth - 1) * 64, who.Position.X)),
-                Math.Max(0, Math.Min((mapHeight - 1) * 64, who.Position.Y))
+                Math.Max(0, Math.Min((mapWidth.Value - 1) * 64, who.Position.X)),
+                Math.Max(0, Math.Min((mapHeight.Value - 1) * 64, who.Position.Y))
                 );
         }
 
@@ -469,6 +474,13 @@ namespace DeepWoodsMod
             this.hasEverBeenVisited.Value = true;
             this.playerCount.Value = this.playerCount.Value + 1;
             ValidateAndIfNecessaryCreateExitChildren();
+        }
+
+        public bool infestedTreeIsDrawing = false;
+
+        public override bool SeedsIgnoreSeasonsHere()
+        {
+            return !infestedTreeIsDrawing;
         }
 
         public void ValidateAndIfNecessaryCreateExitChildren()
@@ -567,7 +579,7 @@ namespace DeepWoodsMod
             if (this.playerCount.Value > 0)
                 return false;
 
-            if ((this.Parent?.playerCount ?? 0) > 0 && Game1.timeOfDay <= (this.abandonedByParentTime.Value + TIME_BEFORE_DELETION_ALLOWED))
+            if ((this.Parent?.playerCount?.Value ?? 0) > 0 && Game1.timeOfDay <= (this.abandonedByParentTime.Value + TIME_BEFORE_DELETION_ALLOWED))
                 return false;
 
             if (Game1.timeOfDay <= (this.spawnTime.Value + TIME_BEFORE_DELETION_ALLOWED))
@@ -595,6 +607,9 @@ namespace DeepWoodsMod
             return true;
         }
 
+        public override void updateSeasonalTileSheets(Map map = null)
+        {
+        }
 
         private Map CreateEmptyMap(string name, int mapWidth, int mapHeight)
         {
@@ -602,9 +617,15 @@ namespace DeepWoodsMod
             Map map = new Map(name);
 
             // Add outdoor tilesheet
+
             map.AddTileSheet(new TileSheet(DEFAULT_OUTDOOR_TILESHEET_ID, map, "Maps\\" + Game1.currentSeason.ToLower() + "_outdoorsTileSheet", new Size(25, 79), new Size(16, 16)));
             map.AddTileSheet(new TileSheet(INFESTED_OUTDOOR_TILESHEET_ID, map, "Maps\\deepWoodsInfestedOutdoorsTileSheet", new Size(25, 79), new Size(16, 16)));
             map.AddTileSheet(new TileSheet(LAKE_TILESHEET_ID, map, "Maps\\deepWoodsLakeTilesheet", new Size(8, 5), new Size(16, 16)));
+
+            for (int i = 0; i < map.TileSheets.Count; i++)
+            {
+                Game1.mapDisplayDevice.LoadTileSheet(map.TileSheets[i]);
+            }
             map.LoadTileSheets(Game1.mapDisplayDevice);
 
             // Add default layers
@@ -615,6 +636,15 @@ namespace DeepWoodsMod
             map.AddLayer(new Layer("AlwaysFront", map, new xTile.Dimensions.Size(mapWidth, mapHeight), new xTile.Dimensions.Size(64, 64)));
 
             return map;
+        }
+
+        public override string GetLocationContextId()
+        {
+            if (map == null)
+            {
+                updateMap();
+            }
+            return base.GetLocationContextId();
         }
 
         public override void updateMap()
@@ -634,14 +664,16 @@ namespace DeepWoodsMod
 
             // Check if map is already created
             if (this.map != null && this.map.Id == this.Name)
+            {
                 return;
+            }
 
             // Check that mapWidth and mapHeight are set
             if (mapWidth.Value == 0 || mapHeight.Value == 0)
                 return;
 
             // Create map with proper size
-            this.map = CreateEmptyMap(this.Name, mapWidth, mapHeight);
+            this.map = CreateEmptyMap(this.Name, mapWidth.Value, mapHeight.Value);
 
             // Build the map!
             ModEntry.GetAPI().CallBeforeMapGeneration(this);
@@ -656,6 +688,8 @@ namespace DeepWoodsMod
                 DeepWoodsBuilder.Build(this, this.map, DeepWoodsEnterExit.CreateExitDictionary(this.EnterDir, this.EnterLocation, this.exits));
             }
             ModEntry.GetAPI().CallAfterMapGeneration(this);
+
+            SortLayers();
         }
 
         // This is the default day update method of GameLocation, called only on the server
@@ -683,7 +717,7 @@ namespace DeepWoodsMod
             {
                 if (terrainFeature.Value is FruitTree fruitTree)
                 {
-                    fruitTree.fruitsOnTree.Value = 0;
+                    fruitTree.fruit.Clear();
                     this.terrainFeatures[terrainFeature.Key] = fruitTree;
                 }
             }
@@ -803,7 +837,7 @@ namespace DeepWoodsMod
             {
                 if (resourceClump.occupiesTile(tileX, tileY))
                 {
-                    if (resourceClump.performToolAction(t, 1, resourceClump.tile.Value, this))
+                    if (resourceClump.performToolAction(t, 1, resourceClump.Tile))
                     {
                         this.resourceClumps.Remove(resourceClump);
                     }
@@ -839,7 +873,7 @@ namespace DeepWoodsMod
             return false;
         }
 
-        public override bool isTileLocationTotallyClearAndPlaceable(Vector2 v)
+        public override bool CanItemBePlacedHere(Vector2 v, bool itemIsPassable = false, CollisionMask collisionMask = CollisionMask.All, CollisionMask ignorePassables = CollisionMask.None, bool useFarmerTile = false, bool ignorePassablesExactly = false)
         {
             // No placements on tiles that are covered in forest.
             if (this.map.GetLayer("Buildings").Tiles[(int)v.X, (int)v.Y] != null)
@@ -864,7 +898,7 @@ namespace DeepWoodsMod
             }
 
             // Call parent method for further checks.
-            return base.isTileLocationTotallyClearAndPlaceable(v);
+            return base.CanItemBePlacedHere(v, itemIsPassable, collisionMask, ignorePassables, useFarmerTile, ignorePassablesExactly);
         }
 
         protected override void resetSharedState()
@@ -874,7 +908,7 @@ namespace DeepWoodsMod
 
         public override void tryToAddCritters(bool onlyIfOnScreen = false)
         {
-            if (this.isInfested.Value)
+            if (IsInfested)
                 return;
 
             // TODO: Better critter spawning in forest
@@ -896,7 +930,7 @@ namespace DeepWoodsMod
 
             foreach (var lightSource in this.lightSources)
             {
-                Game1.currentLightSources.Add(lightSource);
+                Game1.currentLightSources.Add(lightSource.Id, lightSource);
             }
 
             DeepWoodsManager.FixLighting();
@@ -913,7 +947,7 @@ namespace DeepWoodsMod
 
         public override void checkForMusic(GameTime time)
         {
-            if (!Game1.isRaining && this.isInfested.Value)
+            if (!Game1.isRaining && IsInfested)
             {
                 Game1.changeMusicTrack("tribal");
                 return;
@@ -936,7 +970,7 @@ namespace DeepWoodsMod
                     }
                     else
                     {
-                        if (Game1.isDarkOut())
+                        if (Game1.isDarkOut(this))
                         {
                             if (Game1.currentSeason != "winter")
                             {
@@ -963,7 +997,8 @@ namespace DeepWoodsMod
         {
             // Intercept exploding bombs
             base.temporarySprites
-                .FindAll(t => t.bombRadius > 0)
+                .Where(t => t.bombRadius > 0)
+                .ToList()
                 .ForEach(t => t.endFunction = new TemporaryAnimatedSprite.endBehavior(delegate (int extraInfo) {
                     HandleExplosion(t.position / 64, t.bombRadius);
                 })
@@ -993,9 +1028,9 @@ namespace DeepWoodsMod
                         Vector2 location = new Vector2(tile.X + x - radius, tile.Y + y - radius);
                         resourceClumpsCopy.RemoveAll(r =>
                         {
-                            if (r.getBoundingBox(r.tile.Value).Contains((int)location.X * 64, (int)location.Y * 64))
+                            if (r.getBoundingBox().Contains((int)location.X * 64, (int)location.Y * 64))
                             {
-                                if (r.performToolAction(null, radius, location, this))
+                                if (r.performToolAction(null, radius, location))
                                 {
                                     resourceClumps.Remove(r);
                                 }
@@ -1005,9 +1040,9 @@ namespace DeepWoodsMod
                         });
                         largeTerrainFeaturesCopy.RemoveAll(lt =>
                         {
-                            if (lt.getBoundingBox(lt.tilePosition.Value).Contains((int)location.X * 64, (int)location.Y * 64))
+                            if (lt.getBoundingBox().Contains((int)location.X * 64, (int)location.Y * 64))
                             {
-                                if (lt.performToolAction(null, radius, location, this))
+                                if (lt.performToolAction(null, radius, location))
                                 {
                                     largeTerrainFeatures.Remove(lt);
                                 }
@@ -1098,7 +1133,7 @@ namespace DeepWoodsMod
             // Game1.spriteBatch.End();
         }
 
-        public override StardewValley.Object getFish(float millisecondsAfterNibble, int bait, int waterDepth, Farmer who, double baitPotency, Vector2 bobberTile, string locationName = null)
+        public override StardewValley.Item getFish(float millisecondsAfterNibble, string bait, int waterDepth, Farmer who, double baitPotency, Vector2 bobberTile, string locationName = null)
         {
             if ((locationName != null && locationName != this.Name) || !CanHazAwesomeFish())
             {
@@ -1112,9 +1147,9 @@ namespace DeepWoodsMod
             return new DeepWoodsRandom(this, this.Seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()).CheckChance(Settings.Luck.Fishies.ChanceForAwesomeFish);
         }
 
-        private int GetRandomAwesomeFish()
+        private string GetRandomAwesomeFish()
         {
-            return new DeepWoodsRandom(this, this.Seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()).GetRandomValue(Settings.Luck.Fishies.AwesomeFishies);
+            return new DeepWoodsRandom(this, this.Seed ^ Game1.currentGameTime.TotalGameTime.Milliseconds ^ Game1.random.Next()).GetRandomValue(Settings.Luck.Fishies.AwesomeFishies).ToString();
         }
 
         public int GetCombatLevel()
@@ -1164,7 +1199,7 @@ namespace DeepWoodsMod
         {
             base.updateCharacters(time);
 
-            if (Context.IsMainPlayer && this.isInfested.Value && !this.characters.Any(c => c is Monster))
+            if (Context.IsMainPlayer && IsInfested && !this.characters.Any(c => c is Monster))
             {
                 DeInfest();
             }
@@ -1184,7 +1219,7 @@ namespace DeepWoodsMod
             }
 
             // not infested anymore!
-            this.isInfested.Value = false;
+            this.clearingType.Value = LichtungType.Default;
 
             if (Game1.player.currentLocation == this)
             {
@@ -1214,6 +1249,12 @@ namespace DeepWoodsMod
 
             // spawn critters
             tryToAddCritters(false);
+        }
+
+        internal void AddLightSource(Vector2 pos)
+        {
+            string id = $"DeepWoodsLight_{level}_{lightSources.Count}";
+            lightSources.Add(new LightSource(id, LightSource.indoorWindowLight, pos * 64f, 1.0f));
         }
     }
 }

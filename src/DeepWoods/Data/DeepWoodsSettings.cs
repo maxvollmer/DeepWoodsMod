@@ -31,6 +31,11 @@ namespace DeepWoodsMod
             new SimpleCoord(29, 26),
         };
 
+        public SimpleCoord[] DeleteBuildingTileArea { get; set; } = new SimpleCoord[] {
+            new SimpleCoord(24, 25),
+            new SimpleCoord(28, 31),
+        };
+
         public SimpleCoord[] AddBuildingTiles { get; set; } = new SimpleCoord[] {
             new SimpleCoord(24, 24),
             new SimpleCoord(25, 24),
@@ -317,10 +322,10 @@ namespace DeepWoodsMod
         public ResourceClumpLuckSettings ResourceClump { get; set; } = new ResourceClumpLuckSettings();
 
         public WeightedInt[] TreeTypes { get; set; } = new WeightedInt[]{
-            new WeightedInt(Tree.bushyTree, 300),
-            new WeightedInt(Tree.leafyTree, 300),
-            new WeightedInt(Tree.pineTree, 300),
-            new WeightedInt(Tree.mahoganyTree, 100),
+            new WeightedInt(1, 300),
+            new WeightedInt(2, 300),
+            new WeightedInt(3, 300),
+            new WeightedInt(8, 100),
         };
 
         public WeightedInt[] FruitTreeTypes { get; set; } = new WeightedInt[]{
@@ -363,10 +368,14 @@ namespace DeepWoodsMod
     {
         public Chance ChanceForClearing { get; set; } = new Chance(new LuckValue(1, 10));
 
+        public WeightedValue<string>[] ClearingType { get; set; } = new WeightedValue<string>[]{
+            new WeightedValue<string>(LichtungType.Default, 800),
+            new WeightedValue<string>(LichtungType.Lake, 100),
+            new WeightedValue<string>(LichtungType.Infested, 100),
+        };
+
         public WeightedValue<string>[] Perks { get; set; } = new WeightedValue<string>[]{
             new WeightedValue<string>(LichtungStuff.Nothing, 1500),
-            new WeightedValue<string>(LichtungStuff.Lake, 1250),
-            new WeightedValue<string>(LichtungStuff.Infested, 1250),
             new WeightedValue<string>(LichtungStuff.MushroomTrees, 1000),
             new WeightedValue<string>(LichtungStuff.HealingFountain, 1000),
             new WeightedValue<string>(LichtungStuff.GingerbreadHouse, 1000),

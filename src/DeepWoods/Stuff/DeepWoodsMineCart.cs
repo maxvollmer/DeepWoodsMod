@@ -103,9 +103,9 @@ namespace DeepWoodsMod.Stuff
             }
         }
 
-        private static bool IsMineCartOptions(List<Response> responses)
+        private static bool IsMineCartOptions(Response[] responses)
         {
-            if (responses.Count < 3)
+            if (responses.Length < 3)
             {
                 return false;
             }
@@ -149,10 +149,10 @@ namespace DeepWoodsMod.Stuff
             {
             }
 
-            private static List<Response> InsertResponse(List<Response> responses, Response newResponse)
+            private static Response[] InsertResponse(List<Response> responses, Response newResponse)
             {
                 responses.Insert(responses.Count - 1, newResponse);
-                return responses;
+                return responses.ToArray();
             }
 
             public override void receiveLeftClick(int x, int y, bool playSound = true)
@@ -167,7 +167,7 @@ namespace DeepWoodsMod.Stuff
                     return;
                 }
 
-                if (selectedResponse < 0 ||selectedResponse >= responses.Count)
+                if (selectedResponse < 0 ||selectedResponse >= responses.Length)
                 {
                     return;
                 }

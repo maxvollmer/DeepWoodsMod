@@ -18,19 +18,19 @@ namespace DeepWoodsMod.Stuff
         public CuteSign()
            : base(false)
         {
-            InitNetFields();
             this.row.Value = new Random().Next(0, 4);
         }
 
         public CuteSign(Vector2 tileLocation)
             : this()
         {
-            this.tilePosition.Value = tileLocation;
+            this.Tile = tileLocation;
         }
 
-        private void InitNetFields()
+        public override void initNetFields()
         {
-            this.NetFields.AddFields(this.row);
+            base.initNetFields();
+            this.NetFields.AddField(this.row);
         }
 
         public override bool isActionable()
@@ -38,9 +38,9 @@ namespace DeepWoodsMod.Stuff
             return true;
         }
 
-        public override Rectangle getBoundingBox(Vector2 tileLocation)
+        public override Rectangle getBoundingBox()
         {
-            return new Rectangle((int)tileLocation.X * 64 + 8, (int)tileLocation.Y * 64, 128 - 24, 64);
+            return new Rectangle((int)Tile.X * 64 + 8, (int)Tile.Y * 64, 128 - 24, 64);
         }
 
         public override bool isPassable(Character c = null)
@@ -48,7 +48,7 @@ namespace DeepWoodsMod.Stuff
             return false;
         }
 
-        public override bool performUseAction(Vector2 tileLocation, GameLocation location)
+        public override bool performUseAction(Vector2 tileLocation)
         {
             DeepWoodsQuestMenu.OpenQuestMenu(I18N.EntrySignMessage, new Response[1]
             {
@@ -58,12 +58,12 @@ namespace DeepWoodsMod.Stuff
             return true;
         }
 
-        public override bool tickUpdate(GameTime time, Vector2 tileLocation, GameLocation location)
+        public override bool tickUpdate(GameTime time)
         {
             return false;
         }
 
-        public override void dayUpdate(GameLocation environment, Vector2 tileLocation)
+        public override void dayUpdate()
         {
         }
 
@@ -72,18 +72,18 @@ namespace DeepWoodsMod.Stuff
             return false;
         }
 
-        public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)
+        public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation)
         {
             return false;
         }
 
-        public override void performPlayerEntryAction(Vector2 tileLocation)
+        public override void performPlayerEntryAction()
         {
         }
 
-        public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)
+        public override void draw(SpriteBatch spriteBatch)
         {
-            Vector2 globalPosition = tileLocation * 64f;
+            Vector2 globalPosition = Tile * 64f;
 
             int column;
             if (Game1.IsWinter) 
@@ -109,8 +109,8 @@ namespace DeepWoodsMod.Stuff
             Rectangle topSourceRectangle = new Rectangle(column * 32, row.Value * 37, 32, 21);
             Vector2 globalTopPosition = new Vector2(globalPosition.X, globalPosition.Y - 84);
 
-            spriteBatch.Draw(DeepWoodsTextures.Textures.CuteSign, Game1.GlobalToLocal(Game1.viewport, globalTopPosition), topSourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((tileLocation.Y + 1f) * 64f / 10000f + tileLocation.X / 100000f));
-            spriteBatch.Draw(DeepWoodsTextures.Textures.CuteSign, Game1.GlobalToLocal(Game1.viewport, globalBottomPosition), bottomSourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((tileLocation.Y + 1f) * 64f / 10000f + tileLocation.X / 100000f));
+            spriteBatch.Draw(DeepWoodsTextures.Textures.CuteSign, Game1.GlobalToLocal(Game1.viewport, globalTopPosition), topSourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((Tile.Y + 1f) * 64f / 10000f + Tile.X / 100000f));
+            spriteBatch.Draw(DeepWoodsTextures.Textures.CuteSign, Game1.GlobalToLocal(Game1.viewport, globalBottomPosition), bottomSourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((Tile.Y + 1f) * 64f / 10000f + Tile.X / 100000f));
         }
     }
 }

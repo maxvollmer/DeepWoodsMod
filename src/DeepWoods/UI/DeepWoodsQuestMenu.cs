@@ -62,7 +62,7 @@ namespace DeepWoodsMod.UI
                 Game1.activeClickableMenu.emergencyShutDown();
             }
 
-            Game1.activeClickableMenu = new DeepWoodsQuestMenu(text, responses.ToList(), responseHandler);
+            Game1.activeClickableMenu = new DeepWoodsQuestMenu(text, responses.ToArray(), responseHandler);
             Game1.player.CanMove = false;
             Game1.dialogueUp = true;
 
@@ -133,7 +133,7 @@ namespace DeepWoodsMod.UI
 
         GameLocation.afterQuestionBehavior responseHandler = null;
 
-        private DeepWoodsQuestMenu(string text, List<Response> responses, GameLocation.afterQuestionBehavior responseHandler)
+        private DeepWoodsQuestMenu(string text, Response[] responses, GameLocation.afterQuestionBehavior responseHandler)
             : base(text, responses)
         {
             this.responseHandler = responseHandler;

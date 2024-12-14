@@ -12,7 +12,7 @@ namespace DeepWoodsMod
     {
         public class DeepWoodsExit : INetObject<NetFields>, IDeepWoodsExit
         {
-            public NetFields NetFields { get; } = new NetFields();
+            public NetFields NetFields { get; } = new NetFields("DeepWoodsExit");
             public readonly NetInt exitDir = new NetInt(0);
             public readonly NetString myDeepWoodsName = new NetString();
             public readonly NetPoint location = new NetPoint(Point.Zero);
@@ -66,7 +66,7 @@ namespace DeepWoodsMod
             }
             private void InitNetFields()
             {
-                this.NetFields.AddFields(myDeepWoodsName, exitDir, location, targetDeepWoodsName, targetLocation);
+                this.NetFields.AddField(myDeepWoodsName).AddField(exitDir).AddField(location).AddField(targetDeepWoodsName).AddField(targetLocation);
             }
         }
 

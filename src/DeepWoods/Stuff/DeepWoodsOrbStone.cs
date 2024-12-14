@@ -56,19 +56,19 @@ namespace DeepWoodsMod.Stuff
         public DeepWoodsOrbStone()
            : base(false)
         {
-            InitNetFields();
         }
 
         public DeepWoodsOrbStone(Vector2 tileLocation, int orbIndex = -1)
             : this()
         {
-            this.tilePosition.Value = tileLocation;
+            this.Tile = tileLocation;
             this.orbIndex.Value = orbIndex;
         }
 
-        private void InitNetFields()
+        public override void initNetFields()
         {
-            this.NetFields.AddFields(this.hasOrb, this.orbColor, this.orbIndex);
+            base.initNetFields();
+            this.NetFields.AddField(this.hasOrb).AddField(this.orbColor).AddField(this.orbIndex);
         }
 
         private bool IsMainOrbStone(GameLocation location)
@@ -85,9 +85,9 @@ namespace DeepWoodsMod.Stuff
             return true;
         }
 
-        public override bool tickUpdate(GameTime time, Vector2 tileLocation, GameLocation location)
+        public override bool tickUpdate(GameTime time)
         {
-            if (IsMainOrbStone(location))
+            if (IsMainOrbStone(Location))
             {
                 if (Game1.IsMasterGame)
                 {
@@ -103,17 +103,17 @@ namespace DeepWoodsMod.Stuff
 
                 if (hasOrb.Value == true && didHaveOrb == false)
                 {
-                    if (Game1.player.currentLocation == location)
+                    if (Game1.player.currentLocation == Location)
                     {
                         // audible feedback
                         Game1.playSound(Sounds.YOBA);
                     }
-                    (location as DeepWoods).lightSources.Add(new LightSource(LightSource.sconceLight, tileLocation - new Vector2(0, 2), 6, new Color(1f, 0f, 0f)));
+                    (Location as DeepWoods).lightSources.Add(new LightSource($"DeepWoodsOrb{orbIndex.Value}", LightSource.sconceLight, Tile - new Vector2(0, 2), 6, new Color(1f, 0f, 0f)));
                     didHaveOrb = true;
                 }
             }
 
-            return base.tickUpdate(time, tileLocation, location);
+            return base.tickUpdate(time);
         }
 
         public override bool isActionable()
@@ -126,12 +126,12 @@ namespace DeepWoodsMod.Stuff
             return false;
         }
 
-        public override Rectangle getBoundingBox(Vector2 tileLocation)
+        public override Rectangle getBoundingBox()
         {
-            return new Rectangle((int)tileLocation.X * 64, (int)tileLocation.Y * 64, 128, 64);
+            return new Rectangle((int)Tile.X * 64, (int)Tile.Y * 64, 128, 64);
         }
 
-        public override bool performUseAction(Vector2 tileLocation, GameLocation location)
+        public override bool performUseAction(Vector2 tileLocation)
         {
             DeepWoodsQuestMenu.OpenQuestMenu(I18N.OrbStoneTouchQuestion, new Response[2]
             {
@@ -162,14 +162,14 @@ namespace DeepWoodsMod.Stuff
             }
         }
 
-        public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation, GameLocation location)
+        public override bool performToolAction(Tool t, int explosion, Vector2 tileLocation)
         {
             return false;
         }
 
-        public override void draw(SpriteBatch spriteBatch, Vector2 tileLocation)
+        public override void draw(SpriteBatch spriteBatch)
         {
-            Vector2 globalPosition = tileLocation * 64f;
+            Vector2 globalPosition = Tile * 64f;
 
             Rectangle bottomSourceRectangle = new Rectangle(0, 48, 32, 16);
             Vector2 globalBottomPosition = new Vector2(globalPosition.X, globalPosition.Y);
@@ -179,16 +179,16 @@ namespace DeepWoodsMod.Stuff
             topSourceRectangle = new Rectangle(0, 0, 32, 48);
             globalTopPosition = new Vector2(globalPosition.X, globalPosition.Y - 192);
 
-            spriteBatch.Draw(DeepWoodsTextures.Textures.OrbStone, Game1.GlobalToLocal(Game1.viewport, globalTopPosition), topSourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((tileLocation.Y + 1f) * 64f / 10000f + tileLocation.X / 100000f));
-            spriteBatch.Draw(DeepWoodsTextures.Textures.OrbStone, Game1.GlobalToLocal(Game1.viewport, globalBottomPosition), bottomSourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((tileLocation.Y + 1f) * 64f / 10000f + tileLocation.X / 100000f));
+            spriteBatch.Draw(DeepWoodsTextures.Textures.OrbStone, Game1.GlobalToLocal(Game1.viewport, globalTopPosition), topSourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((Tile.Y + 1f) * 64f / 10000f + Tile.X / 100000f));
+            spriteBatch.Draw(DeepWoodsTextures.Textures.OrbStone, Game1.GlobalToLocal(Game1.viewport, globalBottomPosition), bottomSourceRectangle, Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((Tile.Y + 1f) * 64f / 10000f + Tile.X / 100000f));
 
             if (hasOrb.Value)
             {
                 int timeIndex = (int)((long)Math.Round(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 300.0) % 5);
                 topSourceRectangle.X += 32 * timeIndex;
                 bottomSourceRectangle.X += 32 * timeIndex;
-                spriteBatch.Draw(DeepWoodsTextures.Textures.OrbStoneOrb, Game1.GlobalToLocal(Game1.viewport, globalTopPosition), topSourceRectangle, this.orbColor.Value, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((tileLocation.Y + 1f) * 64f / 10000f + tileLocation.X / 100000f + 1));
-                spriteBatch.Draw(DeepWoodsTextures.Textures.OrbStoneOrb, Game1.GlobalToLocal(Game1.viewport, globalBottomPosition), bottomSourceRectangle, this.orbColor.Value, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((tileLocation.Y + 1f) * 64f / 10000f + tileLocation.X / 100000f + 1));
+                spriteBatch.Draw(DeepWoodsTextures.Textures.OrbStoneOrb, Game1.GlobalToLocal(Game1.viewport, globalTopPosition), topSourceRectangle, this.orbColor.Value, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((Tile.Y + 1f) * 64f / 10000f + Tile.X / 100000f + 1));
+                spriteBatch.Draw(DeepWoodsTextures.Textures.OrbStoneOrb, Game1.GlobalToLocal(Game1.viewport, globalBottomPosition), bottomSourceRectangle, this.orbColor.Value, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, ((Tile.Y + 1f) * 64f / 10000f + Tile.X / 100000f + 1));
             }
         }
     }
