@@ -164,15 +164,6 @@ namespace DeepWoodsMod
                 return;
             }
 
-            foreach (var who in Game1.getAllFarmers())
-            {
-                if (who.currentLocation is DeepWoods)
-                {
-                    who.currentLocation = Game1.getLocationFromName("Woods");
-                    who.Position = new Vector2(DeepWoodsSettings.Settings.WoodsPassage.WoodsWarpLocation.X * 64, DeepWoodsSettings.Settings.WoodsPassage.WoodsWarpLocation.Y * 64);
-                }
-            }
-
             DeepWoodsManager.Remove();
             WoodsObelisk.RemoveAllFromGame();
             DeepWoodsSettings.DoSave();

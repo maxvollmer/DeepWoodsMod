@@ -66,7 +66,7 @@ namespace DeepWoodsMod
             }
             private void InitNetFields()
             {
-                this.NetFields.AddField(myDeepWoodsName).AddField(exitDir).AddField(location).AddField(targetDeepWoodsName).AddField(targetLocation);
+                this.NetFields.SetOwner(this).AddField(myDeepWoodsName).AddField(exitDir).AddField(location).AddField(targetDeepWoodsName).AddField(targetLocation);
             }
         }
 

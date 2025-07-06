@@ -289,8 +289,6 @@ namespace DeepWoodsMod
                     {
                         deepWoods.terrainFeatures[location] = new Tree(GetRandomTreeType(), this.random.GetRandomValue(Tree.sproutStage, Tree.saplingStage));
                     }
-                    // TODO: TEMP: 1.6: fruit trees drop seeds, which is super unbalanced. disable them until fix
-                    /*
                     else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForGrownFruitTree) && IsRegionTreeFree(location, 2))
                     {
                         int numFruits = 0;
@@ -304,7 +302,6 @@ namespace DeepWoodsMod
                     {
                         AddFruitTree(location, FruitTree.bushStage);
                     }
-                    */
                     else if (this.random.CheckChance(Settings.Luck.Terrain.ChanceForWeed))
                     {
                         deepWoods.objects[location] = CreateObject(GetRandomWeedType(), false);
@@ -752,7 +749,7 @@ namespace DeepWoodsMod
 
         private void AddFruitTree(Vector2 location, int growthStage, int fruitsOnTree = 0)
         {
-            FruitTree fruitTree = new FruitTree(GetRandomFruitTreeType(), growthStage);
+            FruitTree fruitTree = new SeedLessFruitTree(GetRandomFruitTreeType(), growthStage);
             deepWoods.terrainFeatures[location] = fruitTree;
 
             fruitTree.fruit.Clear();

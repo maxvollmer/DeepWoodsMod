@@ -179,8 +179,8 @@ namespace DeepWoodsMod
             : base()
         {
             base.locationContextId = "Default";
-            base.mapPath.Value = string.Empty;
-            base.loadedMapPath = string.Empty;
+            base.mapPath.Value = null;
+            base.loadedMapPath = null;
             base._mapPathDirty = false;
             //typeof(GameLocation).GetField("seasonOverride").SetValue(this, new Lazy<Season>(null));
             base.name.Value = string.Empty;
@@ -695,30 +695,14 @@ namespace DeepWoodsMod
         // This is the default day update method of GameLocation, called only on the server
         public override void DayUpdate(int dayOfMonth)
         {
-            // we don't do day updates on any deeper levels (they get cleared out anyways)
-            if (this.level.Value != 1)
-                return;
-
-            // remove all fruit trees, as they do all kinds of nonsense we don't want them to do in their day update method
-            var terrainFeaturesCopy = new List<KeyValuePair<Vector2, TerrainFeature>>(this.terrainFeatures.Pairs);
-            foreach (var terrainFeature in terrainFeaturesCopy)
+            if (largeTerrainFeatures != null)
             {
-                if (terrainFeature.Value is FruitTree)
+                foreach (var largeTerrainFeature in largeTerrainFeatures.ToArray())
                 {
-                    this.terrainFeatures.Remove(terrainFeature.Key);
-                }
-            }
-
-            // do normal day update
-            base.DayUpdate(dayOfMonth);
-
-            // re-add fruit trees (and make sure they don't have fruits)
-            foreach (var terrainFeature in terrainFeaturesCopy)
-            {
-                if (terrainFeature.Value is FruitTree fruitTree)
-                {
-                    fruitTree.fruit.Clear();
-                    this.terrainFeatures[terrainFeature.Key] = fruitTree;
+                    if (largeTerrainFeature is Tent tent)
+                    {
+                        tent.dayUpdate();
+                    }
                 }
             }
         }
@@ -930,7 +914,7 @@ namespace DeepWoodsMod
 
             foreach (var lightSource in this.lightSources)
             {
-                Game1.currentLightSources.Add(lightSource.Id, lightSource);
+                Game1.currentLightSources.TryAdd(lightSource.Id, lightSource);
             }
 
             DeepWoodsManager.FixLighting();
